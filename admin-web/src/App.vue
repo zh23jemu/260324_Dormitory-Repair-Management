@@ -3,14 +3,14 @@
     <el-card class="login-card">
       <template #header>
         <div>
-          <div style="font-size: 24px; font-weight: 700">宿舍报修管理端</div>
-          <div style="color: #6b7280; margin-top: 6px">宿管、维修人员、管理员使用</div>
+          <div style="font-size:24px;font-weight:700">宿舍报修管理端</div>
+          <div style="color:#6b7280;margin-top:6px">宿管、维修人员、管理员使用</div>
         </div>
       </template>
       <el-form :model="loginForm" @submit.prevent>
         <el-form-item label="账号"><el-input v-model="loginForm.username" placeholder="admin / dorm01 / repair01" /></el-form-item>
         <el-form-item label="密码"><el-input v-model="loginForm.password" type="password" show-password placeholder="123456" /></el-form-item>
-        <el-button type="primary" style="width: 100%" @click="login">登录</el-button>
+        <el-button type="primary" style="width:100%" @click="login">登录</el-button>
       </el-form>
     </el-card>
   </div>
@@ -18,8 +18,8 @@
   <div v-else class="page-shell">
     <div class="toolbar">
       <div>
-        <div style="font-size: 28px; font-weight: 700">高校宿舍报修管理系统</div>
-        <div style="color: #6b7280; margin-top: 4px">当前用户：{{ userInfo.realName }} / {{ userInfo.role }}</div>
+        <div style="font-size:28px;font-weight:700">高校宿舍报修管理系统</div>
+        <div style="color:#6b7280;margin-top:4px">当前用户：{{ userInfo.realName }} / {{ userInfo.role }}</div>
       </div>
       <div>
         <el-button @click="refreshAll">刷新</el-button>
@@ -27,14 +27,16 @@
       </div>
     </div>
 
-    <div v-if="userInfo.role === 'admin'">
-      <div class="stat-grid">
+    <div v-if="isAdmin">
+      <div class="stat-grid stats-six">
         <div class="stat-card"><div>总工单</div><h2>{{ overview.totalRepairCount || 0 }}</h2></div>
         <div class="stat-card"><div>待审核</div><h2>{{ overview.pendingReviewCount || 0 }}</h2></div>
         <div class="stat-card"><div>处理中</div><h2>{{ overview.processingCount || 0 }}</h2></div>
-        <div class="stat-card"><div>平均评分</div><h2>{{ Number(overview.avgScore || 0).toFixed(1) }}</h2></div>
+        <div class="stat-card"><div>待评价</div><h2>{{ overview.pendingRatingCount || 0 }}</h2></div>
+        <div class="stat-card"><div>完成率</div><h2>{{ Number(overview.completionRate || 0).toFixed(1) }}%</h2></div>
+        <div class="stat-card"><div>满意度</div><h2>{{ Number(overview.satisfactionRate || 0).toFixed(1) }}%</h2></div>
       </div>
-      <div class="grid-two" style="margin-bottom: 16px">
+      <div class="grid-two" style="margin-bottom:16px">
         <el-card><template #header>报修类型统计</template><div ref="typeChartRef" class="chart-box"></div></el-card>
         <el-card><template #header>楼栋报修热度</template><div ref="buildingChartRef" class="chart-box"></div></el-card>
       </div>
@@ -42,10 +44,10 @@
 
     <el-tabs v-model="activeTab" type="border-card">
       <el-tab-pane v-if="isDorm" label="工单管理" name="orders">
-        <div class="toolbar" style="margin-bottom: 12px">
-          <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap">
-            <div style="font-weight: 700">工单列表</div>
-            <el-select v-model="orderFilter.status" placeholder="状态筛选" clearable style="width: 160px">
+        <div class="toolbar" style="margin-bottom:12px">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <div style="font-weight:700">工单列表</div>
+            <el-select v-model="orderFilter.status" placeholder="状态筛选" clearable style="width:160px">
               <el-option label="待审核" value="pending_review" />
               <el-option label="已驳回" value="rejected" />
               <el-option label="待接单" value="pending_accept" />
@@ -53,7 +55,7 @@
               <el-option label="待评价" value="pending_rating" />
               <el-option label="已完成" value="completed" />
             </el-select>
-            <el-input v-model="orderFilter.keyword" placeholder="学生/标题/宿舍" style="width: 220px" clearable />
+            <el-input v-model="orderFilter.keyword" placeholder="学生/标题/宿舍" style="width:220px" clearable />
           </div>
           <el-button @click="exportCsv('工单列表', filteredOrders, orderExportColumns)">导出 CSV</el-button>
         </div>
@@ -76,10 +78,10 @@
       </el-tab-pane>
 
       <el-tab-pane v-if="isRepairer" label="我的工单" name="repairerOrders">
-        <div class="toolbar" style="margin-bottom: 12px">
-          <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap">
-            <div style="font-weight: 700">维修任务</div>
-            <el-select v-model="repairerFilter.status" placeholder="状态筛选" clearable style="width: 160px">
+        <div class="toolbar" style="margin-bottom:12px">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <div style="font-weight:700">维修任务</div>
+            <el-select v-model="repairerFilter.status" placeholder="状态筛选" clearable style="width:160px">
               <el-option label="待接单" value="pending_accept" />
               <el-option label="处理中" value="processing" />
               <el-option label="待评价" value="pending_rating" />
@@ -104,34 +106,68 @@
         </el-table>
       </el-tab-pane>
 
+      <el-tab-pane v-if="isRepairer" label="个人统计" name="repairerStats">
+        <div class="toolbar" style="margin-bottom:12px">
+          <el-date-picker v-model="repairerStatsRange" type="daterange" start-placeholder="开始日期" end-placeholder="结束日期" value-format="YYYY-MM-DD" />
+          <el-button type="primary" @click="loadRepairerStats">查询统计</el-button>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-card"><div>累计工单</div><h2>{{ repairerStats.totalCount || 0 }}</h2></div>
+          <div class="stat-card"><div>已完成</div><h2>{{ repairerStats.completedCount || 0 }}</h2></div>
+          <div class="stat-card"><div>待接单</div><h2>{{ repairerStats.pendingCount || 0 }}</h2></div>
+          <div class="stat-card"><div>处理中</div><h2>{{ repairerStats.processingCount || 0 }}</h2></div>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-card"><div>完成率</div><h2>{{ Number(repairerStats.completionRate || 0).toFixed(1) }}%</h2></div>
+          <div class="stat-card"><div>平均处理时长</div><h2>{{ Number(repairerStats.avgHandleHours || 0).toFixed(2) }}h</h2></div>
+        </div>
+      </el-tab-pane>
+
       <el-tab-pane v-if="isDorm" label="宿舍管理" name="dorms">
         <div class="grid-two">
           <el-card>
-            <template #header>楼栋</template>
+            <template #header>楼栋与宿舍</template>
             <el-form :model="buildingForm" inline>
               <el-form-item><el-input v-model="buildingForm.buildingName" placeholder="楼栋名称" /></el-form-item>
               <el-form-item><el-input v-model="buildingForm.buildingCode" placeholder="楼栋编码" /></el-form-item>
               <el-form-item><el-input-number v-model="buildingForm.floorCount" :min="1" /></el-form-item>
               <el-form-item><el-button type="primary" @click="createBuilding">新增楼栋</el-button></el-form-item>
             </el-form>
-            <el-table :data="buildings" size="small">
-              <el-table-column prop="buildingName" label="名称" />
-              <el-table-column prop="buildingCode" label="编码" />
-              <el-table-column prop="floorCount" label="楼层" />
-            </el-table>
-          </el-card>
-          <el-card>
-            <template #header>宿舍</template>
+            <el-divider />
             <el-form :model="roomForm" inline>
-              <el-form-item><el-select v-model="roomForm.buildingId" placeholder="楼栋" style="width: 120px"><el-option v-for="b in buildings" :key="b.id" :label="b.buildingName" :value="b.id" /></el-select></el-form-item>
+              <el-form-item><el-select v-model="roomForm.buildingId" placeholder="楼栋" style="width:120px"><el-option v-for="b in buildings" :key="b.id" :label="b.buildingName" :value="b.id" /></el-select></el-form-item>
               <el-form-item><el-input v-model="roomForm.roomNo" placeholder="宿舍号" /></el-form-item>
               <el-form-item><el-input-number v-model="roomForm.capacity" :min="1" /></el-form-item>
+              <el-form-item><el-input v-model="roomForm.facilityDesc" placeholder="设施配置" style="width:220px" /></el-form-item>
               <el-form-item><el-button type="primary" @click="createRoom">新增宿舍</el-button></el-form-item>
             </el-form>
-            <el-table :data="rooms" size="small">
-              <el-table-column prop="buildingName" label="楼栋" />
-              <el-table-column prop="roomNo" label="宿舍" />
-              <el-table-column prop="capacity" label="容量" />
+            <el-table :data="rooms" size="small" style="margin-top:12px">
+              <el-table-column prop="buildingName" label="楼栋" width="90" />
+              <el-table-column prop="roomNo" label="宿舍" width="90" />
+              <el-table-column prop="capacity" label="容量" width="70" />
+              <el-table-column prop="facilityDesc" label="设施配置" min-width="180" />
+              <el-table-column label="操作" width="100">
+                <template #default="scope">
+                  <el-button size="small" @click="editRoom(scope.row)">编辑</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+          </el-card>
+
+          <el-card>
+            <template #header>入住学生维护</template>
+            <el-table :data="students" size="small">
+              <el-table-column prop="studentNo" label="学号" width="100" />
+              <el-table-column prop="realName" label="姓名" width="90" />
+              <el-table-column prop="buildingName" label="楼栋" width="90" />
+              <el-table-column prop="roomNo" label="宿舍" width="90" />
+              <el-table-column prop="bedNo" label="床位" width="80" />
+              <el-table-column prop="college" label="学院" min-width="120" />
+              <el-table-column label="操作" width="100">
+                <template #default="scope">
+                  <el-button size="small" @click="editStudentRoom(scope.row)">调整</el-button>
+                </template>
+              </el-table-column>
             </el-table>
           </el-card>
         </div>
@@ -139,8 +175,8 @@
 
       <el-tab-pane v-if="isDorm" label="公告管理" name="announcements">
         <el-form :model="announcementForm" inline>
-          <el-form-item><el-input v-model="announcementForm.title" placeholder="公告标题" style="width: 240px" /></el-form-item>
-          <el-form-item><el-input v-model="announcementForm.content" placeholder="公告内容" style="width: 380px" /></el-form-item>
+          <el-form-item><el-input v-model="announcementForm.title" placeholder="公告标题" style="width:240px" /></el-form-item>
+          <el-form-item><el-input v-model="announcementForm.content" placeholder="公告内容" style="width:380px" /></el-form-item>
           <el-form-item><el-button type="primary" @click="createAnnouncement">发布公告</el-button></el-form-item>
         </el-form>
         <el-table :data="announcements" stripe>
@@ -158,13 +194,15 @@
             <el-form :model="userForm" inline>
               <el-form-item><el-input v-model="userForm.username" placeholder="账号" /></el-form-item>
               <el-form-item><el-input v-model="userForm.realName" placeholder="姓名" /></el-form-item>
-              <el-form-item><el-select v-model="userForm.role" placeholder="角色" style="width: 140px"><el-option label="宿管" value="dorm_admin" /><el-option label="维修" value="repairer" /><el-option label="管理员" value="admin" /></el-select></el-form-item>
+              <el-form-item><el-select v-model="userForm.role" placeholder="角色" style="width:140px"><el-option label="宿管" value="dorm_admin" /><el-option label="维修" value="repairer" /><el-option label="管理员" value="admin" /></el-select></el-form-item>
+              <el-form-item v-if="userForm.role === 'repairer'"><el-select v-model="userForm.workTypeCode" placeholder="维修工种" style="width:160px"><el-option v-for="item in workTypeOptions" :key="item.dictCode" :label="item.dictName" :value="item.dictCode" /></el-select></el-form-item>
               <el-form-item><el-button type="primary" @click="createUser">新增用户</el-button></el-form-item>
             </el-form>
             <el-table :data="users" size="small">
               <el-table-column prop="username" label="账号" />
               <el-table-column prop="realName" label="姓名" />
               <el-table-column prop="role" label="角色" />
+              <el-table-column prop="workTypeName" label="工种" />
               <el-table-column prop="status" label="状态" />
             </el-table>
           </el-card>
@@ -175,6 +213,54 @@
               <el-table-column prop="operationType" label="操作" />
               <el-table-column prop="userName" label="用户" />
               <el-table-column prop="operationDesc" label="描述" min-width="180" />
+            </el-table>
+          </el-card>
+        </div>
+      </el-tab-pane>
+
+      <el-tab-pane v-if="isAdmin" label="基础配置" name="config">
+        <div class="grid-two">
+          <el-card>
+            <template #header><div class="toolbar" style="margin-bottom:0"><span>报修类型</span><el-button size="small" type="primary" @click="editRepairType()">新增</el-button></div></template>
+            <el-table :data="repairTypes" size="small">
+              <el-table-column prop="typeName" label="名称" />
+              <el-table-column prop="sortNo" label="排序" width="80" />
+              <el-table-column prop="status" label="状态" width="90" />
+              <el-table-column label="操作" width="150">
+                <template #default="scope">
+                  <el-button size="small" @click="editRepairType(scope.row)">编辑</el-button>
+                  <el-button size="small" type="danger" plain @click="removeRepairType(scope.row)">删除</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+          </el-card>
+          <el-card>
+            <template #header>
+              <div class="toolbar" style="margin-bottom:0">
+                <span>字典配置</span>
+                <div style="display:flex;gap:10px;align-items:center">
+                  <el-select v-model="dictFilterType" style="width:160px">
+                    <el-option label="全部字典" value="" />
+                    <el-option label="维修工种" value="repair_work_type" />
+                    <el-option label="评价指标" value="rating_indicator" />
+                    <el-option label="报修优先级" value="repair_priority" />
+                    <el-option label="公告类型" value="announcement_type" />
+                  </el-select>
+                  <el-button size="small" type="primary" @click="editDict()">新增</el-button>
+                </div>
+              </div>
+            </template>
+            <el-table :data="filteredDicts" size="small">
+              <el-table-column prop="dictType" label="类型" width="160" />
+              <el-table-column prop="dictCode" label="编码" width="130" />
+              <el-table-column prop="dictName" label="名称" />
+              <el-table-column prop="sortNo" label="排序" width="80" />
+              <el-table-column label="操作" width="150">
+                <template #default="scope">
+                  <el-button size="small" @click="editDict(scope.row)">编辑</el-button>
+                  <el-button size="small" type="danger" plain @click="removeDict(scope.row)">删除</el-button>
+                </template>
+              </el-table-column>
             </el-table>
           </el-card>
         </div>
@@ -190,27 +276,13 @@
           <div><strong>维修人员：</strong>{{ currentOrder.repairerName || '待分配' }}</div>
           <div><strong>类型：</strong>{{ currentOrder.repairTypeName }}</div>
           <div><strong>宿舍：</strong>{{ currentOrder.buildingName }} {{ currentOrder.roomNo }}</div>
-          <div style="grid-column: 1 / -1"><strong>标题：</strong>{{ currentOrder.title }}</div>
-          <div style="grid-column: 1 / -1"><strong>描述：</strong>{{ currentOrder.description }}</div>
-          <div v-if="currentOrder.rejectReason" style="grid-column: 1 / -1"><strong>驳回原因：</strong>{{ currentOrder.rejectReason }}</div>
-          <div v-if="currentOrder.resultDesc" style="grid-column: 1 / -1"><strong>维修结果：</strong>{{ currentOrder.resultDesc }}</div>
-          <div v-if="currentOrder.materialsUsed" style="grid-column: 1 / -1"><strong>使用材料：</strong>{{ currentOrder.materialsUsed }}</div>
-        </div>
-        <div style="margin-top: 20px">
-          <div class="section-title">现场与维修图片</div>
-          <el-empty v-if="!currentOrder.images?.length" description="暂无图片" />
-          <div v-else class="image-grid">
-            <div v-for="img in currentOrder.images" :key="img.id" class="image-card">
-              <div class="image-tag">{{ img.image_type === 'fault' ? '故障图' : '结果图' }}</div>
-              <img :src="fileUrl(img.file_path)" alt="工单图片" @click="previewImage(fileUrl(img.file_path))" />
-            </div>
-          </div>
-        </div>
-        <div style="margin-top: 20px">
-          <div class="section-title">流转记录</div>
-          <el-timeline>
-            <el-timeline-item v-for="flow in currentOrder.flows || []" :key="flow.id" :timestamp="flow.created_at">{{ flow.operator_name || '系统' }}：{{ flow.remark }}</el-timeline-item>
-          </el-timeline>
+          <div><strong>期望时间：</strong>{{ currentOrder.expectTime || '未填写' }}</div>
+          <div style="grid-column:1 / -1"><strong>标题：</strong>{{ currentOrder.title }}</div>
+          <div style="grid-column:1 / -1"><strong>描述：</strong>{{ currentOrder.description }}</div>
+          <div v-if="currentOrder.rejectReason" style="grid-column:1 / -1"><strong>驳回原因：</strong>{{ currentOrder.rejectReason }}</div>
+          <div v-if="currentOrder.resultDesc" style="grid-column:1 / -1"><strong>维修结果：</strong>{{ currentOrder.resultDesc }}</div>
+          <div v-if="currentOrder.materialsUsed" style="grid-column:1 / -1"><strong>使用材料：</strong>{{ currentOrder.materialsUsed }}</div>
+          <div v-if="currentOrder.rating" style="grid-column:1 / -1"><strong>学生评分：</strong>{{ currentOrder.rating.score }} 星 / {{ currentOrder.rating.content || '未填写评价内容' }}</div>
         </div>
       </div>
     </el-dialog>
@@ -231,10 +303,6 @@
         <el-button type="primary" @click="submitFeedback">提交</el-button>
       </template>
     </el-dialog>
-
-    <el-dialog v-model="previewVisible" title="图片预览" width="720px">
-      <img v-if="previewSrc" :src="previewSrc" alt="预览图" style="width: 100%; border-radius: 12px" />
-    </el-dialog>
   </div>
 </template>
 
@@ -245,7 +313,6 @@ import { Plus } from '@element-plus/icons-vue'
 import * as echarts from 'echarts'
 import api from './api'
 
-const baseUrl = 'http://localhost:8080'
 const token = ref(localStorage.getItem('admin_token') || '')
 const activeTab = ref('orders')
 const loginForm = reactive({ username: 'admin', password: '123456' })
@@ -255,44 +322,46 @@ const orders = ref([])
 const repairerOrders = ref([])
 const buildings = ref([])
 const rooms = ref([])
+const students = ref([])
 const announcements = ref([])
 const users = ref([])
 const logs = ref([])
+const dicts = ref([])
+const repairTypes = ref([])
 const repairTypeStats = ref([])
 const buildingHeatStats = ref([])
+const repairerStats = reactive({})
+const repairerStatsRange = ref([])
 const currentOrder = ref(null)
 const currentRepairOrder = ref(null)
 const orderDialogVisible = ref(false)
 const feedbackDialogVisible = ref(false)
-const previewVisible = ref(false)
-const previewSrc = ref('')
 const typeChartRef = ref(null)
 const buildingChartRef = ref(null)
 let typeChart = null
 let buildingChart = null
+
 const orderFilter = reactive({ status: '', keyword: '' })
 const repairerFilter = reactive({ status: '' })
+const dictFilterType = ref('')
 const buildingForm = reactive({ buildingName: '', buildingCode: '', floorCount: 6 })
-const roomForm = reactive({ buildingId: null, roomNo: '', capacity: 4 })
+const roomForm = reactive({ buildingId: null, roomNo: '', capacity: 4, facilityDesc: '' })
 const announcementForm = reactive({ title: '', content: '' })
-const userForm = reactive({ username: '', realName: '', role: 'repairer' })
+const userForm = reactive({ username: '', realName: '', role: 'repairer', workTypeCode: '' })
 const feedbackForm = reactive({ resultDesc: '', materialsUsed: '', finishTime: '', imagePaths: [] })
 
 const orderExportColumns = [['orderNo', '工单号'], ['studentName', '学生'], ['repairTypeName', '类型'], ['buildingName', '楼栋'], ['roomNo', '宿舍'], ['status', '状态'], ['title', '标题']]
 const repairerExportColumns = [['orderNo', '工单号'], ['studentName', '学生'], ['repairTypeName', '类型'], ['status', '状态'], ['title', '标题']]
-const userExportColumns = [['username', '账号'], ['realName', '姓名'], ['role', '角色'], ['status', '状态']]
+const userExportColumns = [['username', '账号'], ['realName', '姓名'], ['role', '角色'], ['workTypeName', '工种'], ['status', '状态']]
 const logExportColumns = [['moduleName', '模块'], ['operationType', '操作'], ['userName', '用户'], ['operationDesc', '描述']]
 
 const isAdmin = computed(() => userInfo.role === 'admin')
 const isDorm = computed(() => ['admin', 'dorm_admin'].includes(userInfo.role))
 const isRepairer = computed(() => userInfo.role === 'repairer')
-const filteredOrders = computed(() => orders.value.filter((item) => {
-  const statusOk = !orderFilter.status || item.status === orderFilter.status
-  const keyword = orderFilter.keyword.trim()
-  const keywordOk = !keyword || [item.studentName, item.title, item.roomNo, item.orderNo].some((v) => String(v || '').includes(keyword))
-  return statusOk && keywordOk
-}))
+const filteredOrders = computed(() => orders.value.filter((item) => (!orderFilter.status || item.status === orderFilter.status) && (!orderFilter.keyword.trim() || [item.studentName, item.title, item.roomNo, item.orderNo].some((v) => String(v || '').includes(orderFilter.keyword.trim())))))
 const filteredRepairerOrders = computed(() => repairerOrders.value.filter((item) => !repairerFilter.status || item.status === repairerFilter.status))
+const filteredDicts = computed(() => dicts.value.filter((item) => !dictFilterType.value || item.dictType === dictFilterType.value))
+const workTypeOptions = computed(() => dicts.value.filter((item) => item.dictType === 'repair_work_type'))
 
 async function login() {
   const { data } = await api.post('/auth/login', loginForm)
@@ -303,8 +372,7 @@ async function login() {
 }
 
 async function loadMe() {
-  const { data } = await api.get('/auth/me')
-  Object.assign(userInfo, data.data)
+  Object.assign(userInfo, (await api.get('/auth/me')).data.data)
   activeTab.value = isRepairer.value ? 'repairerOrders' : 'orders'
 }
 
@@ -315,20 +383,23 @@ function logout() {
 }
 
 async function refreshAll() {
-  if (!token.value) return
   if (isDorm.value) {
     orders.value = (await api.get('/dorm-admin/repair-orders')).data.data
     buildings.value = (await api.get('/dorm-admin/buildings')).data.data
     rooms.value = (await api.get('/dorm-admin/rooms')).data.data
+    students.value = (await api.get('/dorm-admin/students')).data.data
     announcements.value = (await api.get('/dorm-admin/announcements')).data.data
   }
   if (isRepairer.value) {
     repairerOrders.value = (await api.get('/repairer/repair-orders')).data.data
+    await loadRepairerStats()
   }
   if (isAdmin.value) {
     Object.assign(overview, (await api.get('/admin/statistics/overview')).data.data)
     users.value = (await api.get('/admin/users')).data.data
     logs.value = (await api.get('/admin/logs')).data.data
+    dicts.value = (await api.get('/admin/dicts')).data.data
+    repairTypes.value = (await api.get('/admin/repair-types')).data.data
     repairTypeStats.value = (await api.get('/admin/statistics/repair-type')).data.data
     buildingHeatStats.value = (await api.get('/admin/statistics/building-heat')).data.data
     await nextTick()
@@ -336,33 +407,21 @@ async function refreshAll() {
   }
 }
 
+async function loadRepairerStats() {
+  const params = repairerStatsRange.value?.length === 2 ? { dateFrom: repairerStatsRange.value[0], dateTo: repairerStatsRange.value[1] } : {}
+  Object.assign(repairerStats, (await api.get('/repairer/statistics', { params })).data.data)
+}
+
 function renderCharts() {
   if (!isAdmin.value) return
   if (typeChartRef.value) {
     typeChart ||= echarts.init(typeChartRef.value)
-    typeChart.setOption({
-      tooltip: { trigger: 'item' },
-      series: [{ type: 'pie', radius: ['40%', '70%'], data: repairTypeStats.value.map((i) => ({ name: i.name, value: i.value })) }]
-    })
+    typeChart.setOption({ tooltip: { trigger: 'item' }, series: [{ type: 'pie', radius: ['40%', '70%'], data: repairTypeStats.value.map((i) => ({ name: i.name, value: i.value })) }] })
   }
   if (buildingChartRef.value) {
     buildingChart ||= echarts.init(buildingChartRef.value)
-    buildingChart.setOption({
-      tooltip: {},
-      xAxis: { type: 'category', data: buildingHeatStats.value.map((i) => i.name) },
-      yAxis: { type: 'value' },
-      series: [{ type: 'bar', data: buildingHeatStats.value.map((i) => i.value), itemStyle: { color: '#2563eb' } }]
-    })
+    buildingChart.setOption({ tooltip: {}, xAxis: { type: 'category', data: buildingHeatStats.value.map((i) => i.name) }, yAxis: { type: 'value' }, series: [{ type: 'bar', data: buildingHeatStats.value.map((i) => i.value), itemStyle: { color: '#2563eb' } }] })
   }
-}
-
-function fileUrl(path) {
-  return `${baseUrl}${path}`
-}
-
-function previewImage(src) {
-  previewSrc.value = src
-  previewVisible.value = true
 }
 
 async function openOrder(row) {
@@ -376,8 +435,7 @@ async function openRepairerOrder(row) {
 }
 
 async function assign(row) {
-  const repairers = (await api.get('/dorm-admin/repairers')).data.data
-  const repairer = repairers[0]
+  const repairer = (await api.get('/dorm-admin/repairers')).data.data[0]
   if (!repairer) return ElMessage.error('暂无维修人员')
   await api.post(`/dorm-admin/repair-orders/${row.id}/assign`, { repairerId: repairer.id, remark: `自动分配给${repairer.realName}` })
   ElMessage.success('已分配')
@@ -422,44 +480,118 @@ async function submitFeedback() {
 
 async function createBuilding() {
   await api.post('/dorm-admin/buildings', buildingForm)
-  ElMessage.success('楼栋已新增')
   buildingForm.buildingName = ''
   buildingForm.buildingCode = ''
+  ElMessage.success('楼栋已新增')
   refreshAll()
 }
 
 async function createRoom() {
   await api.post('/dorm-admin/rooms', roomForm)
-  ElMessage.success('宿舍已新增')
   roomForm.roomNo = ''
+  roomForm.facilityDesc = ''
+  ElMessage.success('宿舍已新增')
+  refreshAll()
+}
+
+async function editRoom(row) {
+  const facilityDesc = window.prompt('请输入设施配置', row.facilityDesc || '')
+  if (facilityDesc === null) return
+  await api.put(`/dorm-admin/rooms/${row.id}`, { buildingId: row.buildingId, roomNo: row.roomNo, capacity: row.capacity, facilityDesc, status: row.status || 'enabled', remark: row.remark || '' })
+  ElMessage.success('宿舍已更新')
+  refreshAll()
+}
+
+async function editStudentRoom(row) {
+  const roomInput = window.prompt('请输入新的宿舍号或宿舍ID', row.roomNo || row.roomId || '')
+  if (roomInput === null) return
+  const bedNo = window.prompt('请输入床位号', row.bedNo || '')
+  if (bedNo === null) return
+  const normalizedInput = String(roomInput).trim()
+  const matchedByRoomNo = rooms.value.filter((item) => String(item.roomNo) === normalizedInput)
+  let targetRoom = null
+  if (matchedByRoomNo.length === 1) {
+    targetRoom = matchedByRoomNo[0]
+  } else if (matchedByRoomNo.length > 1) {
+    targetRoom = matchedByRoomNo.find((item) => String(item.buildingId) === String(row.buildingId)) || null
+    if (!targetRoom) {
+      return ElMessage.error('存在多个同名宿舍号，请改为输入宿舍ID')
+    }
+  } else {
+    targetRoom = rooms.value.find((item) => String(item.id) === normalizedInput) || null
+  }
+  if (!targetRoom) return ElMessage.error('宿舍不存在')
+  await api.put(`/dorm-admin/students/${row.id}/room`, { buildingId: targetRoom.buildingId, roomId: Number(targetRoom.id), bedNo })
+  ElMessage.success('入住信息已更新')
   refreshAll()
 }
 
 async function createAnnouncement() {
   await api.post('/dorm-admin/announcements', announcementForm)
-  ElMessage.success('公告已发布')
   announcementForm.title = ''
   announcementForm.content = ''
+  ElMessage.success('公告已发布')
   refreshAll()
 }
 
 async function createUser() {
   await api.post('/admin/users', { ...userForm, password: '123456', phone: '13800000000' })
-  ElMessage.success('用户已创建，默认密码 123456')
   userForm.username = ''
   userForm.realName = ''
+  userForm.workTypeCode = ''
+  ElMessage.success('用户已创建，默认密码 123456')
+  refreshAll()
+}
+
+async function editDict(row) {
+  const dictType = window.prompt('字典类型', row?.dictType || 'repair_work_type')
+  if (!dictType) return
+  const dictCode = window.prompt('字典编码', row?.dictCode || '')
+  if (!dictCode) return
+  const dictName = window.prompt('字典名称', row?.dictName || '')
+  if (!dictName) return
+  const sortNo = window.prompt('排序号', row?.sortNo || '1')
+  if (!sortNo) return
+  const status = window.prompt('状态(enabled/disabled)', row?.status || 'enabled')
+  const payload = { dictType, dictCode, dictName, sortNo: Number(sortNo), status: status || 'enabled' }
+  if (row?.id) await api.put(`/admin/dicts/${row.id}`, payload)
+  else await api.post('/admin/dicts', payload)
+  ElMessage.success('字典配置已保存')
+  refreshAll()
+}
+
+async function removeDict(row) {
+  if (!window.confirm(`确认删除字典项 ${row.dictName} 吗？`)) return
+  await api.delete(`/admin/dicts/${row.id}`)
+  ElMessage.success('字典项已删除')
+  refreshAll()
+}
+
+async function editRepairType(row) {
+  const typeName = window.prompt('报修类型名称', row?.typeName || '')
+  if (!typeName) return
+  const sortNo = window.prompt('排序号', row?.sortNo || '1')
+  if (!sortNo) return
+  const status = window.prompt('状态(enabled/disabled)', row?.status || 'enabled')
+  const payload = { typeName, sortNo: Number(sortNo), status: status || 'enabled' }
+  if (row?.id) await api.put(`/admin/repair-types/${row.id}`, payload)
+  else await api.post('/admin/repair-types', payload)
+  ElMessage.success('报修类型已保存')
+  refreshAll()
+}
+
+async function removeRepairType(row) {
+  if (!window.confirm(`确认删除报修类型 ${row.typeName} 吗？`)) return
+  await api.delete(`/admin/repair-types/${row.id}`)
+  ElMessage.success('报修类型已删除')
   refreshAll()
 }
 
 function exportCsv(fileName, rows, columns) {
-  if (!rows?.length) {
-    ElMessage.warning('当前没有可导出的数据')
-    return
-  }
+  if (!rows?.length) return ElMessage.warning('当前没有可导出的数据')
   const header = columns.map(([, label]) => label).join(',')
-  const body = rows.map((row) => columns.map(([key]) => `"${String(row[key] ?? '').replaceAll('"', '""')}"`).join(',')).join('\n')
-  const csv = `\ufeff${header}\n${body}`
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const body = rows.map((row) => columns.map(([key]) => `\"${String(row[key] ?? '').replaceAll('\"', '\"\"')}\"`).join(',')).join('\\n')
+  const blob = new Blob([`\\ufeff${header}\\n${body}`], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url

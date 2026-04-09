@@ -21,6 +21,15 @@
           <van-button type="success" block @click="register">注册</van-button>
         </div>
       </van-tab>
+      <van-tab title="找回密码">
+        <div class="section">
+          <van-field v-model="forgotForm.username" label="账号" />
+          <van-field v-model="forgotForm.studentNo" label="学号" />
+          <van-field v-model="forgotForm.phone" label="手机号" />
+          <van-field v-model="forgotForm.newPassword" label="新密码" type="password" />
+          <van-button type="warning" block @click="forgotPassword">重置密码</van-button>
+        </div>
+      </van-tab>
     </van-tabs>
   </div>
 
@@ -41,14 +50,15 @@
       <div style="font-weight: 700; margin-bottom: 8px">提交报修</div>
       <van-field v-model="repairForm.title" label="标题" placeholder="例如：水龙头漏水" />
       <van-field v-model="repairForm.description" label="描述" type="textarea" rows="3" placeholder="请填写具体故障情况" />
-      <van-field v-model="repairForm.expectTime" label="期望时间" placeholder="2026-03-25 18:00:00" />
+      <van-field label="期望时间">
+        <template #input>
+          <input v-model="repairForm.expectTimeInput" class="datetime-input" type="datetime-local" />
+        </template>
+      </van-field>
       <van-field label="报修类型">
         <template #input>
-          <van-radio-group v-model="repairForm.repairTypeId" direction="horizontal">
-            <van-radio :name="1">水电</van-radio>
-            <van-radio :name="2">家具</van-radio>
-            <van-radio :name="3">门窗</van-radio>
-            <van-radio :name="4">网络</van-radio>
+          <van-radio-group v-model="repairForm.repairTypeId" direction="horizontal" class="type-group">
+            <van-radio v-for="item in repairTypes" :key="item.id" :name="item.id">{{ item.typeName }}</van-radio>
           </van-radio-group>
         </template>
       </van-field>
@@ -76,15 +86,39 @@
           <p>状态：{{ currentOrder.status }}</p>
           <p>标题：{{ currentOrder.title }}</p>
           <p>描述：{{ currentOrder.description }}</p>
+          <p>期望时间：{{ currentOrder.expectTime || '未填写' }}</p>
           <p>维修人员：{{ currentOrder.repairerName || '待分配' }}</p>
           <p>维修结果：{{ currentOrder.resultDesc || '暂无' }}</p>
           <p v-if="currentOrder.rejectReason">驳回原因：{{ currentOrder.rejectReason }}</p>
+          <p v-if="currentOrder.rating">我的评分：{{ currentOrder.rating.score }} 星</p>
+          <p v-if="currentOrder.rating?.content">评价内容：{{ currentOrder.rating.content }}</p>
           <div style="margin-top: 14px; font-weight: 700">图片记录</div>
           <div v-if="currentOrder.images?.length" class="mobile-image-grid">
             <img v-for="img in currentOrder.images" :key="img.id" :src="fileUrl(img.file_path)" @click="previewImage(fileUrl(img.file_path))" />
           </div>
           <div v-else style="color:#64748b; margin-top: 8px">暂无图片</div>
-          <van-button v-if="currentOrder.status === 'pending_rating'" type="success" block style="margin-top: 16px" @click="rateOrder">提交 5 星好评</van-button>
+          <van-button v-if="currentOrder.status === 'pending_rating'" type="success" block style="margin-top: 16px" @click="openRating">提交评价</van-button>
+        </div>
+      </div>
+    </van-popup>
+
+    <van-popup v-model:show="ratingVisible" round position="bottom" :style="{ minHeight: '52%' }">
+      <div style="padding: 16px">
+        <div style="font-size: 20px; font-weight: 700; margin-bottom: 12px">服务评价</div>
+        <div v-if="ratingIndicators.length" class="indicator-box">
+          <div style="font-weight: 700; margin-bottom: 8px">评价参考</div>
+          <div class="indicator-list">
+            <span v-for="item in ratingIndicators" :key="item.id" class="indicator-chip">{{ item.dictName }}</span>
+          </div>
+        </div>
+        <div style="margin: 16px 0 12px">
+          <div style="font-weight: 700; margin-bottom: 8px">评分</div>
+          <van-rate v-model="ratingForm.score" :count="5" />
+        </div>
+        <van-field v-model="ratingForm.content" label="评价内容" type="textarea" rows="4" placeholder="请填写本次维修服务评价" />
+        <div style="margin-top: 16px; display: flex; gap: 12px">
+          <van-button plain block @click="ratingVisible = false">取消</van-button>
+          <van-button type="success" block @click="rateOrder">提交</van-button>
         </div>
       </div>
     </van-popup>
@@ -102,13 +136,17 @@ import { onMounted, reactive, ref } from 'vue'
 import { showNotify, showToast } from 'vant'
 import api from './api'
 
-const baseUrl = 'http://localhost:8080'
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
+const baseUrl = apiBaseUrl.replace(/\/api\/?$/, '')
 const token = ref(localStorage.getItem('student_token') || '')
 const authTab = ref(0)
 const profile = reactive({})
 const announcements = ref([])
+const repairTypes = ref([])
+const ratingIndicators = ref([])
 const orders = ref([])
 const orderVisible = ref(false)
+const ratingVisible = ref(false)
 const previewVisible = ref(false)
 const previewImages = ref([])
 const previewIndex = ref(0)
@@ -116,10 +154,16 @@ const currentOrder = ref(null)
 const uploaderFiles = ref([])
 const loginForm = reactive({ username: 'student01', password: '123456' })
 const registerForm = reactive({ username: '', password: '', realName: '', phone: '', studentNo: '', college: '', major: '', className: '' })
-const repairForm = reactive({ repairTypeId: 1, title: '', description: '', expectTime: '', imagePaths: [] })
+const forgotForm = reactive({ username: '', studentNo: '', phone: '', newPassword: '' })
+const repairForm = reactive({ repairTypeId: null, title: '', description: '', expectTimeInput: '', imagePaths: [] })
+const ratingForm = reactive({ score: 5, content: '' })
 
 function fileUrl(path) {
   return `${baseUrl}${path}`
+}
+
+function toApiDateTime(value) {
+  return value ? `${value.replace('T', ' ')}:00` : ''
 }
 
 async function login() {
@@ -135,9 +179,24 @@ async function register() {
   authTab.value = 0
 }
 
+async function forgotPassword() {
+  await api.post('/auth/forgot-password', forgotForm)
+  showToast('密码已重置，请使用新密码登录')
+  forgotForm.username = ''
+  forgotForm.studentNo = ''
+  forgotForm.phone = ''
+  forgotForm.newPassword = ''
+  authTab.value = 0
+}
+
 async function bootstrap() {
   Object.assign(profile, (await api.get('/auth/me')).data.data)
   announcements.value = (await api.get('/student/announcements')).data.data
+  repairTypes.value = (await api.get('/student/repair-types')).data.data
+  ratingIndicators.value = (await api.get('/student/rating-indicators')).data.data
+  if (!repairForm.repairTypeId && repairTypes.value.length) {
+    repairForm.repairTypeId = repairTypes.value[0].id
+  }
   await loadOrders()
 }
 
@@ -153,13 +212,22 @@ async function afterRead(file) {
 }
 
 async function submitRepair() {
-  await api.post('/student/repair-orders', repairForm)
+  await api.post('/student/repair-orders', {
+    repairTypeId: repairForm.repairTypeId,
+    title: repairForm.title,
+    description: repairForm.description,
+    expectTime: toApiDateTime(repairForm.expectTimeInput),
+    imagePaths: repairForm.imagePaths
+  })
   showNotify({ type: 'success', message: '报修提交成功' })
   repairForm.title = ''
   repairForm.description = ''
-  repairForm.expectTime = ''
+  repairForm.expectTimeInput = ''
   repairForm.imagePaths = []
   uploaderFiles.value = []
+  if (repairTypes.value.length) {
+    repairForm.repairTypeId = repairTypes.value[0].id
+  }
   await loadOrders()
 }
 
@@ -178,9 +246,16 @@ function previewImage(src) {
   previewVisible.value = true
 }
 
+function openRating() {
+  ratingForm.score = 5
+  ratingForm.content = ''
+  ratingVisible.value = true
+}
+
 async function rateOrder() {
-  await api.post(`/student/repair-orders/${currentOrder.value.id}/rating`, { score: 5, content: '维修及时，服务很好' })
+  await api.post(`/student/repair-orders/${currentOrder.value.id}/rating`, { score: ratingForm.score, content: ratingForm.content })
   showToast('评价成功')
+  ratingVisible.value = false
   orderVisible.value = false
   await loadOrders()
 }

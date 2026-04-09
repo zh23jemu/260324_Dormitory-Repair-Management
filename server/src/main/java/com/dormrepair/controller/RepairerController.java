@@ -47,7 +47,10 @@ public class RepairerController {
     }
 
     @GetMapping("/statistics")
-    public ApiResponse<Map<String, Object>> statistics() {
-        return ApiResponse.success(repairerService.statistics());
+    public ApiResponse<Map<String, Object>> statistics(
+            @RequestParam(required = false) String dateFrom,
+            @RequestParam(required = false) String dateTo
+    ) {
+        return ApiResponse.success(repairerService.statistics(dateFrom, dateTo));
     }
 }

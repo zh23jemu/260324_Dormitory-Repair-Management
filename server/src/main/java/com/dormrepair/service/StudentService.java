@@ -57,6 +57,16 @@ public class StudentService {
         logService.log(user.id(), "报修申请", "新增", "提交报修工单: " + orderId);
     }
 
+    public List<Map<String, Object>> repairTypes() {
+        SecurityUtils.requireRole("student");
+        return commonQueryService.list("select id, type_name as typeName, sort_no as sortNo, status from repair_type where status = 'enabled' order by sort_no asc, id asc");
+    }
+
+    public List<Map<String, Object>> ratingIndicators() {
+        SecurityUtils.requireRole("student");
+        return commonQueryService.list("select id, dict_code as dictCode, dict_name as dictName, sort_no as sortNo from sys_dict where dict_type = 'rating_indicator' and status = 'enabled' order by sort_no asc, id asc");
+    }
+
     public List<Map<String, Object>> myRepairOrders(String status) {
         SecurityUtils.requireRole("student");
         JwtUser user = SecurityUtils.currentUser();

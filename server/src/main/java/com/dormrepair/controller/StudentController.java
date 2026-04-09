@@ -35,6 +35,16 @@ public class StudentController {
         return ApiResponse.success(dormAdminService.announcements());
     }
 
+    @GetMapping("/repair-types")
+    public ApiResponse<List<Map<String, Object>>> repairTypes() {
+        return ApiResponse.success(studentService.repairTypes());
+    }
+
+    @GetMapping("/rating-indicators")
+    public ApiResponse<List<Map<String, Object>>> ratingIndicators() {
+        return ApiResponse.success(studentService.ratingIndicators());
+    }
+
     @PostMapping("/repair-orders")
     public ApiResponse<Void> createRepairOrder(@Valid @RequestBody RepairCreateRequest request) {
         studentService.createRepairOrder(request);

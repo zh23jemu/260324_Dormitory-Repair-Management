@@ -33,3 +33,31 @@ body {
   object-fit: cover;
   border-radius: 12px;
 }
+.datetime-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  color: #111827;
+}
+.type-group {
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.indicator-box {
+  padding: 12px;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+.indicator-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.indicator-chip {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 12px;
+}

@@ -1,10 +1,10 @@
-INSERT INTO user (id, username, password, real_name, phone, role, status, created_at, updated_at) VALUES
-(1, 'admin', '123456', '系统管理员', '13800000000', 'admin', 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00'),
-(2, 'dorm01', '123456', '一号宿管', '13800000001', 'dorm_admin', 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00'),
-(3, 'repair01', '123456', '维修员张工', '13800000002', 'repairer', 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00'),
-(4, 'student01', '123456', '张三', '13800000003', 'student', 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00'),
-(5, 'repair02', '123456', '维修员李工', '13800000004', 'repairer', 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00'),
-(6, 'student02', '123456', '李四', '13800000005', 'student', 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00');
+INSERT INTO user (id, username, password, real_name, phone, role, work_type_code, status, created_at, updated_at) VALUES
+(1, 'admin', '123456', '系统管理员', '13800000000', 'admin', NULL, 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00'),
+(2, 'dorm01', '123456', '一号宿管', '13800000001', 'dorm_admin', NULL, 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00'),
+(3, 'repair01', '123456', '维修员张工', '13800000002', 'repairer', 'electrician', 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00'),
+(4, 'student01', '123456', '张三', '13800000003', 'student', NULL, 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00'),
+(5, 'repair02', '123456', '维修员李工', '13800000004', 'repairer', 'carpenter', 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00'),
+(6, 'student02', '123456', '李四', '13800000005', 'student', NULL, 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00');
 
 INSERT INTO dorm_building (id, building_name, building_code, gender_type, floor_count, remark) VALUES
 (1, '一号楼', 'B1', 'male', 6, '男生宿舍'),
@@ -72,7 +72,13 @@ INSERT INTO repair_rating (id, repair_order_id, student_id, score, content, crea
 INSERT INTO sys_dict (id, dict_type, dict_code, dict_name, sort_no, status) VALUES
 (1, 'repair_priority', 'normal', '普通', 1, 'enabled'),
 (2, 'repair_priority', 'urgent', '紧急', 2, 'enabled'),
-(3, 'announcement_type', 'notice', '通知公告', 1, 'enabled');
+(3, 'announcement_type', 'notice', '通知公告', 1, 'enabled'),
+(4, 'repair_work_type', 'electrician', '水电维修', 1, 'enabled'),
+(5, 'repair_work_type', 'carpenter', '家具维修', 2, 'enabled'),
+(6, 'repair_work_type', 'network', '网络维修', 3, 'enabled'),
+(7, 'rating_indicator', 'response_speed', '响应速度', 1, 'enabled'),
+(8, 'rating_indicator', 'service_attitude', '服务态度', 2, 'enabled'),
+(9, 'rating_indicator', 'repair_quality', '维修质量', 3, 'enabled');
 
 INSERT INTO sys_log (id, user_id, module_name, operation_type, operation_desc, ip, created_at) VALUES
 (1, 1, '系统', '初始化', '系统完成基础数据初始化', '127.0.0.1', '2026-03-25 09:00:00'),

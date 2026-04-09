@@ -7,6 +7,7 @@ public record UserCreateRequest(
         @NotBlank String password,
         @NotBlank String realName,
         String phone,
-        @NotBlank String role
+        @NotBlank String role,
+        String workTypeCode
 ) {
 }

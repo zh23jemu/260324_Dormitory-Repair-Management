@@ -1,6 +1,8 @@
 package com.dormrepair.controller;
 
 import com.dormrepair.common.ApiResponse;
+import com.dormrepair.dto.admin.DictSaveRequest;
+import com.dormrepair.dto.admin.RepairTypeSaveRequest;
 import com.dormrepair.dto.admin.StatusUpdateRequest;
 import com.dormrepair.dto.admin.UserCreateRequest;
 import com.dormrepair.dto.admin.UserUpdateRequest;
@@ -10,6 +12,7 @@ import com.dormrepair.service.AuthService;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -87,5 +90,46 @@ public class AdminController {
     @GetMapping("/dicts")
     public ApiResponse<List<Map<String, Object>>> dicts() {
         return ApiResponse.success(adminService.dicts());
+    }
+
+    @PostMapping("/dicts")
+    public ApiResponse<Void> createDict(@Valid @RequestBody DictSaveRequest request) {
+        adminService.createDict(request);
+        return ApiResponse.success();
+    }
+
+    @PutMapping("/dicts/{id}")
+    public ApiResponse<Void> updateDict(@PathVariable Long id, @Valid @RequestBody DictSaveRequest request) {
+        adminService.updateDict(id, request);
+        return ApiResponse.success();
+    }
+
+    @DeleteMapping("/dicts/{id}")
+    public ApiResponse<Void> deleteDict(@PathVariable Long id) {
+        adminService.deleteDict(id);
+        return ApiResponse.success();
+    }
+
+    @GetMapping("/repair-types")
+    public ApiResponse<List<Map<String, Object>>> repairTypes() {
+        return ApiResponse.success(adminService.repairTypes());
+    }
+
+    @PostMapping("/repair-types")
+    public ApiResponse<Void> createRepairType(@Valid @RequestBody RepairTypeSaveRequest request) {
+        adminService.createRepairType(request);
+        return ApiResponse.success();
+    }
+
+    @PutMapping("/repair-types/{id}")
+    public ApiResponse<Void> updateRepairType(@PathVariable Long id, @Valid @RequestBody RepairTypeSaveRequest request) {
+        adminService.updateRepairType(id, request);
+        return ApiResponse.success();
+    }
+
+    @DeleteMapping("/repair-types/{id}")
+    public ApiResponse<Void> deleteRepairType(@PathVariable Long id) {
+        adminService.deleteRepairType(id);
+        return ApiResponse.success();
     }
 }

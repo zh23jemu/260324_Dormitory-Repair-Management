@@ -23,6 +23,7 @@ CREATE TABLE user (
     real_name TEXT NOT NULL,
     phone TEXT,
     role TEXT NOT NULL,
+    work_type_code TEXT,
     status TEXT NOT NULL DEFAULT 'enabled',
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL

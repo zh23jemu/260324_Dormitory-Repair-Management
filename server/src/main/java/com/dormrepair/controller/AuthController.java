@@ -1,6 +1,7 @@
 package com.dormrepair.controller;
 
 import com.dormrepair.common.ApiResponse;
+import com.dormrepair.dto.auth.ForgotPasswordRequest;
 import com.dormrepair.dto.auth.LoginRequest;
 import com.dormrepair.dto.auth.PasswordRequest;
 import com.dormrepair.dto.auth.RegisterRequest;
@@ -34,6 +35,12 @@ public class AuthController {
     @PostMapping("/register")
     public ApiResponse<Void> register(@Valid @RequestBody RegisterRequest request) {
         authService.register(request);
+        return ApiResponse.success();
+    }
+
+    @PostMapping("/forgot-password")
+    public ApiResponse<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        authService.forgotPassword(request);
         return ApiResponse.success();
     }
 

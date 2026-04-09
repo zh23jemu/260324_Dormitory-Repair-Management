@@ -24,6 +24,9 @@ body {
   gap: 12px;
   margin-bottom: 16px;
 }
+.stats-six {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
 .stat-card {
   padding: 16px;
   border-radius: 16px;
@@ -51,7 +54,7 @@ body {
   margin-bottom: 16px;
 }
 @media (max-width: 900px) {
-  .grid-two, .stat-grid {
+  .grid-two, .stat-grid, .stats-six {
     grid-template-columns: 1fr;
   }
 }

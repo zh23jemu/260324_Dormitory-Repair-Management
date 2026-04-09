@@ -45,6 +45,8 @@ public class DormAdminService {
         Map<String, Object> detail = commonQueryService.one(baseOrderSql() + " where ro.id = ?", id);
         detail.put("images", commonQueryService.list("select id, image_type, file_path, created_at from repair_order_image where repair_order_id = ? order by id asc", id));
         detail.put("flows", commonQueryService.list("select rf.id, rf.from_status, rf.to_status, rf.remark, rf.created_at, u.real_name as operator_name from repair_flow rf left join user u on rf.operator_id = u.id where rf.repair_order_id = ? order by rf.id asc", id));
+        List<Map<String, Object>> ratings = commonQueryService.list("select score, content, created_at from repair_rating where repair_order_id = ?", id);
+        detail.put("rating", ratings.isEmpty() ? null : ratings.get(0));
         return detail;
     }
 

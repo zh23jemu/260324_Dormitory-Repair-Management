@@ -1,6 +1,7 @@
 package com.dormrepair.service;
 
 import com.dormrepair.common.BusinessException;
+import com.dormrepair.dto.auth.ForgotPasswordRequest;
 import com.dormrepair.dto.auth.LoginRequest;
 import com.dormrepair.dto.auth.PasswordRequest;
 import com.dormrepair.dto.auth.RegisterRequest;
@@ -73,6 +74,36 @@ public class AuthService {
                 userId, request.studentNo(), null, request.college(), request.major(), request.className(), now, now
         );
         logService.log(userId, "认证", "注册", request.username() + " 注册学生账号");
+    }
+
+    public void forgotPassword(ForgotPasswordRequest request) {
+        Map<String, Object> user = jdbcTemplate.query(
+                "select u.id, u.username, u.role, u.phone, sp.student_no from user u left join student_profile sp on u.id = sp.user_id where u.username = ?",
+                rs -> {
+                    if (!rs.next()) {
+                        return null;
+                    }
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("id", rs.getLong("id"));
+                    row.put("username", rs.getString("username"));
+                    row.put("role", rs.getString("role"));
+                    row.put("phone", rs.getString("phone"));
+                    row.put("studentNo", rs.getString("student_no"));
+                    return row;
+                },
+                request.username()
+        );
+        if (user == null) {
+            throw new BusinessException("账号不存在");
+        }
+        if (!"student".equals(user.get("role"))) {
+            throw new BusinessException("仅学生账号支持自助找回密码");
+        }
+        if (!request.studentNo().equals(user.get("studentNo")) || !request.phone().equals(user.get("phone"))) {
+            throw new BusinessException("账号、学号或手机号不匹配");
+        }
+        jdbcTemplate.update("update user set password = ?, updated_at = ? where id = ?", request.newPassword(), TimeUtils.now(), user.get("id"));
+        logService.log(((Number) user.get("id")).longValue(), "认证", "找回密码", request.username() + " 自助找回密码");
     }
 
     public Map<String, Object> me(Long userId) {
