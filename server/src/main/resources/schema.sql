@@ -71,7 +71,7 @@ CREATE TABLE student_profile (
 CREATE TABLE repair_type (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     type_name TEXT NOT NULL UNIQUE,
-    sort_no INTEGER DEFAULT 0,
+    sort_no INTEGER NOT NULL UNIQUE,
     status TEXT NOT NULL DEFAULT 'enabled'
 );
 

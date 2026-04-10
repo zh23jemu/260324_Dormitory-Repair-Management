@@ -140,6 +140,10 @@ public class AdminService {
         if (count != null && count > 0) {
             throw new BusinessException("报修类型已存在");
         }
+        Integer sortCount = jdbcTemplate.queryForObject("select count(*) from repair_type where sort_no = ?", Integer.class, request.sortNo());
+        if (sortCount != null && sortCount > 0) {
+            throw new BusinessException("排序号已存在");
+        }
         jdbcTemplate.update("insert into repair_type(type_name, sort_no, status) values (?, ?, ?)", request.typeName(), request.sortNo(), request.status());
         logService.log(SecurityUtils.currentUser().id(), "基础配置", "新增", "新增报修类型: " + request.typeName());
     }
@@ -150,15 +154,23 @@ public class AdminService {
         if (count != null && count > 0) {
             throw new BusinessException("报修类型已存在");
         }
+        Integer sortCount = jdbcTemplate.queryForObject("select count(*) from repair_type where sort_no = ? and id <> ?", Integer.class, request.sortNo(), id);
+        if (sortCount != null && sortCount > 0) {
+            throw new BusinessException("排序号已存在");
+        }
         jdbcTemplate.update("update repair_type set type_name = ?, sort_no = ?, status = ? where id = ?", request.typeName(), request.sortNo(), request.status(), id);
         logService.log(SecurityUtils.currentUser().id(), "基础配置", "修改", "修改报修类型: " + id);
     }
 
     public void deleteRepairType(Long id) {
         SecurityUtils.requireRole("admin");
-        Integer count = jdbcTemplate.queryForObject("select count(*) from repair_order where repair_type_id = ?", Integer.class, id);
+        Integer count = jdbcTemplate.queryForObject(
+                "select count(*) from repair_order where repair_type_id = ? and status not in ('completed', 'rejected')",
+                Integer.class,
+                id
+        );
         if (count != null && count > 0) {
-            throw new BusinessException("该报修类型已被工单使用，不能删除");
+            throw new BusinessException("该报修类型存在未完成工单，不能删除");
         }
         jdbcTemplate.update("delete from repair_type where id = ?", id);
         logService.log(SecurityUtils.currentUser().id(), "基础配置", "删除", "删除报修类型: " + id);

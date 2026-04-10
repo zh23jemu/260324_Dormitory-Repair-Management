@@ -303,6 +303,30 @@
         <el-button type="primary" @click="submitFeedback">提交</el-button>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="repairTypeDialogVisible" :title="repairTypeForm.id ? '编辑报修类型' : '新增报修类型'" width="520px">
+      <el-form :model="repairTypeForm" label-width="90px">
+        <el-form-item label="类型名称">
+          <el-input v-model="repairTypeForm.typeName" placeholder="请输入报修类型名称" />
+        </el-form-item>
+        <el-form-item label="排序号">
+          <el-input-number v-model="repairTypeForm.sortNo" :min="1" :max="999" style="width:100%" />
+          <div style="font-size:12px;color:#6b7280;margin-top:6px">
+            建议排序号：{{ nextRepairTypeSortNo }}
+          </div>
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="repairTypeForm.status" style="width:100%">
+            <el-option label="启用" value="enabled" />
+            <el-option label="禁用" value="disabled" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="repairTypeDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitRepairType">确定</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -336,6 +360,7 @@ const currentOrder = ref(null)
 const currentRepairOrder = ref(null)
 const orderDialogVisible = ref(false)
 const feedbackDialogVisible = ref(false)
+const repairTypeDialogVisible = ref(false)
 const typeChartRef = ref(null)
 const buildingChartRef = ref(null)
 let typeChart = null
@@ -349,6 +374,13 @@ const roomForm = reactive({ buildingId: null, roomNo: '', capacity: 4, facilityD
 const announcementForm = reactive({ title: '', content: '' })
 const userForm = reactive({ username: '', realName: '', role: 'repairer', workTypeCode: '' })
 const feedbackForm = reactive({ resultDesc: '', materialsUsed: '', finishTime: '', imagePaths: [] })
+const repairTypeForm = reactive({ id: null, typeName: '', sortNo: 1, status: 'enabled' })
+const nextRepairTypeSortNo = computed(() => {
+  const used = new Set(repairTypes.value.map((item) => Number(item.sortNo)).filter((item) => Number.isFinite(item) && item > 0))
+  let candidate = 1
+  while (used.has(candidate)) candidate += 1
+  return candidate
+})
 
 const orderExportColumns = [['orderNo', '工单号'], ['studentName', '学生'], ['repairTypeName', '类型'], ['buildingName', '楼栋'], ['roomNo', '宿舍'], ['status', '状态'], ['title', '标题']]
 const repairerExportColumns = [['orderNo', '工单号'], ['studentName', '学生'], ['repairTypeName', '类型'], ['status', '状态'], ['title', '标题']]
@@ -568,15 +600,28 @@ async function removeDict(row) {
 }
 
 async function editRepairType(row) {
-  const typeName = window.prompt('报修类型名称', row?.typeName || '')
-  if (!typeName) return
-  const sortNo = window.prompt('排序号', row?.sortNo || '1')
-  if (!sortNo) return
-  const status = window.prompt('状态(enabled/disabled)', row?.status || 'enabled')
-  const payload = { typeName, sortNo: Number(sortNo), status: status || 'enabled' }
-  if (row?.id) await api.put(`/admin/repair-types/${row.id}`, payload)
+  repairTypeForm.id = row?.id || null
+  repairTypeForm.typeName = row?.typeName || ''
+  repairTypeForm.sortNo = row?.sortNo || nextRepairTypeSortNo.value
+  repairTypeForm.status = row?.status || 'enabled'
+  repairTypeDialogVisible.value = true
+}
+
+async function submitRepairType() {
+  if (!repairTypeForm.typeName?.trim()) return ElMessage.warning('请输入报修类型名称')
+  const payload = {
+    typeName: repairTypeForm.typeName.trim(),
+    sortNo: Number(repairTypeForm.sortNo || 1),
+    status: repairTypeForm.status || 'enabled'
+  }
+  if (repairTypeForm.id) await api.put(`/admin/repair-types/${repairTypeForm.id}`, payload)
   else await api.post('/admin/repair-types', payload)
   ElMessage.success('报修类型已保存')
+  repairTypeDialogVisible.value = false
+  repairTypeForm.id = null
+  repairTypeForm.typeName = ''
+  repairTypeForm.sortNo = nextRepairTypeSortNo.value
+  repairTypeForm.status = 'enabled'
   refreshAll()
 }
 
