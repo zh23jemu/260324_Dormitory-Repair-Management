@@ -92,11 +92,11 @@ PC 管理端为 Vite + Vue 3 项目：
 
 默认地址与端口：
 
-- 后端：`http://localhost:8080`
-- 管理端：`http://localhost:5173`
-- 学生端：`http://localhost:5174`
+- 后端：`http://localhost:2360`
+- 管理端：`http://localhost:5183`
+- 学生端：`http://localhost:5184`
 
-前端均直接访问根路径 `/`，没有额外的前端路由体系。
+前端已切换为 Vue Router 结构，分别通过独立路由视图组织管理员端与学生端页面。
 
 ## Tech Stack
 
@@ -280,9 +280,8 @@ PC 管理端为 Vite + Vue 3 项目：
 
 当前两个前端都有几个重要约定：
 
-- 主要业务逻辑集中在单个 `App.vue` 中
-- 没有前端路由和页面拆分
-- Axios `baseURL` 固定为 `http://localhost:8080/api`
+- 已按角色拆分为多个视图组件，并通过 Vue Router 组织页面
+- 前端默认 API 地址为 `http://localhost:2360/api`，也可通过 `VITE_API_BASE_URL` 覆盖
 - 管理端默认账号占位是 `admin`
 - 学生端默认账号占位是 `student01`
 
@@ -324,4 +323,3 @@ PC 管理端为 Vite + Vue 3 项目：
 - 涉及上传逻辑时，优先保持“文件落地本地目录，数据库存路径”的当前模型，除非明确进行存储方案升级
 - 修改初始化策略前，先确认是否仍需要每次启动自动重建示例数据
 - 如要增强前端功能，优先考虑先把 `App.vue` 拆分组件，再继续堆叠业务
-

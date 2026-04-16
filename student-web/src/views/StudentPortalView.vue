@@ -143,7 +143,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { showNotify, showToast } from 'vant'
 import api from '../api'
 
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:2360/api'
 const baseUrl = apiBaseUrl.replace(/\/api\/?$/, '')
 const token = ref(localStorage.getItem('student_token') || '')
 const route = useRoute()

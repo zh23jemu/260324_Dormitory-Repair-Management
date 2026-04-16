@@ -19,37 +19,46 @@
 
 ```powershell
 cd C:\Coding\260324_Dormitory-Repair-Management\server
-mvn spring-boot:run
+cmd /c "mvn -Dspring-boot.run.arguments=--server.port=2360 spring-boot:run"
 ```
 
-后端默认地址：`http://localhost:8080`
+后端默认地址：`http://localhost:2360`
 
 ### 2. 启动管理端
 
 ```powershell
 cd C:\Coding\260324_Dormitory-Repair-Management\admin-web
 npm install
+$env:VITE_API_BASE_URL='http://localhost:2360/api'
 npm run dev
 ```
 
-管理端地址：`http://localhost:5173`
+管理端地址：`http://localhost:5183`
+未显式设置 `VITE_API_BASE_URL` 时，前端默认也会请求 `http://localhost:2360/api`
 
 ### 3. 启动学生端
 
 ```powershell
 cd C:\Coding\260324_Dormitory-Repair-Management\student-web
 npm install
+$env:VITE_API_BASE_URL='http://localhost:2360/api'
 npm run dev
 ```
 
-学生端地址：`http://localhost:5174`
+学生端地址：`http://localhost:5184`
 
 ## 一键启动
 
 ```powershell
 cd C:\Coding\260324_Dormitory-Repair-Management
-.\scripts\start-dev.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\start-dev.ps1
 ```
+
+说明：
+
+- Windows `PowerShell` 下推荐使用 `cmd /c "mvn -Dspring-boot.run.arguments=--server.port=2360 spring-boot:run"`
+- 如果仍想直接在 `PowerShell` 调 Maven，也可以使用 `mvn --% -Dspring-boot.run.arguments=--server.port=2360 spring-boot:run`
+- 不建议写成 `mvn spring-boot:run "-Dspring-boot.run.arguments=..."`，部分环境会出现参数解析异常
 
 ## 预置账号
 
