@@ -283,6 +283,27 @@
           <div v-if="currentOrder.resultDesc" style="grid-column:1 / -1"><strong>维修结果：</strong>{{ currentOrder.resultDesc }}</div>
           <div v-if="currentOrder.materialsUsed" style="grid-column:1 / -1"><strong>使用材料：</strong>{{ currentOrder.materialsUsed }}</div>
           <div v-if="currentOrder.rating" style="grid-column:1 / -1"><strong>学生评分：</strong>{{ currentOrder.rating.score }} 星 / {{ currentOrder.rating.content || '未填写评价内容' }}</div>
+          <div style="grid-column:1 / -1">
+            <strong>图片记录：</strong>
+            <div v-if="currentOrder.images?.length" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
+              <div
+                v-for="img in currentOrder.images"
+                :key="img.id"
+                style="width:96px"
+              >
+                <img
+                  :src="fileUrl(img.file_path)"
+                  :alt="img.image_type === 'result' ? '维修结果图片' : '故障图片'"
+                  style="width:96px;height:96px;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb;cursor:zoom-in"
+                  @click="previewOrderImage(img)"
+                />
+                <div style="font-size:12px;color:#6b7280;text-align:center;margin-top:4px">
+                  {{ img.image_type === 'result' ? '维修结果' : '故障图片' }}
+                </div>
+              </div>
+            </div>
+            <span v-else style="color:#6b7280;margin-left:8px">暂无图片</span>
+          </div>
         </div>
       </div>
     </el-dialog>
@@ -293,7 +314,13 @@
         <el-form-item label="材料"><el-input v-model="feedbackForm.materialsUsed" /></el-form-item>
         <el-form-item label="完成时间"><el-input v-model="feedbackForm.finishTime" placeholder="2026-03-25 18:00:00" /></el-form-item>
         <el-form-item label="维修图片">
-          <el-upload :http-request="uploadRepairImage" list-type="picture-card" :limit="3">
+          <el-upload
+            :http-request="uploadRepairImage"
+            list-type="picture-card"
+            :limit="3"
+            :file-list="feedbackUploadFiles"
+            :on-preview="handleFeedbackImagePreview"
+          >
             <el-icon><Plus /></el-icon>
           </el-upload>
         </el-form-item>
@@ -326,6 +353,18 @@
         <el-button @click="repairTypeDialogVisible = false">取消</el-button>
         <el-button type="primary" @click="submitRepairType">确定</el-button>
       </template>
+    </el-dialog>
+
+    <el-dialog v-model="feedbackPreviewVisible" title="图片预览" width="720px" destroy-on-close :close-on-press-escape="true">
+      <div style="display:flex;justify-content:center;align-items:center;min-height:320px">
+        <img
+          v-if="feedbackPreviewUrl"
+          :src="feedbackPreviewUrl"
+          alt="维修图片预览"
+          style="max-width:100%;max-height:70vh;object-fit:contain;cursor:zoom-out"
+          @click="closeFeedbackPreview"
+        />
+      </div>
     </el-dialog>
   </div>
 </template>
@@ -362,11 +401,13 @@ const currentOrder = ref(null)
 const currentRepairOrder = ref(null)
 const orderDialogVisible = ref(false)
 const feedbackDialogVisible = ref(false)
+const feedbackPreviewVisible = ref(false)
 const repairTypeDialogVisible = ref(false)
 const typeChartRef = ref(null)
 const buildingChartRef = ref(null)
 let typeChart = null
 let buildingChart = null
+let chartRenderTimer = null
 
 const orderFilter = reactive({ status: '', keyword: '' })
 const repairerFilter = reactive({ status: '' })
@@ -376,12 +417,21 @@ const roomForm = reactive({ buildingId: null, roomNo: '', capacity: 4, facilityD
 const announcementForm = reactive({ title: '', content: '' })
 const userForm = reactive({ username: '', realName: '', role: 'repairer', workTypeCode: '' })
 const feedbackForm = reactive({ resultDesc: '', materialsUsed: '', finishTime: '', imagePaths: [] })
+const feedbackUploadFiles = ref([])
+const feedbackPreviewUrl = ref('')
 const repairTypeForm = reactive({ id: null, typeName: '', sortNo: 1, status: 'enabled' })
 const nextRepairTypeSortNo = computed(() => {
   const used = new Set(repairTypes.value.map((item) => Number(item.sortNo)).filter((item) => Number.isFinite(item) && item > 0))
   let candidate = 1
   while (used.has(candidate)) candidate += 1
   return candidate
+})
+const apiOrigin = computed(() => {
+  try {
+    return new URL(api.defaults.baseURL).origin
+  } catch (error) {
+    return window.location.origin
+  }
 })
 
 const orderExportColumns = [['orderNo', '工单号'], ['studentName', '学生'], ['repairTypeName', '类型'], ['buildingName', '楼栋'], ['roomNo', '宿舍'], ['status', '状态'], ['title', '标题']]
@@ -480,13 +530,52 @@ async function loadRepairerStats() {
 
 function renderCharts() {
   if (!isAdmin.value) return
+  const scheduleRetry = () => {
+    if (chartRenderTimer) window.clearTimeout(chartRenderTimer)
+    chartRenderTimer = window.setTimeout(() => {
+      chartRenderTimer = null
+      renderCharts()
+    }, 120)
+  }
   if (typeChartRef.value) {
+    if (!typeChartRef.value.clientWidth || !typeChartRef.value.clientHeight) {
+      scheduleRetry()
+      return
+    }
     typeChart ||= echarts.init(typeChartRef.value)
-    typeChart.setOption({ tooltip: { trigger: 'item' }, series: [{ type: 'pie', radius: ['40%', '70%'], data: repairTypeStats.value.map((i) => ({ name: i.name, value: i.value })) }] })
+    typeChart.setOption({
+      tooltip: { trigger: 'item' },
+      series: [{
+        type: 'pie',
+        radius: ['40%', '70%'],
+        data: repairTypeStats.value.map((item) => ({
+          name: item.name || '未命名类型',
+          value: Number(item.value || 0)
+        }))
+      }]
+    })
+    typeChart.resize()
   }
   if (buildingChartRef.value) {
+    if (!buildingChartRef.value.clientWidth || !buildingChartRef.value.clientHeight) {
+      scheduleRetry()
+      return
+    }
     buildingChart ||= echarts.init(buildingChartRef.value)
-    buildingChart.setOption({ tooltip: {}, xAxis: { type: 'category', data: buildingHeatStats.value.map((i) => i.name) }, yAxis: { type: 'value' }, series: [{ type: 'bar', data: buildingHeatStats.value.map((i) => i.value), itemStyle: { color: '#2563eb' } }] })
+    buildingChart.setOption({
+      tooltip: {},
+      xAxis: {
+        type: 'category',
+        data: buildingHeatStats.value.map((item) => item.name || '未命名楼栋')
+      },
+      yAxis: { type: 'value' },
+      series: [{
+        type: 'bar',
+        data: buildingHeatStats.value.map((item) => Number(item.value || 0)),
+        itemStyle: { color: '#2563eb' }
+      }]
+    })
+    buildingChart.resize()
   }
 }
 
@@ -526,6 +615,9 @@ function openFeedback(row) {
   feedbackForm.materialsUsed = ''
   feedbackForm.finishTime = new Date().toISOString().slice(0, 19).replace('T', ' ')
   feedbackForm.imagePaths = []
+  feedbackUploadFiles.value = []
+  feedbackPreviewUrl.value = ''
+  feedbackPreviewVisible.value = false
   feedbackDialogVisible.value = true
 }
 
@@ -534,7 +626,33 @@ async function uploadRepairImage(option) {
   formData.append('file', option.file)
   const { data } = await api.post('/common/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
   feedbackForm.imagePaths.push(data.data.filePath)
-  option.onSuccess(data)
+  const uploadedFile = {
+    name: option.file.name,
+    url: fileUrl(data.data.filePath)
+  }
+  feedbackUploadFiles.value = [...feedbackUploadFiles.value, uploadedFile]
+  option.onSuccess({ ...data, url: uploadedFile.url }, uploadedFile)
+}
+
+function fileUrl(path) {
+  if (!path) return ''
+  if (/^https?:\/\//.test(path)) return path
+  return `${apiOrigin.value}${path}`
+}
+
+function handleFeedbackImagePreview(file) {
+  const rawUrl = file.url || file.response?.data?.filePath || ''
+  feedbackPreviewUrl.value = rawUrl ? fileUrl(rawUrl) : ''
+  feedbackPreviewVisible.value = Boolean(feedbackPreviewUrl.value)
+}
+
+function previewOrderImage(image) {
+  feedbackPreviewUrl.value = fileUrl(image.file_path)
+  feedbackPreviewVisible.value = Boolean(feedbackPreviewUrl.value)
+}
+
+function closeFeedbackPreview() {
+  feedbackPreviewVisible.value = false
 }
 
 async function submitFeedback() {
@@ -698,6 +816,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
+  if (chartRenderTimer) window.clearTimeout(chartRenderTimer)
   typeChart?.dispose()
   buildingChart?.dispose()
 })

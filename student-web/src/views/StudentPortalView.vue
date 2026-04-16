@@ -63,7 +63,14 @@
         </template>
       </van-field>
       <div style="margin: 10px 0 14px">
-        <van-uploader v-model="uploaderFiles" :after-read="afterRead" multiple :max-count="3" />
+        <van-uploader
+          v-model="uploaderFiles"
+          :after-read="afterRead"
+          :preview-full-image="false"
+          multiple
+          :max-count="3"
+          @click-preview="previewUploadImage"
+        />
       </div>
       <van-button type="primary" block @click="submitRepair">提交报修</van-button>
     </div>
@@ -129,7 +136,14 @@
       </div>
     </van-popup>
 
-    <van-image-preview v-model:show="previewVisible" :images="previewImages" :start-position="previewIndex" />
+    <van-image-preview
+      v-model:show="previewVisible"
+      :images="previewImages"
+      :start-position="previewIndex"
+      :close-on-click-image="true"
+      :close-on-click-overlay="true"
+      @close="closePreview"
+    />
 
     <div style="padding: 0 14px 12px">
       <van-button plain danger block @click="logout">退出登录</van-button>
@@ -138,7 +152,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { showNotify, showToast } from 'vant'
 import api from '../api'
@@ -269,8 +283,36 @@ async function showOrder(item) {
 
 function previewImage(src) {
   previewImages.value = (currentOrder.value?.images || []).map((img) => fileUrl(img.file_path))
-  previewIndex.value = previewImages.value.indexOf(src)
+  const index = previewImages.value.indexOf(src)
+  previewIndex.value = index >= 0 ? index : 0
   previewVisible.value = true
+}
+
+function previewUploadImage(file) {
+  previewImages.value = uploaderFiles.value
+    .map((item) => item.url || item.content || '')
+    .filter(Boolean)
+  const src = file.url || file.content || ''
+  const index = previewImages.value.indexOf(src)
+  previewIndex.value = index >= 0 ? index : 0
+  previewVisible.value = previewImages.value.length > 0
+}
+
+function closePreview() {
+  previewVisible.value = false
+}
+
+function handlePreviewKeydown(event) {
+  if (event.key === 'Escape' && previewVisible.value) {
+    closePreview()
+  }
+}
+
+function handlePreviewClick(event) {
+  if (!previewVisible.value) return
+  if (event.target instanceof Element && event.target.closest('.van-image-preview')) {
+    closePreview()
+  }
 }
 
 function openRating() {
@@ -294,6 +336,8 @@ function logout() {
 }
 
 onMounted(async () => {
+  window.addEventListener('keydown', handlePreviewKeydown)
+  window.addEventListener('click', handlePreviewClick, true)
   if (token.value) {
     try {
       await bootstrap()
@@ -301,5 +345,10 @@ onMounted(async () => {
       logout()
     }
   }
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handlePreviewKeydown)
+  window.removeEventListener('click', handlePreviewClick, true)
 })
 </script>
