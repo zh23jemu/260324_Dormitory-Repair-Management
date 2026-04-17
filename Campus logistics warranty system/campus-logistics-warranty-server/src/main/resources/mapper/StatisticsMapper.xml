@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.platform.warranty.mapper.StatisticsMapper">
+
+    <resultMap id="StatisticsDataMap" type="com.platform.warranty.domain.entity.StatisticsData">
+        <result column="name" property="name"/>
+        <result column="count" property="count"/>
+    </resultMap>
+
+    <!-- 统计各维修类型的报修数量 -->
+    <select id="getRepairTypeStatistics" resultMap="StatisticsDataMap">
+        SELECT
+            rt.name AS name,
+            COUNT(rr.id) AS count
+        FROM repair_record rr
+        LEFT JOIN repair_type rt ON rr.type_id = rt.id
+        GROUP BY rt.name
+        ORDER BY count DESC
+    </select>
+
+    <!-- 统计各地点的报修数量 -->
+    <select id="getRepairLocationStatistics" resultMap="StatisticsDataMap">
+        SELECT
+            location AS name,
+            COUNT(id) AS count
+        FROM repair_record
+        WHERE location IS NOT NULL AND location != ''
+        GROUP BY location
+        ORDER BY count DESC
+    </select>
+
+    <!-- 根据时间范围统计各维修类型的报修数量 -->
+    <select id="getRepairTypeStatisticsByTime" resultMap="StatisticsDataMap">
+        SELECT
+            rt.name AS name,
+            COUNT(rr.id) AS count
+        FROM repair_record rr
+        LEFT JOIN repair_type rt ON rr.type_id = rt.id
+        WHERE rr.create_time BETWEEN #{startTime} AND #{endTime}
+        GROUP BY rt.name
+        ORDER BY count DESC
+    </select>
+
+    <!-- 根据时间范围统计各地点的报修数量 -->
+    <select id="getRepairLocationStatisticsByTime" resultMap="StatisticsDataMap">
+        SELECT
+            location AS name,
+            COUNT(id) AS count
+        FROM repair_record
+        WHERE location IS NOT NULL AND location != ''
+        AND create_time BETWEEN #{startTime} AND #{endTime}
+        GROUP BY location
+        ORDER BY count DESC
+    </select>
+
+    <!-- 统计总体报修记录数量 -->
+    <select id="getTotalRepairCount" resultType="java.lang.Long">
+        SELECT COUNT(id) FROM repair_record
+    </select>
+
+    <!-- 统计各状态的报修记录数量 -->
+    <select id="getRepairStatusStatistics" resultMap="StatisticsDataMap">
+        SELECT
+            status AS name,
+            COUNT(id) AS count
+        FROM repair_record
+        GROUP BY status
+        ORDER BY count DESC
+    </select>
+
+</mapper>
