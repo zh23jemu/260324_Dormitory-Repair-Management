@@ -57,7 +57,7 @@ async function resetQuery() {
 }
 
 async function removeRating(row) {
-  await ElMessageBox.confirm(`确认删除工单 ${row.orderNo} 的评价吗？删除后该工单会回到待评价状态。`, '提示', { type: 'warning' })
+  await ElMessageBox.confirm(`确认删除工单 ${row.orderNo} 的评价吗？删除后工单仍保持已完成状态，仅不再展示该评价。`, '提示', { type: 'warning' })
   await api.delete(`/admin/ratings/${row.id}`)
   ElMessage.success('评价已删除')
   await loadRatings()

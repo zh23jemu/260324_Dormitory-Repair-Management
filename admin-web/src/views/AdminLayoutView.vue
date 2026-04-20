@@ -53,9 +53,9 @@ const allMenus = [
   { path: '/announcements', label: '公告管理', desc: '发布系统公告', roles: ['admin', 'dorm_admin'] },
   { path: '/users', label: '用户管理', desc: '账号与角色', roles: ['admin'] },
   { path: '/resources', label: '报修知识', desc: '知识库维护', roles: ['admin'] },
-  { path: '/forum-posts', label: '论坛管理', desc: '公开内容审核', roles: ['admin'] },
-  { path: '/service-messages', label: '服务留言', desc: '用户反馈处理', roles: ['admin'] },
-  { path: '/ratings', label: '评价管理', desc: '服务质量评价', roles: ['admin'] },
+  { path: '/forum-posts', label: '论坛管理', desc: '公开内容审核', roles: ['admin', 'dorm_admin'] },
+  { path: '/service-messages', label: '服务留言', desc: '用户反馈处理', roles: ['admin', 'dorm_admin'] },
+  { path: '/ratings', label: '评价管理', desc: '服务质量评价', roles: ['admin', 'dorm_admin'] },
   { path: '/materials', label: '耗材管理', desc: '库存与扣减', roles: ['admin'] },
   { path: '/config', label: '基础配置', desc: '类型与字典', roles: ['admin'] },
   { path: '/logs', label: '系统日志', desc: '操作留痕', roles: ['admin'] }

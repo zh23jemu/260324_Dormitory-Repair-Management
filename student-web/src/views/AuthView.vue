@@ -2,7 +2,7 @@
   <div class="auth-shell">
     <div class="auth-hero">
       <div class="auth-title">高校宿舍报修管理系统</div>
-      <div class="auth-subtitle">移动端学生入口，支持报修、查单、评价、查看维修工与知识库</div>
+      <div class="auth-subtitle">移动端学生入口，支持报修、查单、评价、留言、论坛和维修员信息查看</div>
     </div>
     <div class="section">
       <van-tabs v-model:active="activeTab" animated>

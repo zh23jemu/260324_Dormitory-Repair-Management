@@ -215,7 +215,7 @@ public class AdminService {
     }
 
     public List<Map<String, Object>> serviceMessages() {
-        SecurityUtils.requireRole("admin");
+        SecurityUtils.requireRole("admin", "dorm_admin");
         return commonQueryService.list(
                 "select sm.id, sm.title, sm.content, sm.image_path as imagePath, sm.status, sm.reply_content as replyContent, sm.replied_at as repliedAt, sm.created_at as createdAt, su.real_name as studentName, su.phone as studentPhone, au.real_name as repliedByName " +
                         "from service_message sm left join user su on sm.student_id = su.id left join user au on sm.replied_by = au.id order by sm.id desc"
@@ -223,7 +223,7 @@ public class AdminService {
     }
 
     public void replyServiceMessage(Long id, ServiceMessageReplyRequest request) {
-        SecurityUtils.requireRole("admin");
+        SecurityUtils.requireRole("admin", "dorm_admin");
         String now = TimeUtils.now();
         jdbcTemplate.update("update service_message set reply_content = ?, status = ?, replied_by = ?, replied_at = ?, updated_at = ? where id = ?",
                 request.replyContent(), "replied", SecurityUtils.currentUser().id(), now, now, id);
@@ -235,7 +235,7 @@ public class AdminService {
      * 学生端只展示 published 状态的帖子，管理员端需要看到全部状态，便于审核、隐藏和删除。
      */
     public List<Map<String, Object>> forumPosts(String status) {
-        SecurityUtils.requireRole("admin");
+        SecurityUtils.requireRole("admin", "dorm_admin");
         String sql = "select fp.id, fp.title, fp.content, fp.image_path as imagePath, fp.status, fp.created_at as createdAt, fp.updated_at as updatedAt, " +
                 "u.real_name as studentName, u.phone as studentPhone " +
                 "from forum_post fp left join user u on fp.student_id = u.id where 1 = 1";
@@ -251,7 +251,7 @@ public class AdminService {
      * published 表示公开展示，hidden 表示管理员隐藏；保留数据可以满足后台追溯需要。
      */
     public void updateForumPostStatus(Long id, StatusUpdateRequest request) {
-        SecurityUtils.requireRole("admin");
+        SecurityUtils.requireRole("admin", "dorm_admin");
         String status = request.status();
         if (!"published".equals(status) && !"hidden".equals(status)) {
             throw new BusinessException("论坛状态只能设置为 published 或 hidden");
@@ -265,7 +265,7 @@ public class AdminService {
      * 论坛内容属于学生公开交流数据，管理员保留最终删除能力，用于处理违规或无效帖子。
      */
     public void deleteForumPost(Long id) {
-        SecurityUtils.requireRole("admin");
+        SecurityUtils.requireRole("admin", "dorm_admin");
         jdbcTemplate.update("delete from forum_post where id = ?", id);
         logService.log(SecurityUtils.currentUser().id(), "论坛管理", "删除", "删除论坛帖子: " + id);
     }
@@ -275,7 +275,7 @@ public class AdminService {
      * 关联工单、学生、维修员和报修类型，让后台可以按服务过程查看评价来源。
      */
     public List<Map<String, Object>> ratings(Integer score) {
-        SecurityUtils.requireRole("admin");
+        SecurityUtils.requireRole("admin", "dorm_admin");
         String sql = "select rr.id, rr.repair_order_id as repairOrderId, rr.score, rr.content, rr.created_at as createdAt, " +
                 "ro.order_no as orderNo, ro.title as orderTitle, rt.type_name as repairTypeName, " +
                 "su.real_name as studentName, ru.real_name as repairerName " +
@@ -293,13 +293,12 @@ public class AdminService {
 
     /**
      * 删除不合规评价。
-     * 删除评价后，工单回到待评价状态，学生仍可重新提交一次规范评价。
+     * 这里按业务要求只移除评价展示数据，不回退工单状态，避免影响已完成工单的完成记录和统计口径。
      */
     public void deleteRating(Long id) {
-        SecurityUtils.requireRole("admin");
-        Map<String, Object> rating = commonQueryService.one("select id, repair_order_id as repairOrderId from repair_rating where id = ?", id);
+        SecurityUtils.requireRole("admin", "dorm_admin");
+        commonQueryService.one("select id from repair_rating where id = ?", id);
         jdbcTemplate.update("delete from repair_rating where id = ?", id);
-        jdbcTemplate.update("update repair_order set status = ?, updated_at = ? where id = ?", "pending_rating", TimeUtils.now(), rating.get("repairOrderId"));
         logService.log(SecurityUtils.currentUser().id(), "评价管理", "删除", "删除评价记录: " + id);
     }
 
