@@ -3,7 +3,7 @@
     <div class="section" v-if="order">
       <div class="section-head">
         <div class="section-title">工单详情</div>
-        <van-tag type="primary">{{ order.status }}</van-tag>
+        <van-tag type="primary">{{ repairOrderStatusText(order.status) }}</van-tag>
       </div>
       <van-cell-group inset>
         <van-cell title="工单号" :value="order.orderNo" />
@@ -41,7 +41,7 @@
         <strong>处理时间线</strong>
         <van-steps direction="vertical" :active="(order.flows || []).length - 1">
           <van-step v-for="item in order.flows || []" :key="item.id">
-            <h4>{{ item.to_status }}</h4>
+            <h4>{{ repairOrderStatusText(item.to_status) }}</h4>
             <p>{{ item.operator_name || '系统' }}：{{ item.remark }}</p>
             <p>{{ item.created_at }}</p>
           </van-step>
@@ -81,6 +81,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import api from '../../api'
 import { fileUrl } from '../../utils/file'
+import { repairOrderStatusText } from '../../utils/status'
 
 const route = useRoute()
 const router = useRouter()

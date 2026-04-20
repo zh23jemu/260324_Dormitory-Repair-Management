@@ -2,7 +2,7 @@
   <el-dialog :model-value="modelValue" title="工单详情" width="900px" @update:model-value="emit('update:modelValue', $event)">
     <div v-if="order" class="detail-grid">
       <div><strong>工单号：</strong>{{ order.orderNo }}</div>
-      <div><strong>状态：</strong>{{ order.status }}</div>
+      <div><strong>状态：</strong>{{ repairOrderStatusText(order.status) }}</div>
       <div><strong>学生：</strong>{{ order.studentName }}</div>
       <div><strong>维修人员：</strong>{{ order.repairerName || '待分配' }}</div>
       <div><strong>报修类型：</strong>{{ order.repairTypeName }}</div>
@@ -40,6 +40,7 @@
 <script setup>
 import { ref } from 'vue'
 import { fileUrl } from '../../../utils/file'
+import { repairOrderStatusText } from '../../../utils/status'
 
 defineProps({
   modelValue: { type: Boolean, default: false },

@@ -7,7 +7,9 @@
       <el-table-column prop="repairTypeName" label="类型" width="100" />
       <el-table-column prop="buildingName" label="楼栋" width="90" />
       <el-table-column prop="roomNo" label="宿舍" width="90" />
-      <el-table-column prop="status" label="状态" width="120" />
+      <el-table-column label="状态" width="120">
+        <template #default="{ row }">{{ repairOrderStatusText(row.status) }}</template>
+      </el-table-column>
       <el-table-column prop="title" label="标题" min-width="180" />
       <el-table-column label="操作" width="260">
         <template #default="{ row }">
@@ -27,6 +29,7 @@
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import api from '../../api'
+import { repairOrderStatusText } from '../../utils/status'
 import RepairFeedbackDialog from './components/RepairFeedbackDialog.vue'
 import RepairOrderDetailDialog from './components/RepairOrderDetailDialog.vue'
 

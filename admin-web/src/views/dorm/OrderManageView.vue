@@ -48,7 +48,9 @@
         <el-table-column prop="facilityName" label="关联设施" min-width="120" />
         <el-table-column prop="expectTime" label="期望时间" width="170" />
         <el-table-column prop="submittedAt" label="提交时间" width="170" />
-        <el-table-column prop="status" label="状态" width="120" />
+        <el-table-column label="状态" width="120">
+          <template #default="{ row }">{{ repairOrderStatusText(row.status) }}</template>
+        </el-table-column>
         <el-table-column label="操作" width="220" fixed="right">
           <template #default="{ row }">
             <el-button size="small" @click="openDetail(row)">详情</el-button>
@@ -68,6 +70,7 @@
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import api from '../../api'
+import { repairOrderStatusText } from '../../utils/status'
 import AssignRepairerDialog from './components/AssignRepairerDialog.vue'
 import OrderDetailDialog from './components/OrderDetailDialog.vue'
 

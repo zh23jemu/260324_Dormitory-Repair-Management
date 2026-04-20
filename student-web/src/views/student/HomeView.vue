@@ -59,7 +59,7 @@
         <van-button size="small" plain type="primary" to="/orders">全部工单</van-button>
       </div>
       <van-cell-group inset>
-        <van-cell v-for="item in summary.latestOrders || []" :key="item.id" :title="item.title" :label="item.orderNo" :value="item.status" is-link @click="$router.push(`/orders/${item.id}`)" />
+        <van-cell v-for="item in summary.latestOrders || []" :key="item.id" :title="item.title" :label="item.orderNo" :value="repairOrderStatusText(item.status)" is-link @click="$router.push(`/orders/${item.id}`)" />
       </van-cell-group>
     </div>
 
@@ -79,6 +79,7 @@
 import { onMounted, ref } from 'vue'
 import api from '../../api'
 import { fileUrl } from '../../utils/file'
+import { repairOrderStatusText } from '../../utils/status'
 
 const announcements = ref([])
 const summary = ref({})

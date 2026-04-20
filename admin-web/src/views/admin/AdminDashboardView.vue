@@ -36,6 +36,7 @@ import { nextTick, onMounted, onUnmounted, reactive, ref } from 'vue'
 import * as echarts from 'echarts'
 import api from '../../api'
 import { toPercent } from '../../utils/file'
+import { repairOrderStatusText } from '../../utils/status'
 
 const overview = reactive({})
 const dateRange = ref([])
@@ -84,7 +85,7 @@ function renderCharts() {
     statusChart ||= echarts.init(statusChartRef.value)
     statusChart.setOption({
       tooltip: { trigger: 'item' },
-      series: [{ type: 'pie', radius: '62%', data: statusStats.value.map((item) => ({ name: item.name, value: Number(item.value || 0) })) }]
+      series: [{ type: 'pie', radius: '62%', data: statusStats.value.map((item) => ({ name: repairOrderStatusText(item.name), value: Number(item.value || 0) })) }]
     })
   }
   if (repairerChartRef.value) {

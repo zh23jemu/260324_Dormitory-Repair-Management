@@ -13,7 +13,7 @@
           :key="item.id"
           :title="item.title"
           :label="`${item.repairTypeName || ''} / ${item.buildingName || ''}${item.roomNo || ''}`"
-          :value="item.status"
+          :value="repairOrderStatusText(item.status)"
           is-link
           @click="$router.push(`/orders/${item.id}`)"
         />
@@ -25,6 +25,7 @@
 <script setup>
 import { onMounted, ref, watch } from 'vue'
 import api from '../../api'
+import { repairOrderStatusText } from '../../utils/status'
 
 const status = ref('')
 const orders = ref([])
