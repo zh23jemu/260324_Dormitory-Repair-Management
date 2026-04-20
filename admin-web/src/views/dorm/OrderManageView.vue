@@ -59,54 +59,8 @@
       </el-table>
     </el-card>
 
-    <el-dialog v-model="detailVisible" title="工单详情" width="900px">
-      <div v-if="currentOrder" class="detail-grid">
-        <div><strong>工单号：</strong>{{ currentOrder.orderNo }}</div>
-        <div><strong>状态：</strong>{{ currentOrder.status }}</div>
-        <div><strong>学生：</strong>{{ currentOrder.studentName }}</div>
-        <div><strong>维修人员：</strong>{{ currentOrder.repairerName || '待分配' }}</div>
-        <div><strong>报修类型：</strong>{{ currentOrder.repairTypeName }}</div>
-        <div><strong>宿舍：</strong>{{ currentOrder.buildingName }} {{ currentOrder.roomNo }}</div>
-        <div><strong>关联设施：</strong>{{ currentOrder.facilityName || '未关联' }}</div>
-        <div><strong>期望时间：</strong>{{ currentOrder.expectTime || '未填写' }}</div>
-        <div style="grid-column:1 / -1"><strong>标题：</strong>{{ currentOrder.title }}</div>
-        <div style="grid-column:1 / -1"><strong>描述：</strong>{{ currentOrder.description }}</div>
-      </div>
-      <div class="section-title" style="margin-top:18px">处理时间线</div>
-      <el-timeline>
-        <el-timeline-item v-for="item in currentOrder?.flows || []" :key="item.id" :timestamp="item.created_at">
-          {{ item.operator_name || '系统' }}：{{ item.remark }}
-        </el-timeline-item>
-      </el-timeline>
-      <div class="section-title">图片记录</div>
-      <div v-if="currentOrder?.images?.length" class="image-grid">
-        <div v-for="img in currentOrder.images" :key="img.id" class="image-card">
-          <div class="image-tag">{{ img.image_type === 'result' ? '维修结果' : '故障图片' }}</div>
-          <img :src="fileUrl(img.file_path)" @click="previewImage(img.file_path)" />
-        </div>
-      </div>
-      <div v-else class="empty-text">暂无图片</div>
-    </el-dialog>
-
-    <el-dialog v-model="assignVisible" title="分配维修人员" width="760px">
-      <el-table :data="recommendedRepairers" size="small">
-        <el-table-column prop="realName" label="姓名" width="100" />
-        <el-table-column prop="workTypeName" label="工种" width="120" />
-        <el-table-column prop="phone" label="联系方式" width="130" />
-        <el-table-column prop="totalCount" label="累计工单" width="90" />
-        <el-table-column prop="completedCount" label="已完成" width="90" />
-        <el-table-column prop="avgScore" label="平均评分" width="90" />
-        <el-table-column label="操作" width="100">
-          <template #default="{ row }">
-            <el-button size="small" type="primary" @click="assign(row)">选择</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-    </el-dialog>
-
-    <el-dialog v-model="previewVisible" title="图片预览" width="760px">
-      <div class="preview-wrap"><img v-if="previewUrl" :src="previewUrl" class="preview-image" @click="previewVisible = false" /></div>
-    </el-dialog>
+    <OrderDetailDialog v-model="detailVisible" :order="currentOrder" />
+    <AssignRepairerDialog v-model="assignVisible" :repairers="recommendedRepairers" @assign="assign" />
   </div>
 </template>
 
@@ -114,7 +68,8 @@
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import api from '../../api'
-import { fileUrl } from '../../utils/file'
+import AssignRepairerDialog from './components/AssignRepairerDialog.vue'
+import OrderDetailDialog from './components/OrderDetailDialog.vue'
 
 const query = reactive({ keyword: '', status: '', repairTypeId: null, buildingId: null, repairerId: null })
 const orders = ref([])
@@ -124,8 +79,6 @@ const repairers = ref([])
 const recommendedRepairers = ref([])
 const detailVisible = ref(false)
 const assignVisible = ref(false)
-const previewVisible = ref(false)
-const previewUrl = ref('')
 const currentOrder = ref(null)
 const currentAssignOrder = ref(null)
 
@@ -162,11 +115,6 @@ async function reject(row) {
   await api.post(`/dorm-admin/repair-orders/${row.id}/reject`, { rejectReason: '信息不完整，请补充详细故障说明。' })
   ElMessage.success('已驳回')
   await loadOrders()
-}
-
-function previewImage(path) {
-  previewUrl.value = fileUrl(path)
-  previewVisible.value = true
 }
 
 onMounted(async () => {
