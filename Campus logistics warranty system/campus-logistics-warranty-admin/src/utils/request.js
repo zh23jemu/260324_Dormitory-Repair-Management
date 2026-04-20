@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { useStore } from '@/store/index'
+import { isDemoMode, mockRequest } from '@/mock/demo'
 
 // 创建 Axios 实例，并命名为 service
 const service = axios.create({
@@ -11,6 +12,18 @@ const service = axios.create({
 // 请求拦截器
 service.interceptors.request.use(
   (config) => {
+    // 演示模式下不访问真实后端，直接用自定义 adapter 返回模拟响应。
+    // 这样不需要启动 MySQL，也不会影响关闭演示模式后的正常联调。
+    if (isDemoMode) {
+      config.adapter = async () => ({
+        data: mockRequest(config),
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config,
+        request: {}
+      })
+    }
     const token = localStorage.getItem('token') // 假设 token 存储在 localStorage 中
     if (token) {
       config.headers.Authorization = `Bearer ${token}` // 设置 Authorization 请求头

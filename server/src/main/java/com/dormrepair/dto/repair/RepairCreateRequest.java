@@ -11,6 +11,7 @@ public record RepairCreateRequest(
         String expectTime,
         Long buildingId,
         Long roomId,
+        Long facilityId,
         List<String> imagePaths
 ) {
 }

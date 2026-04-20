@@ -3,8 +3,10 @@ package com.dormrepair.controller;
 import com.dormrepair.common.ApiResponse;
 import com.dormrepair.dto.admin.AnnouncementRequest;
 import com.dormrepair.dto.admin.BuildingRequest;
+import com.dormrepair.dto.admin.FacilityRequest;
 import com.dormrepair.dto.admin.RoomRequest;
 import com.dormrepair.dto.admin.StudentRoomRequest;
+import com.dormrepair.dto.repair.RepairOrderQueryRequest;
 import com.dormrepair.dto.repair.RepairAssignRequest;
 import com.dormrepair.dto.repair.RepairRejectRequest;
 import com.dormrepair.service.DormAdminService;
@@ -41,6 +43,11 @@ public class DormAdminController {
         return ApiResponse.success(dormAdminService.repairOrders(status));
     }
 
+    @PostMapping("/repair-orders/query")
+    public ApiResponse<List<Map<String, Object>>> repairOrders(@RequestBody RepairOrderQueryRequest request) {
+        return ApiResponse.success(dormAdminService.repairOrders(request));
+    }
+
     @GetMapping("/repair-orders/{id}")
     public ApiResponse<Map<String, Object>> repairOrderDetail(@PathVariable Long id) {
         return ApiResponse.success(dormAdminService.repairOrderDetail(id));
@@ -61,6 +68,16 @@ public class DormAdminController {
     @GetMapping("/repairers")
     public ApiResponse<List<Map<String, Object>>> repairers() {
         return ApiResponse.success(dormAdminService.repairers());
+    }
+
+    @GetMapping("/repair-types")
+    public ApiResponse<List<Map<String, Object>>> repairTypes() {
+        return ApiResponse.success(dormAdminService.repairTypes());
+    }
+
+    @GetMapping("/repairers/recommended")
+    public ApiResponse<List<Map<String, Object>>> recommendedRepairers(@RequestParam(required = false) Long repairTypeId) {
+        return ApiResponse.success(dormAdminService.recommendedRepairers(repairTypeId));
     }
 
     @GetMapping("/buildings")
@@ -94,6 +111,33 @@ public class DormAdminController {
     @PutMapping("/rooms/{id}")
     public ApiResponse<Void> updateRoom(@PathVariable Long id, @Valid @RequestBody RoomRequest request) {
         dormAdminService.updateRoom(id, request);
+        return ApiResponse.success();
+    }
+
+    @GetMapping("/facilities")
+    public ApiResponse<List<Map<String, Object>>> facilities(
+            @RequestParam(required = false) Long roomId,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String status
+    ) {
+        return ApiResponse.success(dormAdminService.facilities(roomId, keyword, status));
+    }
+
+    @PostMapping("/facilities")
+    public ApiResponse<Void> createFacility(@Valid @RequestBody FacilityRequest request) {
+        dormAdminService.createFacility(request);
+        return ApiResponse.success();
+    }
+
+    @PutMapping("/facilities/{id}")
+    public ApiResponse<Void> updateFacility(@PathVariable Long id, @Valid @RequestBody FacilityRequest request) {
+        dormAdminService.updateFacility(id, request);
+        return ApiResponse.success();
+    }
+
+    @DeleteMapping("/facilities/{id}")
+    public ApiResponse<Void> deleteFacility(@PathVariable Long id) {
+        dormAdminService.deleteFacility(id);
         return ApiResponse.success();
     }
 

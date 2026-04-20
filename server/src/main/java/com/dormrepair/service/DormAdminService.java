@@ -1,14 +1,18 @@
 package com.dormrepair.service;
 
+import com.dormrepair.common.BusinessException;
 import com.dormrepair.dto.admin.AnnouncementRequest;
 import com.dormrepair.dto.admin.BuildingRequest;
+import com.dormrepair.dto.admin.FacilityRequest;
 import com.dormrepair.dto.admin.RoomRequest;
 import com.dormrepair.dto.admin.StudentRoomRequest;
+import com.dormrepair.dto.repair.RepairOrderQueryRequest;
 import com.dormrepair.dto.repair.RepairAssignRequest;
 import com.dormrepair.dto.repair.RepairRejectRequest;
 import com.dormrepair.security.JwtUser;
 import com.dormrepair.util.SecurityUtils;
 import com.dormrepair.util.TimeUtils;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -35,6 +39,48 @@ public class DormAdminService {
         }
         sql += " order by ro.id desc";
         return commonQueryService.list(sql);
+    }
+
+    public List<Map<String, Object>> repairOrders(RepairOrderQueryRequest request) {
+        SecurityUtils.requireRole("dorm_admin", "admin");
+        StringBuilder sql = new StringBuilder(baseOrderSql()).append(" where 1=1");
+        List<Object> args = new ArrayList<>();
+        if (request != null) {
+            if (request.keyword() != null && !request.keyword().isBlank()) {
+                sql.append(" and (ro.order_no like ? or ro.title like ? or su.real_name like ? or dr.room_no like ?)");
+                String keyword = "%" + request.keyword().trim() + "%";
+                args.add(keyword);
+                args.add(keyword);
+                args.add(keyword);
+                args.add(keyword);
+            }
+            if (request.status() != null && !request.status().isBlank()) {
+                sql.append(" and ro.status = ?");
+                args.add(request.status());
+            }
+            if (request.repairTypeId() != null) {
+                sql.append(" and ro.repair_type_id = ?");
+                args.add(request.repairTypeId());
+            }
+            if (request.buildingId() != null) {
+                sql.append(" and ro.building_id = ?");
+                args.add(request.buildingId());
+            }
+            if (request.repairerId() != null) {
+                sql.append(" and ro.assigned_repairer_id = ?");
+                args.add(request.repairerId());
+            }
+            if (request.dateFrom() != null && !request.dateFrom().isBlank()) {
+                sql.append(" and ro.submitted_at >= ?");
+                args.add(request.dateFrom() + " 00:00:00");
+            }
+            if (request.dateTo() != null && !request.dateTo().isBlank()) {
+                sql.append(" and ro.submitted_at <= ?");
+                args.add(request.dateTo() + " 23:59:59");
+            }
+        }
+        sql.append(" order by ro.id desc");
+        return commonQueryService.list(sql.toString(), args.toArray());
     }
 
     public List<Map<String, Object>> pendingReviewOrders() {
@@ -69,7 +115,48 @@ public class DormAdminService {
     }
 
     public List<Map<String, Object>> repairers() {
-        return commonQueryService.list("select id, username, real_name as realName, phone, status from user where role = 'repairer' order by id asc");
+        return commonQueryService.list(
+                "select u.id, u.username, u.real_name as realName, u.phone, u.status, u.work_type_code as workTypeCode, d.dict_name as workTypeName, " +
+                        "(select count(*) from repair_order ro where ro.assigned_repairer_id = u.id) as totalCount, " +
+                        "(select count(*) from repair_order ro where ro.assigned_repairer_id = u.id and ro.status in ('pending_rating', 'completed')) as completedCount, " +
+                        "(select round(avg(rr.score), 2) from repair_rating rr left join repair_order ro on rr.repair_order_id = ro.id where ro.assigned_repairer_id = u.id) as avgScore " +
+                        "from user u left join sys_dict d on u.work_type_code = d.dict_code and d.dict_type = 'repair_work_type' where u.role = 'repairer' order by u.id asc"
+        );
+    }
+
+    /**
+     * 查询宿管侧可见的报修类型列表。
+     * 这里只提供读取能力，供工单筛选和分配场景使用；
+     * 真正的报修类型增删改仍然保留在管理员模块中，避免角色边界混乱。
+     *
+     * @return 报修类型列表，按排序号和主键升序返回
+     */
+    public List<Map<String, Object>> repairTypes() {
+        SecurityUtils.requireRole("dorm_admin", "admin");
+        return commonQueryService.list("select id, type_name as typeName, sort_no as sortNo, status from repair_type order by sort_no asc, id asc");
+    }
+
+    public List<Map<String, Object>> recommendedRepairers(Long repairTypeId) {
+        SecurityUtils.requireRole("dorm_admin", "admin");
+        String workTypeCode = null;
+        if (repairTypeId != null) {
+            Map<String, Object> type = commonQueryService.one("select type_name as typeName from repair_type where id = ?", repairTypeId);
+            String typeName = String.valueOf(type.get("typeName"));
+            if (typeName.contains("水")) workTypeCode = "electrician";
+            else if (typeName.contains("家具") || typeName.contains("门")) workTypeCode = "carpenter";
+            else if (typeName.contains("网")) workTypeCode = "network";
+        }
+        if (workTypeCode == null) {
+            return repairers();
+        }
+        return commonQueryService.list(
+                "select u.id, u.username, u.real_name as realName, u.phone, u.status, u.work_type_code as workTypeCode, d.dict_name as workTypeName, " +
+                        "(select count(*) from repair_order ro where ro.assigned_repairer_id = u.id) as totalCount, " +
+                        "(select count(*) from repair_order ro where ro.assigned_repairer_id = u.id and ro.status in ('pending_rating', 'completed')) as completedCount, " +
+                        "(select round(avg(rr.score), 2) from repair_rating rr left join repair_order ro on rr.repair_order_id = ro.id where ro.assigned_repairer_id = u.id) as avgScore " +
+                        "from user u left join sys_dict d on u.work_type_code = d.dict_code and d.dict_type = 'repair_work_type' where u.role = 'repairer' and u.work_type_code = ? order by u.id asc",
+                workTypeCode
+        );
     }
 
     public List<Map<String, Object>> buildings() {
@@ -90,6 +177,62 @@ public class DormAdminService {
         return commonQueryService.list("select dr.id, dr.room_no as roomNo, dr.capacity, dr.current_count as currentCount, dr.facility_desc as facilityDesc, dr.status, dr.remark, db.id as buildingId, db.building_name as buildingName from dorm_room dr left join dorm_building db on dr.building_id = db.id order by dr.id asc");
     }
 
+    public List<Map<String, Object>> facilities(Long roomId, String keyword, String status) {
+        StringBuilder sql = new StringBuilder(
+                "select df.id, df.room_id as roomId, df.facility_name as facilityName, df.facility_type as facilityType, df.brand, df.model_number as modelNumber, df.purchase_date as purchaseDate, df.status, df.remark, df.created_at as createdAt, dr.room_no as roomNo, db.building_name as buildingName " +
+                        "from dorm_facility df left join dorm_room dr on df.room_id = dr.id left join dorm_building db on dr.building_id = db.id where 1=1"
+        );
+        List<Object> args = new ArrayList<>();
+        if (roomId != null) {
+            sql.append(" and df.room_id = ?");
+            args.add(roomId);
+        }
+        if (keyword != null && !keyword.isBlank()) {
+            sql.append(" and (df.facility_name like ? or df.facility_type like ? or dr.room_no like ?)");
+            String like = "%" + keyword.trim() + "%";
+            args.add(like);
+            args.add(like);
+            args.add(like);
+        }
+        if (status != null && !status.isBlank()) {
+            sql.append(" and df.status = ?");
+            args.add(status);
+        }
+        sql.append(" order by df.id desc");
+        return commonQueryService.list(sql.toString(), args.toArray());
+    }
+
+    public void createFacility(FacilityRequest request) {
+        SecurityUtils.requireRole("dorm_admin", "admin");
+        String now = TimeUtils.now();
+        jdbcTemplate.update(
+                "insert into dorm_facility(room_id, facility_name, facility_type, brand, model_number, purchase_date, status, remark, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                request.roomId(), request.facilityName(), request.facilityType(), request.brand(), request.modelNumber(), request.purchaseDate(),
+                request.status() == null ? "normal" : request.status(), request.remark(), now, now
+        );
+        logService.log(SecurityUtils.currentUser().id(), "设施台账", "新增", "新增宿舍设施: " + request.facilityName());
+    }
+
+    public void updateFacility(Long id, FacilityRequest request) {
+        SecurityUtils.requireRole("dorm_admin", "admin");
+        jdbcTemplate.update(
+                "update dorm_facility set room_id = ?, facility_name = ?, facility_type = ?, brand = ?, model_number = ?, purchase_date = ?, status = ?, remark = ?, updated_at = ? where id = ?",
+                request.roomId(), request.facilityName(), request.facilityType(), request.brand(), request.modelNumber(), request.purchaseDate(),
+                request.status() == null ? "normal" : request.status(), request.remark(), TimeUtils.now(), id
+        );
+        logService.log(SecurityUtils.currentUser().id(), "设施台账", "修改", "修改宿舍设施: " + id);
+    }
+
+    public void deleteFacility(Long id) {
+        SecurityUtils.requireRole("dorm_admin", "admin");
+        Integer count = jdbcTemplate.queryForObject("select count(*) from repair_order where facility_id = ? and status not in ('completed', 'rejected')", Integer.class, id);
+        if (count != null && count > 0) {
+            throw new BusinessException("该设施存在未完成关联工单，不能删除");
+        }
+        jdbcTemplate.update("delete from dorm_facility where id = ?", id);
+        logService.log(SecurityUtils.currentUser().id(), "设施台账", "删除", "删除宿舍设施: " + id);
+    }
+
     public void addRoom(RoomRequest request) {
         SecurityUtils.requireRole("dorm_admin", "admin");
         jdbcTemplate.update("insert into dorm_room(building_id, room_no, capacity, current_count, facility_desc, status, remark) values (?, ?, ?, ?, ?, ?, ?)", request.buildingId(), request.roomNo(), request.capacity(), 0, request.facilityDesc(), request.status() == null ? "enabled" : request.status(), request.remark());
@@ -101,7 +244,7 @@ public class DormAdminService {
     }
 
     public List<Map<String, Object>> students() {
-        return commonQueryService.list("select sp.id, sp.student_no as studentNo, u.real_name as realName, u.phone, sp.college, sp.major, sp.class_name as className, sp.building_id as buildingId, sp.room_id as roomId, sp.bed_no as bedNo, db.building_name as buildingName, dr.room_no as roomNo from student_profile sp left join user u on sp.user_id = u.id left join dorm_building db on sp.building_id = db.id left join dorm_room dr on sp.room_id = dr.id order by sp.id asc");
+        return commonQueryService.list("select sp.id, sp.student_no as studentNo, u.real_name as realName, u.phone, sp.college, sp.major, sp.class_name as className, sp.building_id as buildingId, sp.room_id as roomId, sp.bed_no as bedNo, db.building_name as buildingName, dr.room_no as roomNo from student_profile sp left join user u on sp.user_id = u.id left join dorm_building db on sp.building_id = db.id left join dorm_room dr on sp.room_id = dr.id order by db.id asc, dr.id asc, sp.id asc");
     }
 
     public void updateStudentRoom(Long id, StudentRoomRequest request) {
@@ -132,6 +275,6 @@ public class DormAdminService {
     }
 
     private String baseOrderSql() {
-        return "select ro.id, ro.order_no as orderNo, ro.title, ro.description, ro.status, ro.expect_time as expectTime, ro.reject_reason as rejectReason, ro.submitted_at as submittedAt, ro.assigned_at as assignedAt, ro.completed_at as completedAt, rt.type_name as repairTypeName, db.building_name as buildingName, dr.room_no as roomNo, su.real_name as studentName, ru.real_name as repairerName from repair_order ro left join repair_type rt on ro.repair_type_id = rt.id left join dorm_building db on ro.building_id = db.id left join dorm_room dr on ro.room_id = dr.id left join user su on ro.student_id = su.id left join user ru on ro.assigned_repairer_id = ru.id";
+        return "select ro.id, ro.order_no as orderNo, ro.title, ro.description, ro.status, ro.expect_time as expectTime, ro.reject_reason as rejectReason, ro.submitted_at as submittedAt, ro.assigned_at as assignedAt, ro.completed_at as completedAt, rt.type_name as repairTypeName, db.building_name as buildingName, dr.room_no as roomNo, su.real_name as studentName, ru.real_name as repairerName, df.id as facilityId, df.facility_name as facilityName, df.facility_type as facilityType from repair_order ro left join repair_type rt on ro.repair_type_id = rt.id left join dorm_building db on ro.building_id = db.id left join dorm_room dr on ro.room_id = dr.id left join dorm_facility df on ro.facility_id = df.id left join user su on ro.student_id = su.id left join user ru on ro.assigned_repairer_id = ru.id";
     }
 }

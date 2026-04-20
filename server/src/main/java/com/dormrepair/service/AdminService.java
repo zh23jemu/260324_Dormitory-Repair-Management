@@ -2,7 +2,9 @@ package com.dormrepair.service;
 
 import com.dormrepair.common.BusinessException;
 import com.dormrepair.dto.admin.DictSaveRequest;
+import com.dormrepair.dto.admin.ResourceRequest;
 import com.dormrepair.dto.admin.RepairTypeSaveRequest;
+import com.dormrepair.dto.admin.ServiceMessageReplyRequest;
 import com.dormrepair.dto.admin.StatusUpdateRequest;
 import com.dormrepair.dto.admin.UserCreateRequest;
 import com.dormrepair.dto.admin.UserUpdateRequest;
@@ -66,8 +68,10 @@ public class AdminService {
         Integer completed = (Integer) map.get("completedCount");
         Integer ratedCount = (Integer) map.get("ratedCount");
         Integer satisfiedCount = jdbcTemplate.queryForObject("select count(*) from repair_rating where score >= 4", Integer.class);
+        Double avgHandleHours = jdbcTemplate.queryForObject("select avg((julianday(completed_at) - julianday(assigned_at)) * 24.0) from repair_order where assigned_at is not null and completed_at is not null and status in ('pending_rating', 'completed')", Double.class);
         map.put("completionRate", total == null || total == 0 ? 0 : completed * 100.0 / total);
         map.put("satisfactionRate", ratedCount == null || ratedCount == 0 ? 0 : (satisfiedCount == null ? 0 : satisfiedCount * 100.0 / ratedCount));
+        map.put("avgHandleHours", avgHandleHours == null ? 0 : Math.round(avgHandleHours * 100.0) / 100.0);
         return map;
     }
 
@@ -84,6 +88,18 @@ public class AdminService {
     public List<Map<String, Object>> ratingStats() {
         SecurityUtils.requireRole("admin");
         return commonQueryService.list("select score as name, count(*) as value from repair_rating group by score order by score asc");
+    }
+
+    public List<Map<String, Object>> statusStats() {
+        SecurityUtils.requireRole("admin");
+        return commonQueryService.list("select status as name, count(*) as value from repair_order group by status order by count(*) desc");
+    }
+
+    public List<Map<String, Object>> repairerWorkloadStats() {
+        SecurityUtils.requireRole("admin");
+        return commonQueryService.list(
+                "select u.real_name as name, count(ro.id) as value from user u left join repair_order ro on u.id = ro.assigned_repairer_id where u.role = 'repairer' group by u.id, u.real_name order by value desc, u.id asc"
+        );
     }
 
     public List<Map<String, Object>> logs() {
@@ -127,6 +143,54 @@ public class AdminService {
         }
         jdbcTemplate.update("delete from sys_dict where id = ?", id);
         logService.log(SecurityUtils.currentUser().id(), "基础配置", "删除", "删除字典项: " + id);
+    }
+
+    public List<Map<String, Object>> resources() {
+        SecurityUtils.requireRole("admin");
+        return commonQueryService.list("select rr.id, rr.title, rr.category, rr.summary, rr.content, rr.cover_image as coverImage, rr.sort_no as sortNo, rr.status, rr.created_at as createdAt, u.real_name as publisherName from repair_resource rr left join user u on rr.publisher_id = u.id order by rr.sort_no asc, rr.id desc");
+    }
+
+    public void createResource(ResourceRequest request) {
+        SecurityUtils.requireRole("admin");
+        String now = TimeUtils.now();
+        jdbcTemplate.update(
+                "insert into repair_resource(title, category, summary, content, cover_image, sort_no, status, publisher_id, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                request.title(), request.category(), request.summary(), request.content(), request.coverImage(), request.sortNo(),
+                request.status() == null ? "published" : request.status(), SecurityUtils.currentUser().id(), now, now
+        );
+        logService.log(SecurityUtils.currentUser().id(), "报修知识", "新增", "新增知识库内容: " + request.title());
+    }
+
+    public void updateResource(Long id, ResourceRequest request) {
+        SecurityUtils.requireRole("admin");
+        jdbcTemplate.update(
+                "update repair_resource set title = ?, category = ?, summary = ?, content = ?, cover_image = ?, sort_no = ?, status = ?, updated_at = ? where id = ?",
+                request.title(), request.category(), request.summary(), request.content(), request.coverImage(), request.sortNo(),
+                request.status() == null ? "published" : request.status(), TimeUtils.now(), id
+        );
+        logService.log(SecurityUtils.currentUser().id(), "报修知识", "修改", "修改知识库内容: " + id);
+    }
+
+    public void deleteResource(Long id) {
+        SecurityUtils.requireRole("admin");
+        jdbcTemplate.update("delete from repair_resource where id = ?", id);
+        logService.log(SecurityUtils.currentUser().id(), "报修知识", "删除", "删除知识库内容: " + id);
+    }
+
+    public List<Map<String, Object>> serviceMessages() {
+        SecurityUtils.requireRole("admin");
+        return commonQueryService.list(
+                "select sm.id, sm.title, sm.content, sm.image_path as imagePath, sm.status, sm.reply_content as replyContent, sm.replied_at as repliedAt, sm.created_at as createdAt, su.real_name as studentName, su.phone as studentPhone, au.real_name as repliedByName " +
+                        "from service_message sm left join user su on sm.student_id = su.id left join user au on sm.replied_by = au.id order by sm.id desc"
+        );
+    }
+
+    public void replyServiceMessage(Long id, ServiceMessageReplyRequest request) {
+        SecurityUtils.requireRole("admin");
+        String now = TimeUtils.now();
+        jdbcTemplate.update("update service_message set reply_content = ?, status = ?, replied_by = ?, replied_at = ?, updated_at = ? where id = ?",
+                request.replyContent(), "replied", SecurityUtils.currentUser().id(), now, now, id);
+        logService.log(SecurityUtils.currentUser().id(), "服务留言", "回复", "回复服务留言: " + id);
     }
 
     public List<Map<String, Object>> repairTypes() {

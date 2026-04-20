@@ -1,10 +1,13 @@
 PRAGMA foreign_keys = OFF;
 
+DROP TABLE IF EXISTS service_message;
+DROP TABLE IF EXISTS repair_resource;
 DROP TABLE IF EXISTS repair_rating;
 DROP TABLE IF EXISTS repair_feedback;
 DROP TABLE IF EXISTS repair_flow;
 DROP TABLE IF EXISTS repair_order_image;
 DROP TABLE IF EXISTS repair_order;
+DROP TABLE IF EXISTS dorm_facility;
 DROP TABLE IF EXISTS repair_type;
 DROP TABLE IF EXISTS student_profile;
 DROP TABLE IF EXISTS dorm_room;
@@ -50,6 +53,21 @@ CREATE TABLE dorm_room (
     FOREIGN KEY (building_id) REFERENCES dorm_building(id)
 );
 
+CREATE TABLE dorm_facility (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    room_id INTEGER NOT NULL,
+    facility_name TEXT NOT NULL,
+    facility_type TEXT NOT NULL,
+    brand TEXT,
+    model_number TEXT,
+    purchase_date TEXT,
+    status TEXT NOT NULL DEFAULT 'normal',
+    remark TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (room_id) REFERENCES dorm_room(id)
+);
+
 CREATE TABLE student_profile (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL UNIQUE,
@@ -81,6 +99,7 @@ CREATE TABLE repair_order (
     student_id INTEGER NOT NULL,
     building_id INTEGER,
     room_id INTEGER,
+    facility_id INTEGER,
     repair_type_id INTEGER NOT NULL,
     title TEXT NOT NULL,
     description TEXT NOT NULL,
@@ -96,6 +115,7 @@ CREATE TABLE repair_order (
     FOREIGN KEY (student_id) REFERENCES user(id),
     FOREIGN KEY (building_id) REFERENCES dorm_building(id),
     FOREIGN KEY (room_id) REFERENCES dorm_room(id),
+    FOREIGN KEY (facility_id) REFERENCES dorm_facility(id),
     FOREIGN KEY (repair_type_id) REFERENCES repair_type(id),
     FOREIGN KEY (assigned_repairer_id) REFERENCES user(id)
 );
@@ -155,6 +175,37 @@ CREATE TABLE announcement (
     FOREIGN KEY (publisher_id) REFERENCES user(id)
 );
 
+CREATE TABLE repair_resource (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    category TEXT NOT NULL,
+    summary TEXT,
+    content TEXT NOT NULL,
+    cover_image TEXT,
+    sort_no INTEGER NOT NULL DEFAULT 1,
+    status TEXT NOT NULL DEFAULT 'published',
+    publisher_id INTEGER NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (publisher_id) REFERENCES user(id)
+);
+
+CREATE TABLE service_message (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    image_path TEXT,
+    status TEXT NOT NULL DEFAULT 'pending',
+    reply_content TEXT,
+    replied_by INTEGER,
+    replied_at TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (student_id) REFERENCES user(id),
+    FOREIGN KEY (replied_by) REFERENCES user(id)
+);
+
 CREATE TABLE sys_log (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER,
@@ -179,4 +230,8 @@ CREATE INDEX idx_user_role ON user(role);
 CREATE INDEX idx_repair_order_status ON repair_order(status);
 CREATE INDEX idx_repair_order_student_id ON repair_order(student_id);
 CREATE INDEX idx_repair_order_repairer_id ON repair_order(assigned_repairer_id);
+CREATE INDEX idx_repair_order_facility_id ON repair_order(facility_id);
 CREATE INDEX idx_repair_flow_order_id ON repair_flow(repair_order_id);
+CREATE INDEX idx_dorm_facility_room_id ON dorm_facility(room_id);
+CREATE INDEX idx_resource_status ON repair_resource(status);
+CREATE INDEX idx_service_message_student_id ON service_message(student_id);

@@ -1,4 +1,5 @@
 import {createRouter,createWebHistory} from "vue-router"
+import { isDemoMode } from "@/mock/demo"
 
 
 
@@ -116,6 +117,16 @@ const workerAllowedRoutes = [
 
 // 全局前置守卫
 router.beforeEach((to, from, next) => {
+    // 演示模式用于只看页面效果：自动写入 token 和管理员角色，绕过真实登录。
+    // 关闭 VITE_DEMO_MODE 后，这段逻辑不会执行，系统恢复原本鉴权流程。
+    if (isDemoMode) {
+        if (!localStorage.getItem('token')) {
+            localStorage.setItem('token', 'demo-token')
+        }
+        if (!localStorage.getItem('userRole')) {
+            localStorage.setItem('userRole', 'admin')
+        }
+    }
     // 获取token和角色
     const token = localStorage.getItem('token')
     const userRole = localStorage.getItem('userRole')

@@ -1,4 +1,5 @@
 import {createRouter,createWebHistory} from "vue-router"
+import { isDemoMode } from "@/mock/demo"
 
 
 
@@ -113,6 +114,11 @@ const router = createRouter({
 
 // 路由守卫
 router.beforeEach((to, from, next) => {
+    // 演示模式用于只看页面效果：自动写入 token，绕过真实登录。
+    // 关闭 VITE_DEMO_MODE 后，仍然使用原本的登录鉴权流程。
+    if (isDemoMode && !localStorage.getItem('token')) {
+        localStorage.setItem('token', 'demo-token')
+    }
     const token = localStorage.getItem('token')
     const requiresAuth = to.meta.requiresAuth !== false // 默认需要鉴权
     

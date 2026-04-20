@@ -2,7 +2,9 @@ package com.dormrepair.controller;
 
 import com.dormrepair.common.ApiResponse;
 import com.dormrepair.dto.admin.DictSaveRequest;
+import com.dormrepair.dto.admin.ResourceRequest;
 import com.dormrepair.dto.admin.RepairTypeSaveRequest;
+import com.dormrepair.dto.admin.ServiceMessageReplyRequest;
 import com.dormrepair.dto.admin.StatusUpdateRequest;
 import com.dormrepair.dto.admin.UserCreateRequest;
 import com.dormrepair.dto.admin.UserUpdateRequest;
@@ -82,6 +84,16 @@ public class AdminController {
         return ApiResponse.success(adminService.ratingStats());
     }
 
+    @GetMapping("/statistics/status")
+    public ApiResponse<List<Map<String, Object>>> statusStats() {
+        return ApiResponse.success(adminService.statusStats());
+    }
+
+    @GetMapping("/statistics/repairer-workload")
+    public ApiResponse<List<Map<String, Object>>> repairerWorkloadStats() {
+        return ApiResponse.success(adminService.repairerWorkloadStats());
+    }
+
     @GetMapping("/logs")
     public ApiResponse<List<Map<String, Object>>> logs() {
         return ApiResponse.success(adminService.logs());
@@ -107,6 +119,40 @@ public class AdminController {
     @DeleteMapping("/dicts/{id}")
     public ApiResponse<Void> deleteDict(@PathVariable Long id) {
         adminService.deleteDict(id);
+        return ApiResponse.success();
+    }
+
+    @GetMapping("/resources")
+    public ApiResponse<List<Map<String, Object>>> resources() {
+        return ApiResponse.success(adminService.resources());
+    }
+
+    @PostMapping("/resources")
+    public ApiResponse<Void> createResource(@Valid @RequestBody ResourceRequest request) {
+        adminService.createResource(request);
+        return ApiResponse.success();
+    }
+
+    @PutMapping("/resources/{id}")
+    public ApiResponse<Void> updateResource(@PathVariable Long id, @Valid @RequestBody ResourceRequest request) {
+        adminService.updateResource(id, request);
+        return ApiResponse.success();
+    }
+
+    @DeleteMapping("/resources/{id}")
+    public ApiResponse<Void> deleteResource(@PathVariable Long id) {
+        adminService.deleteResource(id);
+        return ApiResponse.success();
+    }
+
+    @GetMapping("/service-messages")
+    public ApiResponse<List<Map<String, Object>>> serviceMessages() {
+        return ApiResponse.success(adminService.serviceMessages());
+    }
+
+    @PutMapping("/service-messages/{id}/reply")
+    public ApiResponse<Void> replyServiceMessage(@PathVariable Long id, @Valid @RequestBody ServiceMessageReplyRequest request) {
+        adminService.replyServiceMessage(id, request);
         return ApiResponse.success();
     }
 

@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { useStore } from '@/store/index'
+import { isDemoMode, mockRequest } from '@/mock/demo'
 
 // 创建 Axios 实例，并命名为 service
 const service = axios.create({
@@ -11,6 +12,18 @@ const service = axios.create({
 // 请求拦截器
 service.interceptors.request.use(
   (config) => {
+    // 演示模式下不访问真实后端，直接返回模拟数据。
+    // 适合只查看页面结构和交互，不需要启动 MySQL 或 Spring Boot。
+    if (isDemoMode) {
+      config.adapter = async () => ({
+        data: mockRequest(config),
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config,
+        request: {}
+      })
+    }
     const token = localStorage.getItem('token') // 假设 token 存储在 localStorage 中
     if (token) {
       config.headers.Authorization = `Bearer ${token}` // 设置 Authorization 请求头
