@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -154,6 +155,34 @@ public class AdminController {
     @PutMapping("/service-messages/{id}/reply")
     public ApiResponse<Void> replyServiceMessage(@PathVariable Long id, @Valid @RequestBody ServiceMessageReplyRequest request) {
         adminService.replyServiceMessage(id, request);
+        return ApiResponse.success();
+    }
+
+    @GetMapping("/forum-posts")
+    public ApiResponse<List<Map<String, Object>>> forumPosts(@RequestParam(required = false) String status) {
+        return ApiResponse.success(adminService.forumPosts(status));
+    }
+
+    @PutMapping("/forum-posts/{id}/status")
+    public ApiResponse<Void> updateForumPostStatus(@PathVariable Long id, @Valid @RequestBody StatusUpdateRequest request) {
+        adminService.updateForumPostStatus(id, request);
+        return ApiResponse.success();
+    }
+
+    @DeleteMapping("/forum-posts/{id}")
+    public ApiResponse<Void> deleteForumPost(@PathVariable Long id) {
+        adminService.deleteForumPost(id);
+        return ApiResponse.success();
+    }
+
+    @GetMapping("/ratings")
+    public ApiResponse<List<Map<String, Object>>> ratings(@RequestParam(required = false) Integer score) {
+        return ApiResponse.success(adminService.ratings(score));
+    }
+
+    @DeleteMapping("/ratings/{id}")
+    public ApiResponse<Void> deleteRating(@PathVariable Long id) {
+        adminService.deleteRating(id);
         return ApiResponse.success();
     }
 

@@ -230,6 +230,79 @@ public class AdminService {
         logService.log(SecurityUtils.currentUser().id(), "服务留言", "回复", "回复服务留言: " + id);
     }
 
+    /**
+     * 管理员论坛管理列表。
+     * 学生端只展示 published 状态的帖子，管理员端需要看到全部状态，便于审核、隐藏和删除。
+     */
+    public List<Map<String, Object>> forumPosts(String status) {
+        SecurityUtils.requireRole("admin");
+        String sql = "select fp.id, fp.title, fp.content, fp.image_path as imagePath, fp.status, fp.created_at as createdAt, fp.updated_at as updatedAt, " +
+                "u.real_name as studentName, u.phone as studentPhone " +
+                "from forum_post fp left join user u on fp.student_id = u.id where 1 = 1";
+        if (status != null && !status.isBlank()) {
+            sql += " and fp.status = '" + status + "'";
+        }
+        sql += " order by fp.id desc";
+        return commonQueryService.list(sql);
+    }
+
+    /**
+     * 更新论坛帖子状态。
+     * published 表示公开展示，hidden 表示管理员隐藏；保留数据可以满足后台追溯需要。
+     */
+    public void updateForumPostStatus(Long id, StatusUpdateRequest request) {
+        SecurityUtils.requireRole("admin");
+        String status = request.status();
+        if (!"published".equals(status) && !"hidden".equals(status)) {
+            throw new BusinessException("论坛状态只能设置为 published 或 hidden");
+        }
+        jdbcTemplate.update("update forum_post set status = ?, updated_at = ? where id = ?", status, TimeUtils.now(), id);
+        logService.log(SecurityUtils.currentUser().id(), "论坛管理", "状态变更", "修改论坛帖子状态: " + id + " -> " + status);
+    }
+
+    /**
+     * 删除论坛帖子。
+     * 论坛内容属于学生公开交流数据，管理员保留最终删除能力，用于处理违规或无效帖子。
+     */
+    public void deleteForumPost(Long id) {
+        SecurityUtils.requireRole("admin");
+        jdbcTemplate.update("delete from forum_post where id = ?", id);
+        logService.log(SecurityUtils.currentUser().id(), "论坛管理", "删除", "删除论坛帖子: " + id);
+    }
+
+    /**
+     * 管理员评价管理列表。
+     * 关联工单、学生、维修员和报修类型，让后台可以按服务过程查看评价来源。
+     */
+    public List<Map<String, Object>> ratings(Integer score) {
+        SecurityUtils.requireRole("admin");
+        String sql = "select rr.id, rr.repair_order_id as repairOrderId, rr.score, rr.content, rr.created_at as createdAt, " +
+                "ro.order_no as orderNo, ro.title as orderTitle, rt.type_name as repairTypeName, " +
+                "su.real_name as studentName, ru.real_name as repairerName " +
+                "from repair_rating rr " +
+                "left join repair_order ro on rr.repair_order_id = ro.id " +
+                "left join repair_type rt on ro.repair_type_id = rt.id " +
+                "left join user su on rr.student_id = su.id " +
+                "left join user ru on ro.assigned_repairer_id = ru.id where 1 = 1";
+        if (score != null) {
+            sql += " and rr.score = " + score;
+        }
+        sql += " order by rr.id desc";
+        return commonQueryService.list(sql);
+    }
+
+    /**
+     * 删除不合规评价。
+     * 删除评价后，工单回到待评价状态，学生仍可重新提交一次规范评价。
+     */
+    public void deleteRating(Long id) {
+        SecurityUtils.requireRole("admin");
+        Map<String, Object> rating = commonQueryService.one("select id, repair_order_id as repairOrderId from repair_rating where id = ?", id);
+        jdbcTemplate.update("delete from repair_rating where id = ?", id);
+        jdbcTemplate.update("update repair_order set status = ?, updated_at = ? where id = ?", "pending_rating", TimeUtils.now(), rating.get("repairOrderId"));
+        logService.log(SecurityUtils.currentUser().id(), "评价管理", "删除", "删除评价记录: " + id);
+    }
+
     public List<Map<String, Object>> repairTypes() {
         SecurityUtils.requireRole("admin");
         return commonQueryService.list("select id, type_name as typeName, sort_no as sortNo, status from repair_type order by sort_no asc, id asc");
