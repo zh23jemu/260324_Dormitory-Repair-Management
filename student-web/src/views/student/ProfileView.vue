@@ -2,6 +2,12 @@
   <div class="page-stack">
     <div class="section">
       <div class="section-title">个人中心</div>
+      <div class="profile-avatar">
+        <van-uploader :after-read="uploadAvatar" :max-count="1" :show-upload="false">
+          <van-image round width="76" height="76" :src="fileUrl(form.avatar) || 'https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg'" />
+        </van-uploader>
+        <span>点击头像上传新头像</span>
+      </div>
       <van-cell-group inset>
         <van-cell title="姓名" :value="profile.realName || ''" />
         <van-cell title="账号" :value="profile.username || ''" />
@@ -28,22 +34,32 @@ import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import api from '../../api'
 import { useStudentAuth } from '../../utils/auth'
+import { fileUrl } from '../../utils/file'
 
 const router = useRouter()
 const auth = useStudentAuth()
 const profile = ref({})
-const form = reactive({ phone: '' })
+const form = reactive({ phone: '', avatar: '' })
 
 async function loadProfile() {
   profile.value = (await api.get('/student/profile')).data.data
   form.phone = profile.value.phone || ''
+  form.avatar = profile.value.avatar || ''
 }
 
 async function saveProfile() {
-  await api.put('/student/profile', { phone: form.phone, buildingId: profile.value.buildingId, roomId: profile.value.roomId, bedNo: profile.value.bedNo })
+  await api.put('/student/profile', { phone: form.phone, avatar: form.avatar, buildingId: profile.value.buildingId, roomId: profile.value.roomId, bedNo: profile.value.bedNo })
   showToast('个人信息已更新')
   await loadProfile()
   await auth.loadProfile()
+}
+
+async function uploadAvatar(file) {
+  const formData = new FormData()
+  formData.append('file', file.file)
+  const { data } = await api.post('/common/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+  form.avatar = data.data.filePath
+  showToast('头像已上传，请点击保存信息')
 }
 
 function logout() {

@@ -1,9 +1,12 @@
 PRAGMA foreign_keys = OFF;
 
 DROP TABLE IF EXISTS service_message;
+DROP TABLE IF EXISTS forum_post;
 DROP TABLE IF EXISTS repair_resource;
 DROP TABLE IF EXISTS repair_rating;
 DROP TABLE IF EXISTS repair_feedback;
+DROP TABLE IF EXISTS material_usage;
+DROP TABLE IF EXISTS repair_material;
 DROP TABLE IF EXISTS repair_flow;
 DROP TABLE IF EXISTS repair_order_image;
 DROP TABLE IF EXISTS repair_order;
@@ -25,6 +28,7 @@ CREATE TABLE user (
     password TEXT NOT NULL,
     real_name TEXT NOT NULL,
     phone TEXT,
+    avatar TEXT,
     role TEXT NOT NULL,
     work_type_code TEXT,
     status TEXT NOT NULL DEFAULT 'enabled',
@@ -153,6 +157,30 @@ CREATE TABLE repair_feedback (
     FOREIGN KEY (repairer_id) REFERENCES user(id)
 );
 
+CREATE TABLE repair_material (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    material_name TEXT NOT NULL UNIQUE,
+    material_type TEXT,
+    unit TEXT NOT NULL,
+    stock_qty REAL NOT NULL DEFAULT 0,
+    warning_qty REAL NOT NULL DEFAULT 0,
+    remark TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+
+CREATE TABLE material_usage (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    repair_order_id INTEGER NOT NULL,
+    repairer_id INTEGER NOT NULL,
+    material_id INTEGER NOT NULL,
+    quantity REAL NOT NULL,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (repair_order_id) REFERENCES repair_order(id),
+    FOREIGN KEY (repairer_id) REFERENCES user(id),
+    FOREIGN KEY (material_id) REFERENCES repair_material(id)
+);
+
 CREATE TABLE repair_rating (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     repair_order_id INTEGER NOT NULL UNIQUE,
@@ -168,11 +196,24 @@ CREATE TABLE announcement (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
     content TEXT NOT NULL,
+    image_path TEXT,
     publisher_id INTEGER NOT NULL,
     status TEXT NOT NULL DEFAULT 'published',
     published_at TEXT,
     created_at TEXT NOT NULL,
     FOREIGN KEY (publisher_id) REFERENCES user(id)
+);
+
+CREATE TABLE forum_post (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    image_path TEXT,
+    status TEXT NOT NULL DEFAULT 'published',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (student_id) REFERENCES user(id)
 );
 
 CREATE TABLE repair_resource (
@@ -232,6 +273,8 @@ CREATE INDEX idx_repair_order_student_id ON repair_order(student_id);
 CREATE INDEX idx_repair_order_repairer_id ON repair_order(assigned_repairer_id);
 CREATE INDEX idx_repair_order_facility_id ON repair_order(facility_id);
 CREATE INDEX idx_repair_flow_order_id ON repair_flow(repair_order_id);
+CREATE INDEX idx_material_usage_order_id ON material_usage(repair_order_id);
 CREATE INDEX idx_dorm_facility_room_id ON dorm_facility(room_id);
 CREATE INDEX idx_resource_status ON repair_resource(status);
 CREATE INDEX idx_service_message_student_id ON service_message(student_id);
+CREATE INDEX idx_forum_post_status ON forum_post(status);

@@ -116,11 +116,11 @@ public class DormAdminService {
 
     public List<Map<String, Object>> repairers() {
         return commonQueryService.list(
-                "select u.id, u.username, u.real_name as realName, u.phone, u.status, u.work_type_code as workTypeCode, d.dict_name as workTypeName, " +
+                "select u.id, u.username, u.real_name as realName, u.phone, u.status, u.work_type_code as workTypeCode, (select group_concat(d.dict_name, '、') from sys_dict d where d.dict_type = 'repair_work_type' and instr(',' || coalesce(u.work_type_code, '') || ',', ',' || d.dict_code || ',') > 0) as workTypeName, " +
                         "(select count(*) from repair_order ro where ro.assigned_repairer_id = u.id) as totalCount, " +
                         "(select count(*) from repair_order ro where ro.assigned_repairer_id = u.id and ro.status in ('pending_rating', 'completed')) as completedCount, " +
                         "(select round(avg(rr.score), 2) from repair_rating rr left join repair_order ro on rr.repair_order_id = ro.id where ro.assigned_repairer_id = u.id) as avgScore " +
-                        "from user u left join sys_dict d on u.work_type_code = d.dict_code and d.dict_type = 'repair_work_type' where u.role = 'repairer' order by u.id asc"
+                        "from user u where u.role = 'repairer' order by u.id asc"
         );
     }
 
@@ -150,11 +150,12 @@ public class DormAdminService {
             return repairers();
         }
         return commonQueryService.list(
-                "select u.id, u.username, u.real_name as realName, u.phone, u.status, u.work_type_code as workTypeCode, d.dict_name as workTypeName, " +
+                "select u.id, u.username, u.real_name as realName, u.phone, u.status, u.work_type_code as workTypeCode, " +
+                        "(select group_concat(d.dict_name, '、') from sys_dict d where d.dict_type = 'repair_work_type' and instr(',' || coalesce(u.work_type_code, '') || ',', ',' || d.dict_code || ',') > 0) as workTypeName, " +
                         "(select count(*) from repair_order ro where ro.assigned_repairer_id = u.id) as totalCount, " +
                         "(select count(*) from repair_order ro where ro.assigned_repairer_id = u.id and ro.status in ('pending_rating', 'completed')) as completedCount, " +
                         "(select round(avg(rr.score), 2) from repair_rating rr left join repair_order ro on rr.repair_order_id = ro.id where ro.assigned_repairer_id = u.id) as avgScore " +
-                        "from user u left join sys_dict d on u.work_type_code = d.dict_code and d.dict_type = 'repair_work_type' where u.role = 'repairer' and u.work_type_code = ? order by u.id asc",
+                        "from user u where u.role = 'repairer' and instr(',' || coalesce(u.work_type_code, '') || ',', ',' || ? || ',') > 0 order by u.id asc",
                 workTypeCode
         );
     }
@@ -253,20 +254,20 @@ public class DormAdminService {
     }
 
     public List<Map<String, Object>> announcements() {
-        return commonQueryService.list("select a.id, a.title, a.content, a.status, a.published_at as publishedAt, a.created_at as createdAt, u.real_name as publisherName from announcement a left join user u on a.publisher_id = u.id order by a.id desc");
+        return commonQueryService.list("select a.id, a.title, a.content, a.image_path as imagePath, a.status, a.published_at as publishedAt, a.created_at as createdAt, u.real_name as publisherName from announcement a left join user u on a.publisher_id = u.id order by a.id desc");
     }
 
     public void createAnnouncement(AnnouncementRequest request) {
         SecurityUtils.requireRole("dorm_admin", "admin");
         JwtUser user = SecurityUtils.currentUser();
         String now = TimeUtils.now();
-        jdbcTemplate.update("insert into announcement(title, content, publisher_id, status, published_at, created_at) values (?, ?, ?, ?, ?, ?)", request.title(), request.content(), user.id(), request.status() == null ? "published" : request.status(), now, now);
+        jdbcTemplate.update("insert into announcement(title, content, image_path, publisher_id, status, published_at, created_at) values (?, ?, ?, ?, ?, ?, ?)", request.title(), request.content(), request.imagePath(), user.id(), request.status() == null ? "published" : request.status(), now, now);
         logService.log(user.id(), "公告管理", "新增", "发布公告: " + request.title());
     }
 
     public void updateAnnouncement(Long id, AnnouncementRequest request) {
         SecurityUtils.requireRole("dorm_admin", "admin");
-        jdbcTemplate.update("update announcement set title = ?, content = ?, status = ?, published_at = ? where id = ?", request.title(), request.content(), request.status() == null ? "published" : request.status(), TimeUtils.now(), id);
+        jdbcTemplate.update("update announcement set title = ?, content = ?, image_path = ?, status = ?, published_at = ? where id = ?", request.title(), request.content(), request.imagePath(), request.status() == null ? "published" : request.status(), TimeUtils.now(), id);
     }
 
     public void deleteAnnouncement(Long id) {

@@ -2,6 +2,7 @@ package com.dormrepair.controller;
 
 import com.dormrepair.common.ApiResponse;
 import com.dormrepair.dto.repair.RepairFeedbackRequest;
+import com.dormrepair.dto.repair.RepairerProfileRequest;
 import com.dormrepair.service.RepairerService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.Map;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -32,6 +34,37 @@ public class RepairerController {
     @GetMapping("/repair-orders/{id}")
     public ApiResponse<Map<String, Object>> detail(@PathVariable Long id) {
         return ApiResponse.success(repairerService.detail(id));
+    }
+
+    @GetMapping("/profile")
+    public ApiResponse<Map<String, Object>> profile() {
+        return ApiResponse.success(repairerService.myProfile());
+    }
+
+    @PutMapping("/profile")
+    public ApiResponse<Void> updateProfile(@RequestBody RepairerProfileRequest request) {
+        repairerService.updateProfile(request);
+        return ApiResponse.success();
+    }
+
+    @GetMapping("/repairers")
+    public ApiResponse<List<Map<String, Object>>> repairers() {
+        return ApiResponse.success(repairerService.repairers());
+    }
+
+    @GetMapping("/repairers/{id}")
+    public ApiResponse<Map<String, Object>> repairerDetail(@PathVariable Long id) {
+        return ApiResponse.success(repairerService.repairerDetail(id));
+    }
+
+    @GetMapping("/work-types")
+    public ApiResponse<List<Map<String, Object>>> workTypes() {
+        return ApiResponse.success(repairerService.workTypes());
+    }
+
+    @GetMapping("/materials")
+    public ApiResponse<List<Map<String, Object>>> materials() {
+        return ApiResponse.success(repairerService.materials());
     }
 
     @PostMapping("/repair-orders/{id}/accept")

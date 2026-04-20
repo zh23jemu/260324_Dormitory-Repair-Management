@@ -2,6 +2,7 @@ package com.dormrepair.service;
 
 import com.dormrepair.common.BusinessException;
 import com.dormrepair.dto.admin.DictSaveRequest;
+import com.dormrepair.dto.admin.MaterialRequest;
 import com.dormrepair.dto.admin.ResourceRequest;
 import com.dormrepair.dto.admin.RepairTypeSaveRequest;
 import com.dormrepair.dto.admin.ServiceMessageReplyRequest;
@@ -10,9 +11,11 @@ import com.dormrepair.dto.admin.UserCreateRequest;
 import com.dormrepair.dto.admin.UserUpdateRequest;
 import com.dormrepair.util.SecurityUtils;
 import com.dormrepair.util.TimeUtils;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -31,7 +34,7 @@ public class AdminService {
 
     public List<Map<String, Object>> users() {
         SecurityUtils.requireRole("admin");
-        return commonQueryService.list("select u.id, u.username, u.real_name as realName, u.phone, u.role, u.work_type_code as workTypeCode, d.dict_name as workTypeName, u.status, u.created_at as createdAt from user u left join sys_dict d on u.work_type_code = d.dict_code and d.dict_type = 'repair_work_type' order by u.id asc");
+        return commonQueryService.list("select u.id, u.username, u.real_name as realName, u.phone, u.avatar, u.role, u.work_type_code as workTypeCode, (select group_concat(d.dict_name, '、') from sys_dict d where d.dict_type = 'repair_work_type' and instr(',' || coalesce(u.work_type_code, '') || ',', ',' || d.dict_code || ',') > 0) as workTypeName, u.status, u.created_at as createdAt from user u order by u.id asc");
     }
 
     public void createUser(UserCreateRequest request) {
@@ -136,13 +139,47 @@ public class AdminService {
         SecurityUtils.requireRole("admin");
         Map<String, Object> dict = commonQueryService.one("select id, dict_type as dictType, dict_code as dictCode from sys_dict where id = ?", id);
         if ("repair_work_type".equals(dict.get("dictType"))) {
-            Integer count = jdbcTemplate.queryForObject("select count(*) from user where work_type_code = ?", Integer.class, dict.get("dictCode"));
-            if (count != null && count > 0) {
-                throw new BusinessException("该维修工种已被用户使用，不能删除");
+            Integer unfinished = jdbcTemplate.queryForObject(
+                    "select count(*) from repair_order ro left join user u on ro.assigned_repairer_id = u.id where ro.status in ('processing', 'pending_rating') and instr(',' || coalesce(u.work_type_code, '') || ',', ',' || ? || ',') > 0",
+                    Integer.class,
+                    dict.get("dictCode")
+            );
+            if (unfinished != null && unfinished > 0) {
+                throw new BusinessException("该维修工种存在已接单未完成工单，不能删除");
+            }
+            /*
+             * 维修工种是多选编码，删除一个工种配置时，如果没有未完成已接单工单，
+             * 需要同步从维修员资料中移除该编码，避免后续页面展示出已删除的无效工种。
+             */
+            String dictCode = String.valueOf(dict.get("dictCode"));
+            List<Map<String, Object>> repairers = commonQueryService.list(
+                    "select id, work_type_code as workTypeCode from user where role = 'repairer' and instr(',' || coalesce(work_type_code, '') || ',', ',' || ? || ',') > 0",
+                    dictCode
+            );
+            for (Map<String, Object> repairer : repairers) {
+                String updatedCodes = removeCode((String) repairer.get("workTypeCode"), dictCode);
+                jdbcTemplate.update("update user set work_type_code = ?, updated_at = ? where id = ?", updatedCodes, TimeUtils.now(), repairer.get("id"));
             }
         }
         jdbcTemplate.update("delete from sys_dict where id = ?", id);
         logService.log(SecurityUtils.currentUser().id(), "基础配置", "删除", "删除字典项: " + id);
+    }
+
+    /**
+     * 从逗号分隔的维修工种编码中移除指定编码。
+     * 返回 null 而不是空字符串，便于数据库中明确表示“未设置工种”。
+     */
+    private String removeCode(String codes, String removedCode) {
+        if (codes == null || codes.isBlank()) {
+            return null;
+        }
+        String result = Arrays.stream(codes.split(","))
+                .map(String::trim)
+                .filter((code) -> !code.isBlank())
+                .filter((code) -> !code.equals(removedCode))
+                .distinct()
+                .collect(Collectors.joining(","));
+        return result.isBlank() ? null : result;
     }
 
     public List<Map<String, Object>> resources() {
@@ -238,5 +275,39 @@ public class AdminService {
         }
         jdbcTemplate.update("delete from repair_type where id = ?", id);
         logService.log(SecurityUtils.currentUser().id(), "基础配置", "删除", "删除报修类型: " + id);
+    }
+
+    public List<Map<String, Object>> materials() {
+        SecurityUtils.requireRole("admin");
+        return commonQueryService.list("select id, material_name as materialName, material_type as materialType, unit, stock_qty as stockQty, warning_qty as warningQty, remark, created_at as createdAt, updated_at as updatedAt from repair_material order by id asc");
+    }
+
+    public void createMaterial(MaterialRequest request) {
+        SecurityUtils.requireRole("admin");
+        String now = TimeUtils.now();
+        jdbcTemplate.update(
+                "insert into repair_material(material_name, material_type, unit, stock_qty, warning_qty, remark, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?, ?)",
+                request.materialName(), request.materialType(), request.unit(), request.stockQty(), request.warningQty(), request.remark(), now, now
+        );
+        logService.log(SecurityUtils.currentUser().id(), "耗材管理", "新增", "新增耗材: " + request.materialName());
+    }
+
+    public void updateMaterial(Long id, MaterialRequest request) {
+        SecurityUtils.requireRole("admin");
+        jdbcTemplate.update(
+                "update repair_material set material_name = ?, material_type = ?, unit = ?, stock_qty = ?, warning_qty = ?, remark = ?, updated_at = ? where id = ?",
+                request.materialName(), request.materialType(), request.unit(), request.stockQty(), request.warningQty(), request.remark(), TimeUtils.now(), id
+        );
+        logService.log(SecurityUtils.currentUser().id(), "耗材管理", "修改", "修改耗材: " + id);
+    }
+
+    public void deleteMaterial(Long id) {
+        SecurityUtils.requireRole("admin");
+        Integer count = jdbcTemplate.queryForObject("select count(*) from material_usage where material_id = ?", Integer.class, id);
+        if (count != null && count > 0) {
+            throw new BusinessException("该耗材已有使用记录，不能删除");
+        }
+        jdbcTemplate.update("delete from repair_material where id = ?", id);
+        logService.log(SecurityUtils.currentUser().id(), "耗材管理", "删除", "删除耗材: " + id);
     }
 }

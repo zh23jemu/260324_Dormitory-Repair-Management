@@ -14,6 +14,8 @@ const routes = [
       { path: 'orders', name: 'orders', component: () => import('../views/dorm/OrderManageView.vue'), meta: { roles: ['admin', 'dorm_admin'] } },
       { path: 'repair-work', name: 'repair-work', component: () => import('../views/repairer/RepairWorkView.vue'), meta: { roles: ['repairer'] } },
       { path: 'repairer/stats', name: 'repairer-stats', component: () => import('../views/repairer/RepairerStatsView.vue'), meta: { roles: ['repairer'] } },
+      { path: 'repairer/list', name: 'repairer-list', component: () => import('../views/repairer/RepairerInfoView.vue'), meta: { roles: ['repairer'] } },
+      { path: 'repairer/profile', name: 'repairer-profile', component: () => import('../views/repairer/RepairerProfileView.vue'), meta: { roles: ['repairer'] } },
       { path: 'dorm-rooms', name: 'dorm-rooms', component: () => import('../views/dorm/DormRoomManageView.vue'), meta: { roles: ['admin', 'dorm_admin'] } },
       { path: 'facilities', name: 'facilities', component: () => import('../views/dorm/FacilityManageView.vue'), meta: { roles: ['admin', 'dorm_admin'] } },
       { path: 'students', name: 'students', component: () => import('../views/dorm/StudentStayManageView.vue'), meta: { roles: ['admin', 'dorm_admin'] } },
@@ -21,6 +23,7 @@ const routes = [
       { path: 'users', name: 'users', component: () => import('../views/admin/UserManageView.vue'), meta: { roles: ['admin'] } },
       { path: 'resources', name: 'resources', component: () => import('../views/admin/ResourceManageView.vue'), meta: { roles: ['admin'] } },
       { path: 'service-messages', name: 'service-messages', component: () => import('../views/admin/ServiceMessageManageView.vue'), meta: { roles: ['admin'] } },
+      { path: 'materials', name: 'materials', component: () => import('../views/admin/MaterialManageView.vue'), meta: { roles: ['admin'] } },
       { path: 'config', name: 'config', component: () => import('../views/admin/ConfigManageView.vue'), meta: { roles: ['admin'] } },
       { path: 'logs', name: 'logs', component: () => import('../views/admin/SystemLogView.vue'), meta: { roles: ['admin'] } }
     ]

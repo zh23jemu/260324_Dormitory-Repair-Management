@@ -3,6 +3,7 @@ package com.dormrepair.service;
 import com.dormrepair.common.BusinessException;
 import com.dormrepair.dto.repair.RepairCreateRequest;
 import com.dormrepair.dto.repair.RepairRatingRequest;
+import com.dormrepair.dto.student.ForumPostRequest;
 import com.dormrepair.dto.student.ServiceMessageRequest;
 import com.dormrepair.dto.student.StudentProfileUpdateRequest;
 import com.dormrepair.security.JwtUser;
@@ -116,32 +117,50 @@ public class StudentService {
 
     public List<Map<String, Object>> repairers() {
         return commonQueryService.list(
-                "select u.id, u.real_name as realName, u.phone, u.work_type_code as workTypeCode, d.dict_name as workTypeName, " +
+                "select u.id, u.real_name as realName, u.phone, u.avatar, u.work_type_code as workTypeCode, (select group_concat(d.dict_name, '、') from sys_dict d where d.dict_type = 'repair_work_type' and instr(',' || coalesce(u.work_type_code, '') || ',', ',' || d.dict_code || ',') > 0) as workTypeName, " +
                         "(select count(*) from repair_order ro where ro.assigned_repairer_id = u.id) as totalCount, " +
                         "(select count(*) from repair_order ro where ro.assigned_repairer_id = u.id and ro.status in ('pending_rating', 'completed')) as completedCount, " +
                         "(select round(avg(rr.score), 2) from repair_rating rr left join repair_order ro on rr.repair_order_id = ro.id where ro.assigned_repairer_id = u.id) as avgScore " +
-                        "from user u left join sys_dict d on u.work_type_code = d.dict_code and d.dict_type = 'repair_work_type' where u.role = 'repairer' and u.status = 'enabled' order by u.id asc"
+                        "from user u where u.role = 'repairer' and u.status = 'enabled' order by u.id asc"
         );
     }
 
     public Map<String, Object> repairerDetail(Long id) {
         Map<String, Object> detail = commonQueryService.one(
-                "select u.id, u.username, u.real_name as realName, u.phone, u.work_type_code as workTypeCode, d.dict_name as workTypeName, " +
+                "select u.id, u.username, u.real_name as realName, u.phone, u.avatar, u.work_type_code as workTypeCode, (select group_concat(d.dict_name, '、') from sys_dict d where d.dict_type = 'repair_work_type' and instr(',' || coalesce(u.work_type_code, '') || ',', ',' || d.dict_code || ',') > 0) as workTypeName, " +
                         "(select count(*) from repair_order ro where ro.assigned_repairer_id = u.id) as totalCount, " +
                         "(select count(*) from repair_order ro where ro.assigned_repairer_id = u.id and ro.status in ('pending_rating', 'completed')) as completedCount, " +
                         "(select round(avg(rr.score), 2) from repair_rating rr left join repair_order ro on rr.repair_order_id = ro.id where ro.assigned_repairer_id = u.id) as avgScore " +
-                        "from user u left join sys_dict d on u.work_type_code = d.dict_code and d.dict_type = 'repair_work_type' where u.role = 'repairer' and u.id = ?",
+                        "from user u where u.role = 'repairer' and u.id = ?",
                 id
         );
         int total = detail.get("totalCount") == null ? 0 : ((Number) detail.get("totalCount")).intValue();
         int completed = detail.get("completedCount") == null ? 0 : ((Number) detail.get("completedCount")).intValue();
         detail.put("completionRate", total == 0 ? 0 : Math.round(completed * 10000.0 / total) / 100.0);
         detail.put("recentOrders", commonQueryService.list(
-                "select ro.id, ro.order_no as orderNo, ro.title, ro.status, ro.completed_at as completedAt, rt.type_name as repairTypeName " +
-                        "from repair_order ro left join repair_type rt on ro.repair_type_id = rt.id where ro.assigned_repairer_id = ? order by ro.id desc limit 5",
+                "select ro.id, ro.order_no as orderNo, ro.title, ro.status, ro.completed_at as completedAt, rt.type_name as repairTypeName, rr.score, rr.content as ratingContent, rr.created_at as ratedAt, su.real_name as studentName " +
+                        "from repair_order ro left join repair_type rt on ro.repair_type_id = rt.id left join repair_rating rr on ro.id = rr.repair_order_id left join user su on rr.student_id = su.id where ro.assigned_repairer_id = ? and ro.status = 'completed' order by ro.id desc limit 8",
                 id
         ));
         return detail;
+    }
+
+    public List<Map<String, Object>> forumPosts() {
+        return commonQueryService.list(
+                "select fp.id, fp.title, fp.content, fp.image_path as imagePath, fp.status, fp.created_at as createdAt, u.real_name as studentName, u.avatar as studentAvatar " +
+                        "from forum_post fp left join user u on fp.student_id = u.id where fp.status = 'published' order by fp.id desc"
+        );
+    }
+
+    public void createForumPost(ForumPostRequest request) {
+        SecurityUtils.requireRole("student");
+        JwtUser user = SecurityUtils.currentUser();
+        String now = TimeUtils.now();
+        jdbcTemplate.update(
+                "insert into forum_post(student_id, title, content, image_path, status, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?)",
+                user.id(), request.title(), request.content(), request.imagePath(), "published", now, now
+        );
+        logService.log(user.id(), "学生论坛", "新增", "发布论坛帖子: " + request.title());
     }
 
     public List<Map<String, Object>> serviceMessages() {
@@ -200,7 +219,7 @@ public class StudentService {
     public Map<String, Object> myProfile() {
         SecurityUtils.requireRole("student");
         Map<String, Object> profile = commonQueryService.one(
-                "select u.id, u.username, u.real_name as realName, u.phone, sp.student_no as studentNo, sp.college, sp.major, sp.class_name as className, sp.building_id as buildingId, sp.room_id as roomId, sp.bed_no as bedNo, db.building_name as buildingName, dr.room_no as roomNo " +
+                "select u.id, u.username, u.real_name as realName, u.phone, u.avatar, sp.student_no as studentNo, sp.college, sp.major, sp.class_name as className, sp.building_id as buildingId, sp.room_id as roomId, sp.bed_no as bedNo, db.building_name as buildingName, dr.room_no as roomNo " +
                         "from user u left join student_profile sp on u.id = sp.user_id left join dorm_building db on sp.building_id = db.id left join dorm_room dr on sp.room_id = dr.id where u.id = ?",
                 SecurityUtils.currentUser().id()
         );
@@ -212,7 +231,7 @@ public class StudentService {
         SecurityUtils.requireRole("student");
         JwtUser user = SecurityUtils.currentUser();
         String now = TimeUtils.now();
-        jdbcTemplate.update("update user set phone = ?, updated_at = ? where id = ?", request.phone(), now, user.id());
+        jdbcTemplate.update("update user set phone = ?, avatar = ?, updated_at = ? where id = ?", request.phone(), request.avatar(), now, user.id());
         jdbcTemplate.update("update student_profile set building_id = ?, room_id = ?, bed_no = ?, updated_at = ? where user_id = ?", request.buildingId(), request.roomId(), request.bedNo(), now, user.id());
         logService.log(user.id(), "个人信息", "修改", "更新学生个人信息");
     }
@@ -222,11 +241,11 @@ public class StudentService {
         JwtUser user = SecurityUtils.currentUser();
         Map<String, Object> map = new HashMap<>();
         map.put("announcementCount", jdbcTemplate.queryForObject("select count(*) from announcement where status = 'published'", Integer.class));
-        map.put("resourceCount", jdbcTemplate.queryForObject("select count(*) from repair_resource where status = 'published'", Integer.class));
+        map.put("forumCount", jdbcTemplate.queryForObject("select count(*) from forum_post where status = 'published'", Integer.class));
         map.put("myOrderCount", jdbcTemplate.queryForObject("select count(*) from repair_order where student_id = ?", Integer.class, user.id()));
         map.put("pendingCount", jdbcTemplate.queryForObject("select count(*) from repair_order where student_id = ? and status not in ('completed', 'rejected')", Integer.class, user.id()));
         map.put("messageCount", jdbcTemplate.queryForObject("select count(*) from service_message where student_id = ?", Integer.class, user.id()));
-        map.put("latestResources", commonQueryService.list("select id, title, category from repair_resource where status = 'published' order by sort_no asc, id desc limit 3"));
+        map.put("latestForumPosts", commonQueryService.list("select fp.id, fp.title, fp.created_at as createdAt, u.real_name as studentName from forum_post fp left join user u on fp.student_id = u.id where fp.status = 'published' order by fp.id desc limit 3"));
         map.put("latestOrders", commonQueryService.list(
                 "select ro.id, ro.order_no as orderNo, ro.title, ro.status, ro.created_at as createdAt from repair_order ro where ro.student_id = ? order by ro.id desc limit 3",
                 user.id()

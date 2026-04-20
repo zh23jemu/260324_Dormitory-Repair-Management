@@ -1,10 +1,10 @@
-INSERT INTO user (id, username, password, real_name, phone, role, work_type_code, status, created_at, updated_at) VALUES
-(1, 'admin', '123456', '系统管理员', '13800000000', 'admin', NULL, 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00'),
-(2, 'dorm01', '123456', '一号宿管', '13800000001', 'dorm_admin', NULL, 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00'),
-(3, 'repair01', '123456', '维修员张工', '13800000002', 'repairer', 'electrician', 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00'),
-(4, 'student01', '123456', '张三', '13800000003', 'student', NULL, 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00'),
-(5, 'repair02', '123456', '维修员李工', '13800000004', 'repairer', 'carpenter', 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00'),
-(6, 'student02', '123456', '李四', '13800000005', 'student', NULL, 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00');
+INSERT INTO user (id, username, password, real_name, phone, avatar, role, work_type_code, status, created_at, updated_at) VALUES
+(1, 'admin', '123456', '系统管理员', '13800000000', NULL, 'admin', NULL, 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00'),
+(2, 'dorm01', '123456', '一号宿管', '13800000001', NULL, 'dorm_admin', NULL, 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00'),
+(3, 'repair01', '123456', '维修员张工', '13800000002', NULL, 'repairer', 'electrician', 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00'),
+(4, 'student01', '123456', '张三', '13800000003', NULL, 'student', NULL, 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00'),
+(5, 'repair02', '123456', '维修员李工', '13800000004', NULL, 'repairer', 'carpenter', 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00'),
+(6, 'student02', '123456', '李四', '13800000005', NULL, 'student', NULL, 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00');
 
 INSERT INTO dorm_building (id, building_name, building_code, gender_type, floor_count, remark) VALUES
 (1, '一号楼', 'B1', 'male', 6, '男生宿舍'),
@@ -34,9 +34,9 @@ INSERT INTO repair_type (id, type_name, sort_no, status) VALUES
 (4, '网络', 4, 'enabled'),
 (5, '其他', 5, 'enabled');
 
-INSERT INTO announcement (id, title, content, publisher_id, status, published_at, created_at) VALUES
-(1, '宿舍报修系统启用通知', '系统已上线，学生可直接通过手机端提交报修申请。', 1, 'published', '2026-03-25 09:00:00', '2026-03-25 09:00:00'),
-(2, '本周水电巡检通知', '周三下午将对一号楼和二号楼开展统一巡检，请宿舍同学提前做好准备。', 2, 'published', '2026-03-25 10:00:00', '2026-03-25 10:00:00');
+INSERT INTO announcement (id, title, content, image_path, publisher_id, status, published_at, created_at) VALUES
+(1, '宿舍报修系统启用通知', '系统已上线，学生可直接通过手机端提交报修申请。', NULL, 1, 'published', '2026-03-25 09:00:00', '2026-03-25 09:00:00'),
+(2, '本周水电巡检通知', '周三下午将对一号楼和二号楼开展统一巡检，请宿舍同学提前做好准备。', NULL, 2, 'published', '2026-03-25 10:00:00', '2026-03-25 10:00:00');
 
 INSERT INTO repair_order (id, order_no, student_id, building_id, room_id, facility_id, repair_type_id, title, description, expect_time, status, reject_reason, assigned_repairer_id, submitted_at, assigned_at, completed_at, created_at, updated_at) VALUES
 (1, 'BX202603250001', 4, 1, 1, 1, 1, '宿舍水龙头漏水', '卫生间水龙头持续滴水，需要尽快处理。', '2026-03-26 10:00:00', 'pending_review', NULL, NULL, '2026-03-25 09:30:00', NULL, NULL, '2026-03-25 09:30:00', '2026-03-25 09:30:00'),
@@ -73,6 +73,12 @@ INSERT INTO repair_feedback (id, repair_order_id, repairer_id, result_desc, mate
 (1, 5, 3, '已更换热水器温控模块，设备恢复正常加热。', '温控模块、绝缘胶带', '2026-03-25 12:10:00', '2026-03-25 12:10:00'),
 (2, 6, 5, '已加固衣柜铰链并重新校正柜门。', '螺丝、铰链垫片', '2026-03-25 10:15:00', '2026-03-25 10:15:00');
 
+INSERT INTO repair_material (id, material_name, material_type, unit, stock_qty, warning_qty, remark, created_at, updated_at) VALUES
+(1, '温控模块', '水电耗材', '个', 20, 5, '热水器维修常用', '2026-03-25 00:00:00', '2026-03-25 00:00:00'),
+(2, '绝缘胶带', '水电耗材', '卷', 50, 10, '线路绝缘处理', '2026-03-25 00:00:00', '2026-03-25 00:00:00'),
+(3, '螺丝', '家具耗材', '盒', 30, 5, '家具门窗维修常用', '2026-03-25 00:00:00', '2026-03-25 00:00:00'),
+(4, '网线模块', '网络耗材', '个', 15, 3, '宿舍网络面板维护', '2026-03-25 00:00:00', '2026-03-25 00:00:00');
+
 INSERT INTO repair_rating (id, repair_order_id, student_id, score, content, created_at) VALUES
 (1, 6, 6, 5, '处理速度很快，维修后使用正常。', '2026-03-25 10:40:00');
 
@@ -84,6 +90,10 @@ INSERT INTO repair_resource (id, title, category, summary, content, cover_image,
 INSERT INTO service_message (id, student_id, title, content, image_path, status, reply_content, replied_by, replied_at, created_at, updated_at) VALUES
 (1, 4, '建议增加维修进度提醒', '希望系统在维修员接单和维修完成时推送更明显的提示。', NULL, 'replied', '已记录，后续版本会继续优化消息提醒体验。', 1, '2026-03-25 12:30:00', '2026-03-25 12:00:00', '2026-03-25 12:30:00'),
 (2, 6, '报修图片上传建议', '上传图片时希望支持更多张数和更清晰的预览。', NULL, 'pending', NULL, NULL, NULL, '2026-03-25 12:40:00', '2026-03-25 12:40:00');
+
+INSERT INTO forum_post (id, student_id, title, content, image_path, status, created_at, updated_at) VALUES
+(1, 4, '宿舍热水器报修体验分享', '昨天提交报修后，维修员当天就完成处理，整体进度在系统里看得比较清楚。', NULL, 'published', '2026-03-25 13:00:00', '2026-03-25 13:00:00'),
+(2, 6, '建议报修时补充故障照片', '上传故障照片后，宿管和维修员判断问题会更快，建议大家尽量拍清楚。', NULL, 'published', '2026-03-25 13:30:00', '2026-03-25 13:30:00');
 
 INSERT INTO sys_dict (id, dict_type, dict_code, dict_name, sort_no, status) VALUES
 (1, 'repair_priority', 'normal', '普通', 1, 'enabled'),

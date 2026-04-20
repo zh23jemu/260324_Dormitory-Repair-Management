@@ -3,6 +3,7 @@ package com.dormrepair.controller;
 import com.dormrepair.common.ApiResponse;
 import com.dormrepair.dto.repair.RepairCreateRequest;
 import com.dormrepair.dto.repair.RepairRatingRequest;
+import com.dormrepair.dto.student.ForumPostRequest;
 import com.dormrepair.dto.student.ServiceMessageRequest;
 import com.dormrepair.dto.student.StudentProfileUpdateRequest;
 import com.dormrepair.service.DormAdminService;
@@ -74,6 +75,17 @@ public class StudentController {
     @GetMapping("/repairers/{id}")
     public ApiResponse<Map<String, Object>> repairerDetail(@PathVariable Long id) {
         return ApiResponse.success(studentService.repairerDetail(id));
+    }
+
+    @GetMapping("/forum-posts")
+    public ApiResponse<List<Map<String, Object>>> forumPosts() {
+        return ApiResponse.success(studentService.forumPosts());
+    }
+
+    @PostMapping("/forum-posts")
+    public ApiResponse<Void> createForumPost(@Valid @RequestBody ForumPostRequest request) {
+        studentService.createForumPost(request);
+        return ApiResponse.success();
     }
 
     @PostMapping("/repair-orders")

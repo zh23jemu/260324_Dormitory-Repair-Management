@@ -11,10 +11,21 @@
         <van-cell title="平均评分" :value="String(detail.avgScore || 0)" />
       </van-cell-group>
       <div class="detail-block">
-        <strong>近期工单</strong>
+        <strong>已完成工单评价</strong>
         <van-cell-group inset>
-          <van-cell v-for="item in detail.recentOrders || []" :key="item.id" :title="item.title" :label="item.repairTypeName" :value="item.status" />
+          <van-cell v-for="item in detail.recentOrders || []" :key="item.id" :title="item.title" :label="`${item.repairTypeName || ''} / ${item.studentName || '学生'}`">
+            <template #value>
+              <van-rate v-if="item.score" :model-value="item.score" readonly size="14" />
+              <span v-else>暂无评价</span>
+            </template>
+          </van-cell>
         </van-cell-group>
+        <div v-for="item in detail.recentOrders || []" :key="`rating-${item.id}`" class="rating-card" v-if="item.ratingContent">
+          <strong>{{ item.orderNo }}</strong>
+          <p>{{ item.ratingContent }}</p>
+          <span>{{ item.ratedAt || item.completedAt }}</span>
+        </div>
+        <van-empty v-if="!(detail.recentOrders || []).length" description="暂无已完成工单评价" />
       </div>
     </div>
   </div>

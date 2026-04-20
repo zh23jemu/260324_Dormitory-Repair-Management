@@ -2,6 +2,7 @@ package com.dormrepair.controller;
 
 import com.dormrepair.common.ApiResponse;
 import com.dormrepair.dto.admin.DictSaveRequest;
+import com.dormrepair.dto.admin.MaterialRequest;
 import com.dormrepair.dto.admin.ResourceRequest;
 import com.dormrepair.dto.admin.RepairTypeSaveRequest;
 import com.dormrepair.dto.admin.ServiceMessageReplyRequest;
@@ -176,6 +177,29 @@ public class AdminController {
     @DeleteMapping("/repair-types/{id}")
     public ApiResponse<Void> deleteRepairType(@PathVariable Long id) {
         adminService.deleteRepairType(id);
+        return ApiResponse.success();
+    }
+
+    @GetMapping("/materials")
+    public ApiResponse<List<Map<String, Object>>> materials() {
+        return ApiResponse.success(adminService.materials());
+    }
+
+    @PostMapping("/materials")
+    public ApiResponse<Void> createMaterial(@Valid @RequestBody MaterialRequest request) {
+        adminService.createMaterial(request);
+        return ApiResponse.success();
+    }
+
+    @PutMapping("/materials/{id}")
+    public ApiResponse<Void> updateMaterial(@PathVariable Long id, @Valid @RequestBody MaterialRequest request) {
+        adminService.updateMaterial(id, request);
+        return ApiResponse.success();
+    }
+
+    @DeleteMapping("/materials/{id}")
+    public ApiResponse<Void> deleteMaterial(@PathVariable Long id) {
+        adminService.deleteMaterial(id);
         return ApiResponse.success();
     }
 }

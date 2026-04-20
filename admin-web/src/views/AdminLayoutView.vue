@@ -45,6 +45,8 @@ const allMenus = [
   { path: '/orders', label: '工单管理', desc: '审核与分配', roles: ['admin', 'dorm_admin'] },
   { path: '/repair-work', label: '维修处理', desc: '工单执行', roles: ['repairer'] },
   { path: '/repairer/stats', label: '个人统计', desc: '维修员数据', roles: ['repairer'] },
+  { path: '/repairer/list', label: '维修员信息', desc: '同事与评价', roles: ['repairer'] },
+  { path: '/repairer/profile', label: '个人信息', desc: '头像与工种', roles: ['repairer'] },
   { path: '/dorm-rooms', label: '楼栋宿舍', desc: '楼栋房间管理', roles: ['admin', 'dorm_admin'] },
   { path: '/facilities', label: '设施台账', desc: '宿舍资产管理', roles: ['admin', 'dorm_admin'] },
   { path: '/students', label: '学生住宿', desc: '入住信息维护', roles: ['admin', 'dorm_admin'] },
@@ -52,6 +54,7 @@ const allMenus = [
   { path: '/users', label: '用户管理', desc: '账号与角色', roles: ['admin'] },
   { path: '/resources', label: '报修知识', desc: '知识库维护', roles: ['admin'] },
   { path: '/service-messages', label: '服务留言', desc: '用户反馈处理', roles: ['admin'] },
+  { path: '/materials', label: '耗材管理', desc: '库存与扣减', roles: ['admin'] },
   { path: '/config', label: '基础配置', desc: '类型与字典', roles: ['admin'] },
   { path: '/logs', label: '系统日志', desc: '操作留痕', roles: ['admin'] }
 ]

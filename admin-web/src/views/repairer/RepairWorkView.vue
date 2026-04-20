@@ -35,6 +35,18 @@
     <el-form :model="feedbackForm" label-width="90px">
       <el-form-item label="处理结果"><el-input v-model="feedbackForm.resultDesc" type="textarea" rows="4" /></el-form-item>
       <el-form-item label="使用材料"><el-input v-model="feedbackForm.materialsUsed" /></el-form-item>
+      <el-form-item label="耗材上报">
+        <div class="material-usage-list">
+          <div v-for="(item, index) in feedbackForm.materialUsages" :key="index" class="material-usage-row">
+            <el-select v-model="item.materialId" placeholder="选择耗材" style="width:220px">
+              <el-option v-for="m in materials" :key="m.id" :label="`${m.materialName}（库存 ${m.stockQty}${m.unit}）`" :value="m.id" />
+            </el-select>
+            <el-input-number v-model="item.quantity" :min="0" :precision="2" placeholder="数量" />
+            <el-button type="danger" plain @click="feedbackForm.materialUsages.splice(index, 1)">删除</el-button>
+          </div>
+          <el-button plain @click="feedbackForm.materialUsages.push({ materialId: null, quantity: 1 })">新增耗材</el-button>
+        </div>
+      </el-form-item>
       <el-form-item label="完成时间"><el-input v-model="feedbackForm.finishTime" placeholder="2026-04-17 18:00:00" /></el-form-item>
     </el-form>
     <template #footer>
@@ -50,14 +62,19 @@ import { ElMessage } from 'element-plus'
 import api from '../../api'
 
 const orders = ref([])
+const materials = ref([])
 const currentOrder = ref(null)
 const currentRepairOrder = ref(null)
 const detailVisible = ref(false)
 const feedbackVisible = ref(false)
-const feedbackForm = reactive({ resultDesc: '', materialsUsed: '', finishTime: '', imagePaths: [] })
+const feedbackForm = reactive({ resultDesc: '', materialsUsed: '', finishTime: '', imagePaths: [], materialUsages: [] })
 
 async function loadOrders() {
   orders.value = (await api.get('/repairer/repair-orders')).data.data
+}
+
+async function loadMaterials() {
+  materials.value = (await api.get('/repairer/materials')).data.data
 }
 
 async function openDetail(row) {
@@ -76,15 +93,40 @@ function openFeedback(row) {
   feedbackForm.resultDesc = ''
   feedbackForm.materialsUsed = ''
   feedbackForm.finishTime = new Date().toISOString().slice(0, 19).replace('T', ' ')
+  feedbackForm.materialUsages = []
   feedbackVisible.value = true
 }
 
 async function submitFeedback() {
+  // 完工提交前先在前端做一次明确校验，避免空耗材、0 数量进入后端造成用户不清楚失败原因。
+  for (const item of feedbackForm.materialUsages) {
+    if (!item.materialId || !item.quantity || item.quantity <= 0) {
+      ElMessage.error('请完整选择耗材并填写大于 0 的使用数量')
+      return
+    }
+  }
   await api.post(`/repairer/repair-orders/${currentRepairOrder.value.id}/feedback`, feedbackForm)
   ElMessage.success('维修结果已提交')
   feedbackVisible.value = false
-  await loadOrders()
+  await Promise.all([loadOrders(), loadMaterials()])
 }
 
-onMounted(loadOrders)
+onMounted(async () => {
+  await Promise.all([loadOrders(), loadMaterials()])
+})
 </script>
+
+<style scoped>
+.material-usage-list {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+}
+
+.material-usage-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+</style>
