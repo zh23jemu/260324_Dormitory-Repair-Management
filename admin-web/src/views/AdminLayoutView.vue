@@ -34,31 +34,31 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useAdminAuth } from '../utils/auth'
+import { useAuth } from '../utils/auth'
 
 const router = useRouter()
 const route = useRoute()
-const auth = useAdminAuth()
+const auth = useAuth()
 
 const allMenus = [
-  { path: '/dashboard', label: '统计中心', desc: '概览与图表', roles: ['admin'] },
-  { path: '/orders', label: '工单管理', desc: '审核与分配', roles: ['admin', 'dorm_admin'] },
-  { path: '/repair-work', label: '维修处理', desc: '工单执行', roles: ['repairer'] },
-  { path: '/repairer/stats', label: '个人统计', desc: '维修员数据', roles: ['repairer'] },
-  { path: '/repairer/list', label: '维修员信息', desc: '同事与评价', roles: ['repairer'] },
-  { path: '/repairer/profile', label: '个人信息', desc: '头像与工种', roles: ['repairer'] },
-  { path: '/dorm-rooms', label: '楼栋宿舍', desc: '楼栋房间管理', roles: ['admin', 'dorm_admin'] },
-  { path: '/facilities', label: '设施台账', desc: '宿舍资产管理', roles: ['admin', 'dorm_admin'] },
-  { path: '/students', label: '学生住宿', desc: '入住信息维护', roles: ['admin', 'dorm_admin'] },
-  { path: '/announcements', label: '公告管理', desc: '发布系统公告', roles: ['admin', 'dorm_admin'] },
-  { path: '/users', label: '用户管理', desc: '账号与角色', roles: ['admin'] },
-  { path: '/resources', label: '报修知识', desc: '知识库维护', roles: ['admin'] },
-  { path: '/forum-posts', label: '论坛管理', desc: '公开内容审核', roles: ['admin', 'dorm_admin'] },
-  { path: '/service-messages', label: '服务留言', desc: '用户反馈处理', roles: ['admin', 'dorm_admin'] },
-  { path: '/ratings', label: '评价管理', desc: '服务质量评价', roles: ['admin', 'dorm_admin'] },
-  { path: '/materials', label: '耗材管理', desc: '库存与扣减', roles: ['admin'] },
-  { path: '/config', label: '基础配置', desc: '类型与字典', roles: ['admin'] },
-  { path: '/logs', label: '系统日志', desc: '操作留痕', roles: ['admin'] }
+  { path: '/admin/dashboard', label: '统计中心', desc: '概览与图表', roles: ['admin'] },
+  { path: '/admin/orders', label: '工单管理', desc: '审核与分配', roles: ['admin', 'dorm_admin'] },
+  { path: '/admin/repair-work', label: '维修处理', desc: '工单执行', roles: ['repairer'] },
+  { path: '/admin/repairer/stats', label: '个人统计', desc: '维修员数据', roles: ['repairer'] },
+  { path: '/admin/repairer/list', label: '维修员信息', desc: '同事与评价', roles: ['repairer'] },
+  { path: '/admin/repairer/profile', label: '个人信息', desc: '头像与工种', roles: ['repairer'] },
+  { path: '/admin/dorm-rooms', label: '楼栋宿舍', desc: '楼栋房间管理', roles: ['admin', 'dorm_admin'] },
+  { path: '/admin/facilities', label: '设施台账', desc: '宿舍资产管理', roles: ['admin', 'dorm_admin'] },
+  { path: '/admin/students', label: '学生住宿', desc: '入住信息维护', roles: ['admin', 'dorm_admin'] },
+  { path: '/admin/announcements', label: '公告管理', desc: '发布系统公告', roles: ['admin', 'dorm_admin'] },
+  { path: '/admin/users', label: '用户管理', desc: '账号与角色', roles: ['admin'] },
+  { path: '/admin/resources', label: '报修知识', desc: '知识库维护', roles: ['admin'] },
+  { path: '/admin/forum-posts', label: '论坛管理', desc: '公开内容审核', roles: ['admin', 'dorm_admin'] },
+  { path: '/admin/service-messages', label: '服务留言', desc: '用户反馈处理', roles: ['admin', 'dorm_admin'] },
+  { path: '/admin/ratings', label: '评价管理', desc: '服务质量评价', roles: ['admin', 'dorm_admin'] },
+  { path: '/admin/materials', label: '耗材管理', desc: '库存与扣减', roles: ['admin'] },
+  { path: '/admin/config', label: '基础配置', desc: '类型与字典', roles: ['admin'] },
+  { path: '/admin/logs', label: '系统日志', desc: '操作留痕', roles: ['admin'] }
 ]
 
 const menus = computed(() => allMenus.filter((item) => item.roles.includes(auth.state.userInfo.role)))
@@ -67,7 +67,7 @@ const roleText = computed(() => ({ admin: '系统管理员', dorm_admin: '宿舍
 
 function handleLogout() {
   auth.logout()
-  router.replace('/login')
+  router.replace('/home')
 }
 
 function refreshCurrent() {

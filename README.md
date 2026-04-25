@@ -3,15 +3,13 @@
 ## 项目结构
 
 - `server`：Spring Boot 后端
-- `admin-web`：PC 管理端
-- `student-web`：移动端 Web 学生端
+- `admin-web`：统一前端，包含公共门户、学生端页面、宿管端、维修员端、管理员端
 - `docs`：设计方案、数据库和接口文档
 
 ## 技术栈
 
 - 后端：Spring Boot 3、Spring Security、JWT、SQLite、JdbcTemplate
-- 管理端：Vue 3、Vite、Element Plus、ECharts
-- 学生端：Vue 3、Vite、Vant
+- 前端：Vue 3、Vite、Vue Router、Element Plus、Vant、ECharts
 
 ## 启动方式
 
@@ -22,9 +20,9 @@ cd C:\Coding\260324_Dormitory-Repair-Management\server
 cmd /c "mvn -Dspring-boot.run.arguments=--server.port=2360 spring-boot:run"
 ```
 
-后端默认地址：`http://localhost:2360`
+后端地址：`http://localhost:2360`
 
-### 2. 启动管理端
+### 2. 启动统一前端
 
 ```powershell
 cd C:\Coding\260324_Dormitory-Repair-Management\admin-web
@@ -33,19 +31,12 @@ $env:VITE_API_BASE_URL='http://localhost:2360/api'
 npm run dev
 ```
 
-管理端地址：`http://localhost:5183`
-未显式设置 `VITE_API_BASE_URL` 时，前端默认也会请求 `http://localhost:2360/api`
+统一前端地址：`http://localhost:5183`
 
-### 3. 启动学生端
+主要入口：
 
-```powershell
-cd C:\Coding\260324_Dormitory-Repair-Management\student-web
-npm install
-$env:VITE_API_BASE_URL='http://localhost:2360/api'
-npm run dev
-```
-
-学生端地址：`http://localhost:5184`
+- 统一门户首页：`http://localhost:5183/home`
+- 统一登录页：`http://localhost:5183/login`
 
 ## 一键启动
 
@@ -56,8 +47,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\start-dev.ps1
 
 说明：
 
+- 一键启动只会拉起后端和统一前端
 - Windows `PowerShell` 下推荐使用 `cmd /c "mvn -Dspring-boot.run.arguments=--server.port=2360 spring-boot:run"`
-- 如果仍想直接在 `PowerShell` 调 Maven，也可以使用 `mvn --% -Dspring-boot.run.arguments=--server.port=2360 spring-boot:run`
 - 不建议写成 `mvn spring-boot:run "-Dspring-boot.run.arguments=..."`，部分环境会出现参数解析异常
 
 ## 预置账号
@@ -79,14 +70,13 @@ powershell -ExecutionPolicy Bypass -File .\scripts\start-dev.ps1
 - 不同状态的工单：`待审核`、`已驳回`、`待接单`、`处理中`、`待评价`、`已完成`
 - 维修结果、评价记录、系统日志
 
-如果想重新生成示例数据，删除项目根目录下的 `dorm_repair.db` 后重启后端即可。
+如果想重新生成示例数据，可删除项目根目录下的 `dorm_repair.db` 后重启后端。
 
 ## 已实现内容
 
-- 学生注册登录、提交报修、查看报修、评价工单、查看公告
-- 学生端故障图片上传和工单图片预览
-- 宿管审核工单、分配维修人员、驳回工单、管理宿舍、发布公告
-- 维修人员接单、提交维修结果、上传维修图片、查看个人统计
-- 管理员查看统计概览、图表、用户列表、日志列表
-- 管理端 CSV 导出、工单筛选、图片预览
-- SQLite 自动建表和初始化数据
+- 公共门户：首页统一展示公告、报修记录、服务统计、维修排行和论坛内容
+- 统一登录：学生、宿管、维修员、管理员共用一个登录页
+- 学生功能：注册登录、找回密码、提交报修、查看工单、评价、留言、论坛、维修员信息、个人中心
+- 宿管功能：工单审核、分配维修、宿舍与住宿管理、公告/论坛/留言/评价管理
+- 维修员功能：接单处理、完工反馈、个人统计、个人信息与工种管理
+- 管理员功能：统计概览、用户、基础配置、耗材、日志等后台能力
