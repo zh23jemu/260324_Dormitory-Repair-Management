@@ -11,6 +11,10 @@
           <span>维修员：repair01 / 123456</span>
           <span>管理员：admin / 123456</span>
         </div>
+        <div class="unified-login__floating-card">
+          <strong>统一门户与工作台</strong>
+          <span>同一套视觉语言下完成公告浏览、报修提交、论坛交流与后台管理演示。</span>
+        </div>
       </div>
       <div class="unified-login__panel">
         <el-card class="login-card">

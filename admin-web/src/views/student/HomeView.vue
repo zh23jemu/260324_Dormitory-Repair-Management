@@ -80,27 +80,39 @@
         <div class="portal-panel portal-stats-card">
           <div class="portal-side-title">维修服务统计</div>
           <div class="portal-stats-card__block">
-            <div class="portal-stats-card__caption">工单处理情况</div>
+            <div class="portal-stats-card__caption">
+              <span class="portal-stats-card__caption-icon">📊</span>
+              <span>工单处理情况</span>
+            </div>
             <div class="portal-kpi-grid">
               <div class="portal-kpi-item">
+                <div class="portal-kpi-item__icon">单</div>
                 <span>工单总数</span>
                 <strong>{{ statistics.totalCount || 0 }}</strong>
               </div>
               <div class="portal-kpi-item">
+                <div class="portal-kpi-item__icon is-success">成</div>
                 <span>已维修</span>
                 <strong class="is-success">{{ statistics.completedCount || 0 }}</strong>
               </div>
               <div class="portal-kpi-item">
+                <div class="portal-kpi-item__icon is-warn">修</div>
                 <span>维修中</span>
                 <strong class="is-warn">{{ statistics.processingCount || 0 }}</strong>
               </div>
             </div>
           </div>
           <div class="portal-stats-card__block">
-            <div class="portal-stats-card__caption">维修单位排行榜</div>
+            <div class="portal-stats-card__caption">
+              <span class="portal-stats-card__caption-icon">🏆</span>
+              <span>维修单位排行榜</span>
+            </div>
             <div class="portal-mini-rank">
               <div v-for="(item, index) in repairerRanking.slice(0, 5)" :key="item.id" class="portal-mini-rank__item">
-                <span>#{{ index + 1 }} {{ item.realName }}</span>
+                <div class="portal-mini-rank__main">
+                  <em class="portal-mini-rank__badge" :class="`is-rank-${index + 1}`">TOP {{ index + 1 }}</em>
+                  <span>{{ item.realName }}</span>
+                </div>
                 <strong>{{ item.completedCount || 0 }} 单</strong>
               </div>
             </div>
