@@ -179,15 +179,22 @@ body {
   cursor: pointer;
 }
 .site-brand__mark {
-  width: 42px;
-  height: 42px;
-  border-radius: 14px;
+  width: 44px;
+  height: 44px;
+  border-radius: 15px;
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg, #0f766e, #2563eb);
-  color: #ffffff;
-  font-size: 22px;
-  font-weight: 800;
+  overflow: hidden;
+  background: linear-gradient(135deg, #e0f2fe, #dbeafe);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.72),
+    0 10px 20px rgba(37, 99, 235, 0.12);
+}
+.site-brand__mark img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
 }
 .site-brand strong,
 .site-brand span {
@@ -390,7 +397,7 @@ body {
 }
 .portal-main {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-columns: minmax(0, 1fr) 360px;
   gap: 18px;
   margin-top: 18px;
 }
@@ -535,6 +542,7 @@ body {
 }
 .portal-stats-card {
   padding: 22px;
+  min-width: 0;
 }
 .portal-side-title,
 .portal-section-title {
@@ -567,18 +575,18 @@ body {
 }
 .portal-kpi-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 12px;
 }
 .portal-kpi-item {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: 48px minmax(0, 1fr);
   grid-template-areas:
     'icon label'
     'icon value';
   align-items: center;
   column-gap: 12px;
-  gap: 8px;
+  row-gap: 6px;
   padding: 16px 14px;
   border-radius: 18px;
   background:
@@ -612,6 +620,9 @@ body {
   grid-area: label;
   color: #6b7280;
   font-size: 14px;
+  line-height: 1.5;
+  writing-mode: horizontal-tb;
+  word-break: break-all;
 }
 .portal-kpi-item strong {
   grid-area: value;
@@ -619,6 +630,7 @@ body {
   line-height: 1;
   color: #1d4ed8;
   letter-spacing: 0.03em;
+  justify-self: end;
 }
 .portal-kpi-item strong.is-success {
   color: #047857;
@@ -1241,7 +1253,6 @@ body {
   }
   .portal-feed__toolbar,
   .portal-announcement-card,
-  .portal-kpi-grid,
   .portal-sidebar,
   .portal-filter-row,
   .unified-login__hero {

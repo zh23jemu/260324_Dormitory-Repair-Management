@@ -3,7 +3,9 @@
     <header class="site-header">
       <div class="site-header__inner">
         <div class="site-brand" @click="router.push('/home')">
-          <span class="site-brand__mark">D</span>
+          <span class="site-brand__mark">
+            <img src="../assets/portal/portal-logo.png" alt="高校宿舍报修管理系统标识" />
+          </span>
           <div>
             <strong>高校宿舍报修管理系统</strong>
             <span>统一门户 / 公告 / 报修 / 论坛 / 维修服务</span>
