@@ -19,6 +19,7 @@
             <span>论坛与公告统一展示</span>
             <span>按角色进入不同工作台</span>
           </div>
+          <div class="portal-illustration-card__image" aria-hidden="true"></div>
         </div>
       </div>
     </section>
