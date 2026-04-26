@@ -70,7 +70,9 @@
           <div class="portal-entry-card__icon">🔧</div>
           <div>
             <strong>我要报修</strong>
-            <span>登录后提交宿舍报修申请</span>
+            <span v-if="!auth.hasToken()">登录后提交宿舍报修申请</span>
+            <span v-else-if="auth.hasRole('student')">进入个人报修中心，快速提交并跟踪宿舍工单</span>
+            <span v-else>当前账号可浏览门户信息，学生账号可在此提交报修申请</span>
           </div>
         </div>
 
