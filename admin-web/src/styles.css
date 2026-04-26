@@ -530,7 +530,10 @@ body {
 }
 .portal-announcement-card {
   display: grid;
-  grid-template-columns: 200px 1fr;
+  grid-template-columns: minmax(0, 1fr);
+}
+.portal-announcement-card--with-image {
+  grid-template-columns: 200px minmax(0, 1fr);
 }
 .portal-announcement-card img,
 .portal-forum-item img {

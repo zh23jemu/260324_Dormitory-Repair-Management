@@ -130,7 +130,11 @@
       <div class="portal-panel">
         <div class="portal-section-title">公告信息</div>
         <div v-if="announcements.length" class="portal-announcement-list">
-          <article v-for="item in announcements.slice(0, 4)" :key="item.id" class="portal-announcement-card">
+          <article
+            v-for="item in announcements.slice(0, 4)"
+            :key="item.id"
+            :class="['portal-announcement-card', { 'portal-announcement-card--with-image': !!item.imagePath }]"
+          >
             <img v-if="item.imagePath" :src="fileUrl(item.imagePath)" alt="公告配图" />
             <div class="portal-announcement-card__content">
               <strong>{{ item.title }}</strong>
