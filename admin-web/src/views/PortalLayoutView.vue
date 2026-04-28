@@ -69,11 +69,11 @@ const auth = useAuth()
 
 const navItems = [
   { label: '首页', to: '/home', requiresAuth: false },
+  { label: '公告信息', to: '/announcements', requiresAuth: false },
   { label: '我要报修', to: '/student/repair/create', requiresAuth: true, roles: ['student'] },
   { label: '我的工单', to: '/student/orders', requiresAuth: true, roles: ['student'] },
-  { label: '论坛交流', to: '/forum', requiresAuth: false },
-  { label: '公告信息', to: '/announcements', requiresAuth: false },
-  { label: '维修员信息', to: '/repairers', requiresAuth: false }
+  { label: '论坛交流', to: '/forum', requiresAuth: true, roles: ['student'] },
+  { label: '维修员信息', to: '/repairers', requiresAuth: true, roles: ['student'] }
 ]
 
 function isActive(path) {
