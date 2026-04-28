@@ -2,8 +2,15 @@
   <div class="admin-shell">
     <aside class="admin-side">
       <div class="brand-box">
-        <div class="brand-title">宿舍报修管理</div>
-        <div class="brand-subtitle">{{ auth.state.userInfo.realName }} / {{ roleText }}</div>
+        <div class="admin-brand">
+          <span class="admin-brand__mark">
+            <img src="../assets/portal/portal-logo.png" alt="宿舍报修管理系统标识" />
+          </span>
+          <div>
+            <div class="brand-title">宿舍报修管理</div>
+            <div class="brand-subtitle">{{ auth.state.userInfo.realName }} / {{ roleText }}</div>
+          </div>
+        </div>
       </div>
       <nav class="side-nav">
         <router-link v-for="item in menus" :key="item.path" :to="item.path" class="nav-item" active-class="is-active">
@@ -16,6 +23,7 @@
     <div class="admin-main">
       <header class="admin-header">
         <div>
+          <div class="admin-header__eyebrow">{{ roleText }}工作台</div>
           <div class="page-title">{{ currentTitle }}</div>
           <div class="page-subtitle">围绕宿舍报修全流程、宿舍设施、统计分析和服务反馈进行管理</div>
         </div>
