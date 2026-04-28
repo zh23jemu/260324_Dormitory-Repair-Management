@@ -1,58 +1,117 @@
 <template>
-  <div class="page-stack">
-    <div class="section" v-if="order">
-      <div class="section-head">
-        <div class="section-title">工单详情</div>
-        <van-tag type="primary">{{ repairOrderStatusText(order.status) }}</van-tag>
+  <div class="student-page">
+    <section class="student-hero" v-if="order">
+      <div class="student-hero__copy">
+        <div class="student-hero__eyebrow">工单详情</div>
+        <h1>{{ order.title }}</h1>
+        <p>查看报修工单的当前状态、流转记录、维修结果和图片资料。</p>
       </div>
-      <van-cell-group inset>
-        <van-cell title="工单号" :value="order.orderNo" />
-        <van-cell title="报修类型" :value="order.repairTypeName" />
-        <van-cell title="宿舍位置" :value="`${order.buildingName || ''} ${order.roomNo || ''}`" />
-        <van-cell title="关联设施" :value="order.facilityName || '未关联'" />
-        <van-cell title="期望时间" :value="order.expectTime || '未填写'" />
-        <van-cell title="维修人员" :value="order.repairerName || '待分配'" />
-        <van-cell title="维修结果" :value="order.resultDesc || '暂无'" />
-      </van-cell-group>
-      <div class="detail-block">
-        <strong>标题</strong>
-        <p>{{ order.title }}</p>
-      </div>
-      <div class="detail-block">
-        <strong>描述</strong>
-        <p>{{ order.description }}</p>
-      </div>
-      <div class="detail-block" v-if="order.rejectReason">
-        <strong>驳回原因</strong>
-        <p>{{ order.rejectReason }}</p>
-      </div>
-      <div class="detail-block" v-if="order.rating">
-        <strong>服务评价</strong>
-        <p>{{ order.rating.score }} 星 / {{ order.rating.content || '未填写评价内容' }}</p>
-      </div>
-      <div class="detail-block">
-        <strong>图片记录</strong>
-        <div v-if="order.images?.length" class="mobile-image-grid">
-          <img v-for="img in order.images" :key="img.id" :src="fileUrl(img.file_path)" @click="previewImage(fileUrl(img.file_path))" />
+      <div class="student-hero__metrics">
+        <div class="student-hero__metric">
+          <span>当前状态</span>
+          <strong>{{ repairOrderStatusText(order.status) }}</strong>
         </div>
-        <van-empty v-else description="暂无图片" />
       </div>
-      <div class="detail-block">
-        <strong>处理时间线</strong>
-        <van-steps direction="vertical" :active="(order.flows || []).length - 1">
-          <van-step v-for="item in order.flows || []" :key="item.id">
-            <h4>{{ repairOrderStatusText(item.to_status) }}</h4>
-            <p>{{ item.operator_name || '系统' }}：{{ item.remark }}</p>
-            <p>{{ item.created_at }}</p>
-          </van-step>
-        </van-steps>
+    </section>
+
+    <section class="student-layout" v-if="order">
+      <div class="student-main">
+        <div class="student-card student-card--accent">
+          <div class="student-card__header">
+            <div>
+              <h2>处理摘要</h2>
+              <p>从提交到完结的关键信息汇总，方便快速了解当前处理进度。</p>
+            </div>
+          </div>
+          <div class="student-highlight-grid">
+            <div class="student-highlight-item">
+              <span>当前状态</span>
+              <strong>{{ repairOrderStatusText(order.status) }}</strong>
+            </div>
+            <div class="student-highlight-item">
+              <span>维修人员</span>
+              <strong>{{ order.repairerName || '待分配' }}</strong>
+            </div>
+            <div class="student-highlight-item">
+              <span>期望上门</span>
+              <strong>{{ order.expectTime || '未填写' }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="student-card">
+          <div class="student-card__header">
+            <div>
+              <h2>基础信息</h2>
+              <p>工单号、位置、维修员和结果等关键信息汇总。</p>
+            </div>
+          </div>
+          <div class="student-info-grid">
+            <div class="student-info-item"><span>工单号</span><strong>{{ order.orderNo }}</strong></div>
+            <div class="student-info-item"><span>报修类型</span><strong>{{ order.repairTypeName }}</strong></div>
+            <div class="student-info-item"><span>宿舍位置</span><strong>{{ `${order.buildingName || ''} ${order.roomNo || ''}` }}</strong></div>
+            <div class="student-info-item"><span>关联设施</span><strong>{{ order.facilityName || '未关联' }}</strong></div>
+            <div class="student-info-item"><span>期望时间</span><strong>{{ order.expectTime || '未填写' }}</strong></div>
+            <div class="student-info-item"><span>维修人员</span><strong>{{ order.repairerName || '待分配' }}</strong></div>
+            <div class="student-info-item student-info-item--full"><span>维修结果</span><strong>{{ order.resultDesc || '暂无' }}</strong></div>
+          </div>
+        </div>
+
+        <div class="student-card">
+          <div class="student-card__header">
+            <div>
+              <h2>报修内容</h2>
+            </div>
+          </div>
+          <div class="detail-block">
+            <strong>描述</strong>
+            <p>{{ order.description }}</p>
+          </div>
+          <div class="detail-block" v-if="order.rejectReason">
+            <strong>驳回原因</strong>
+            <p>{{ order.rejectReason }}</p>
+          </div>
+          <div class="detail-block" v-if="order.rating">
+            <strong>服务评价</strong>
+            <p>{{ order.rating.score }} 星 / {{ order.rating.content || '未填写评价内容' }}</p>
+          </div>
+        </div>
+
+        <div class="student-card">
+          <div class="student-card__header">
+            <div>
+              <h2>图片记录</h2>
+              <p>展示学生提交的现场图片，便于回溯问题场景。</p>
+            </div>
+          </div>
+          <div v-if="order.images?.length" class="mobile-image-grid">
+            <img v-for="img in order.images" :key="img.id" :src="fileUrl(img.file_path)" @click="previewImage(fileUrl(img.file_path))" />
+          </div>
+          <van-empty v-else description="暂无图片" />
+        </div>
+
+        <div class="student-card">
+          <div class="student-card__header">
+            <div>
+              <h2>处理时间线</h2>
+              <p>按状态流转顺序查看每一次处理动作和备注说明。</p>
+            </div>
+          </div>
+          <van-steps direction="vertical" :active="(order.flows || []).length - 1" class="student-timeline">
+            <van-step v-for="item in order.flows || []" :key="item.id">
+              <h4>{{ repairOrderStatusText(item.to_status) }}</h4>
+              <p>{{ item.operator_name || '系统' }}：{{ item.remark }}</p>
+              <p>{{ item.created_at }}</p>
+            </van-step>
+          </van-steps>
+          <van-button v-if="order.status === 'pending_rating'" type="success" block @click="ratingVisible = true">提交评价</van-button>
+        </div>
       </div>
-      <van-button v-if="order.status === 'pending_rating'" type="success" block @click="ratingVisible = true">提交评价</van-button>
-    </div>
+    </section>
 
     <van-popup v-model:show="ratingVisible" round position="bottom" :style="{ minHeight: '52%' }">
       <div style="padding: 16px">
-        <div style="font-size: 20px; font-weight: 700; margin-bottom: 12px">服务评价</div>
+        <div class="student-popup-title">服务评价</div>
         <div v-if="ratingIndicators.length" class="indicator-box">
           <div style="font-weight: 700; margin-bottom: 8px">评价参考</div>
           <div class="indicator-list">
