@@ -49,11 +49,60 @@ public class AdminService {
         SecurityUtils.requireRole("admin");
         String workTypeCode = "repairer".equals(request.role()) ? request.workTypeCode() : null;
         jdbcTemplate.update("update user set real_name = ?, phone = ?, role = ?, work_type_code = ?, updated_at = ? where id = ?", request.realName(), request.phone(), request.role(), workTypeCode, TimeUtils.now(), id);
+        logService.log(SecurityUtils.currentUser().id(), "用户管理", "修改", "修改用户: " + id);
+    }
+
+    public void deleteUser(Long id) {
+        SecurityUtils.requireRole("admin");
+        if (SecurityUtils.currentUser().id().equals(id)) {
+            throw new BusinessException("不能删除当前登录账号");
+        }
+        Map<String, Object> user = commonQueryService.one("select id, username, role from user where id = ?", id);
+
+        // 用户可能被多个业务表引用。为避免删除后工单、评价、公告等历史数据丢失，
+        // 只允许删除没有业务数据的账号；学生空档案会随账号一并删除。
+        if (countByUser("select count(*) from repair_order where student_id = ? or assigned_repairer_id = ?", id, id) > 0) {
+            throw new BusinessException("该用户已关联报修工单，不能删除");
+        }
+        if (countByUser("select count(*) from repair_flow where operator_id = ?", id) > 0) {
+            throw new BusinessException("该用户已关联工单流转记录，不能删除");
+        }
+        if (countByUser("select count(*) from repair_feedback where repairer_id = ?", id) > 0) {
+            throw new BusinessException("该用户已关联维修反馈，不能删除");
+        }
+        if (countByUser("select count(*) from material_usage where repairer_id = ?", id) > 0) {
+            throw new BusinessException("该用户已关联耗材使用记录，不能删除");
+        }
+        if (countByUser("select count(*) from repair_rating where student_id = ?", id) > 0) {
+            throw new BusinessException("该用户已关联服务评价，不能删除");
+        }
+        if (countByUser("select count(*) from announcement where publisher_id = ?", id) > 0) {
+            throw new BusinessException("该用户已发布公告，不能删除");
+        }
+        if (countByUser("select count(*) from repair_resource where publisher_id = ?", id) > 0) {
+            throw new BusinessException("该用户已发布知识内容，不能删除");
+        }
+        if (countByUser("select count(*) from forum_post where student_id = ?", id) > 0) {
+            throw new BusinessException("该用户已发布论坛帖子，不能删除");
+        }
+        if (countByUser("select count(*) from service_message where student_id = ? or replied_by = ?", id, id) > 0) {
+            throw new BusinessException("该用户已关联服务留言，不能删除");
+        }
+
+        jdbcTemplate.update("delete from student_profile where user_id = ?", id);
+        jdbcTemplate.update("update sys_log set user_id = null where user_id = ?", id);
+        jdbcTemplate.update("delete from user where id = ?", id);
+        logService.log(SecurityUtils.currentUser().id(), "用户管理", "删除", "删除用户: " + user.get("username"));
     }
 
     public void updateUserStatus(Long id, StatusUpdateRequest request) {
         SecurityUtils.requireRole("admin");
         jdbcTemplate.update("update user set status = ?, updated_at = ? where id = ?", request.status(), TimeUtils.now(), id);
+    }
+
+    private int countByUser(String sql, Object... args) {
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, args);
+        return count == null ? 0 : count;
     }
 
     public Map<String, Object> overview() {

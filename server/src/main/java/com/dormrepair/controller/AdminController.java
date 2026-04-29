@@ -54,6 +54,12 @@ public class AdminController {
         return ApiResponse.success();
     }
 
+    @DeleteMapping("/users/{id}")
+    public ApiResponse<Void> deleteUser(@PathVariable Long id) {
+        adminService.deleteUser(id);
+        return ApiResponse.success();
+    }
+
     @PutMapping("/users/{id}/status")
     public ApiResponse<Void> updateStatus(@PathVariable Long id, @Valid @RequestBody StatusUpdateRequest request) {
         adminService.updateUserStatus(id, request);
