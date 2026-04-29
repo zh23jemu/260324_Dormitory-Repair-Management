@@ -252,6 +252,26 @@ body {
   background: #f8fafc;
   color: #334155;
 }
+.table-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.table-actions .el-button {
+  margin-left: 0;
+  font-weight: 700;
+}
+.table-actions .el-button--primary.is-plain {
+  color: #0f766e;
+  background: #ecfeff;
+  border-color: #99f6e4;
+}
+.table-actions .el-button--danger.is-plain {
+  color: #dc2626;
+  background: #fef2f2;
+  border-color: #fecaca;
+}
 .admin-header .el-button--primary,
 .admin-content .el-button--primary {
   border: none;

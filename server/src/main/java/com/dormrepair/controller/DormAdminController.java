@@ -97,6 +97,12 @@ public class DormAdminController {
         return ApiResponse.success();
     }
 
+    @DeleteMapping("/buildings/{id}")
+    public ApiResponse<Void> deleteBuilding(@PathVariable Long id) {
+        dormAdminService.deleteBuilding(id);
+        return ApiResponse.success();
+    }
+
     @GetMapping("/rooms")
     public ApiResponse<List<Map<String, Object>>> rooms() {
         return ApiResponse.success(dormAdminService.rooms());
@@ -111,6 +117,12 @@ public class DormAdminController {
     @PutMapping("/rooms/{id}")
     public ApiResponse<Void> updateRoom(@PathVariable Long id, @Valid @RequestBody RoomRequest request) {
         dormAdminService.updateRoom(id, request);
+        return ApiResponse.success();
+    }
+
+    @DeleteMapping("/rooms/{id}")
+    public ApiResponse<Void> deleteRoom(@PathVariable Long id) {
+        dormAdminService.deleteRoom(id);
         return ApiResponse.success();
     }
 

@@ -174,6 +174,21 @@ public class DormAdminService {
         jdbcTemplate.update("update dorm_building set building_name = ?, building_code = ?, gender_type = ?, floor_count = ?, remark = ? where id = ?", request.buildingName(), request.buildingCode(), request.genderType(), request.floorCount(), request.remark(), id);
     }
 
+    /**
+     * 删除楼栋前先检查是否还有宿舍引用。
+     * 楼栋属于宿舍和学生住宿关系的上级数据，直接删除会导致页面无法正确展示位置，
+     * 因此这里只允许删除未被任何宿舍使用的楼栋。
+     */
+    public void deleteBuilding(Long id) {
+        SecurityUtils.requireRole("dorm_admin", "admin");
+        Integer roomCount = jdbcTemplate.queryForObject("select count(*) from dorm_room where building_id = ?", Integer.class, id);
+        if (roomCount != null && roomCount > 0) {
+            throw new BusinessException("该楼栋下仍有宿舍，不能删除");
+        }
+        jdbcTemplate.update("delete from dorm_building where id = ?", id);
+        logService.log(SecurityUtils.currentUser().id(), "楼栋宿舍", "删除", "删除楼栋: " + id);
+    }
+
     public List<Map<String, Object>> rooms() {
         return commonQueryService.list("select dr.id, dr.room_no as roomNo, dr.capacity, dr.current_count as currentCount, dr.facility_desc as facilityDesc, dr.status, dr.remark, db.id as buildingId, db.building_name as buildingName from dorm_room dr left join dorm_building db on dr.building_id = db.id order by dr.id asc");
     }
@@ -242,6 +257,29 @@ public class DormAdminService {
     public void updateRoom(Long id, RoomRequest request) {
         SecurityUtils.requireRole("dorm_admin", "admin");
         jdbcTemplate.update("update dorm_room set building_id = ?, room_no = ?, capacity = ?, facility_desc = ?, status = ?, remark = ? where id = ?", request.buildingId(), request.roomNo(), request.capacity(), request.facilityDesc(), request.status() == null ? "enabled" : request.status(), request.remark(), id);
+    }
+
+    /**
+     * 删除宿舍前检查学生、工单、设施台账等关联数据。
+     * 宿舍是报修工单和住宿信息的重要外键来源，为避免历史数据断链，
+     * 只允许删除完全未被业务引用的宿舍。
+     */
+    public void deleteRoom(Long id) {
+        SecurityUtils.requireRole("dorm_admin", "admin");
+        Integer studentCount = jdbcTemplate.queryForObject("select count(*) from student_profile where room_id = ?", Integer.class, id);
+        if (studentCount != null && studentCount > 0) {
+            throw new BusinessException("该宿舍仍有入住学生，不能删除");
+        }
+        Integer orderCount = jdbcTemplate.queryForObject("select count(*) from repair_order where room_id = ?", Integer.class, id);
+        if (orderCount != null && orderCount > 0) {
+            throw new BusinessException("该宿舍存在关联报修工单，不能删除");
+        }
+        Integer facilityCount = jdbcTemplate.queryForObject("select count(*) from dorm_facility where room_id = ?", Integer.class, id);
+        if (facilityCount != null && facilityCount > 0) {
+            throw new BusinessException("该宿舍存在设施台账记录，不能删除");
+        }
+        jdbcTemplate.update("delete from dorm_room where id = ?", id);
+        logService.log(SecurityUtils.currentUser().id(), "楼栋宿舍", "删除", "删除宿舍: " + id);
     }
 
     public List<Map<String, Object>> students() {
