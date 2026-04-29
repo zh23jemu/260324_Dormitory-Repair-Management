@@ -2,10 +2,12 @@ package com.dormrepair.service;
 
 import com.dormrepair.common.BusinessException;
 import com.dormrepair.dto.auth.ForgotPasswordRequest;
+import com.dormrepair.dto.auth.ForgotPasswordQuestionRequest;
 import com.dormrepair.dto.auth.LoginRequest;
 import com.dormrepair.dto.auth.PasswordRequest;
 import com.dormrepair.dto.auth.RegisterRequest;
 import com.dormrepair.dto.auth.ResetPasswordRequest;
+import com.dormrepair.dto.auth.SecurityQuestionRequest;
 import com.dormrepair.security.JwtTokenProvider;
 import com.dormrepair.security.JwtUser;
 import com.dormrepair.util.SecurityUtils;
@@ -65,8 +67,11 @@ public class AuthService {
 
         String now = TimeUtils.now();
         jdbcTemplate.update(
-                "insert into user(username, password, real_name, phone, role, status, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?, ?)",
-                request.username(), request.password(), request.realName(), request.phone(), "student", "enabled", now, now
+                "insert into user(username, password, real_name, phone, role, password_question, password_answer, status, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                request.username(), request.password(), request.realName(), request.phone(), "student",
+                cleanRequired(request.passwordQuestion(), "请设置找回密码问题"),
+                cleanRequired(request.passwordAnswer(), "请设置找回密码答案"),
+                "enabled", now, now
         );
         Long userId = jdbcTemplate.queryForObject("select id from user where username = ?", Long.class, request.username());
         jdbcTemplate.update(
@@ -76,31 +81,28 @@ public class AuthService {
         logService.log(userId, "认证", "注册", request.username() + " 注册学生账号");
     }
 
+    public Map<String, Object> forgotPasswordQuestion(ForgotPasswordQuestionRequest request) {
+        Map<String, Object> user = findPasswordQuestionUser(request.username());
+        validateSelfServiceRole((String) user.get("role"));
+        String question = (String) user.get("passwordQuestion");
+        if (question == null || question.trim().isEmpty()) {
+            throw new BusinessException("该账号尚未设置找回密码问题，请联系管理员处理");
+        }
+        Map<String, Object> result = new HashMap<>();
+        result.put("username", user.get("username"));
+        result.put("question", question);
+        return result;
+    }
+
     public void forgotPassword(ForgotPasswordRequest request) {
-        Map<String, Object> user = jdbcTemplate.query(
-                "select u.id, u.username, u.role, u.phone, sp.student_no from user u left join student_profile sp on u.id = sp.user_id where u.username = ?",
-                rs -> {
-                    if (!rs.next()) {
-                        return null;
-                    }
-                    Map<String, Object> row = new HashMap<>();
-                    row.put("id", rs.getLong("id"));
-                    row.put("username", rs.getString("username"));
-                    row.put("role", rs.getString("role"));
-                    row.put("phone", rs.getString("phone"));
-                    row.put("studentNo", rs.getString("student_no"));
-                    return row;
-                },
-                request.username()
-        );
-        if (user == null) {
-            throw new BusinessException("账号不存在");
+        Map<String, Object> user = findPasswordQuestionUser(request.username());
+        validateSelfServiceRole((String) user.get("role"));
+        String storedAnswer = (String) user.get("passwordAnswer");
+        if (storedAnswer == null || storedAnswer.trim().isEmpty()) {
+            throw new BusinessException("该账号尚未设置找回密码答案，请联系管理员处理");
         }
-        if (!"student".equals(user.get("role"))) {
-            throw new BusinessException("仅学生账号支持自助找回密码");
-        }
-        if (!request.studentNo().equals(user.get("studentNo")) || !request.phone().equals(user.get("phone"))) {
-            throw new BusinessException("账号、学号或手机号不匹配");
+        if (!clean(request.answer()).equals(storedAnswer.trim())) {
+            throw new BusinessException("找回密码答案不正确");
         }
         jdbcTemplate.update("update user set password = ?, updated_at = ? where id = ?", request.newPassword(), TimeUtils.now(), user.get("id"));
         logService.log(((Number) user.get("id")).longValue(), "认证", "找回密码", request.username() + " 自助找回密码");
@@ -139,6 +141,29 @@ public class AuthService {
         return user;
     }
 
+    public Map<String, Object> securityQuestion() {
+        JwtUser user = SecurityUtils.currentUser();
+        validateSelfServiceRole(user.role());
+        Map<String, Object> row = commonSecurityQuestion(user.id());
+        Map<String, Object> result = new HashMap<>();
+        result.put("question", row.get("passwordQuestion"));
+        result.put("hasAnswer", row.get("passwordAnswer") != null && !((String) row.get("passwordAnswer")).trim().isEmpty());
+        return result;
+    }
+
+    public void updateSecurityQuestion(SecurityQuestionRequest request) {
+        JwtUser user = SecurityUtils.currentUser();
+        validateSelfServiceRole(user.role());
+        jdbcTemplate.update(
+                "update user set password_question = ?, password_answer = ?, updated_at = ? where id = ?",
+                cleanRequired(request.question(), "请输入找回密码问题"),
+                cleanRequired(request.answer(), "请输入找回密码答案"),
+                TimeUtils.now(),
+                user.id()
+        );
+        logService.log(user.id(), "认证", "安全设置", user.username() + " 修改找回密码问题");
+    }
+
     public void changePassword(PasswordRequest request) {
         JwtUser user = SecurityUtils.currentUser();
         String oldPassword = jdbcTemplate.queryForObject("select password from user where id = ?", String.class, user.id());
@@ -165,6 +190,63 @@ public class AuthService {
         row.put("status", status);
         row.put("phone", phone);
         return row;
+    }
+
+    private Map<String, Object> findPasswordQuestionUser(String username) {
+        Map<String, Object> user = jdbcTemplate.query(
+                "select id, username, role, password_question, password_answer from user where username = ?",
+                rs -> {
+                    if (!rs.next()) {
+                        return null;
+                    }
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("id", rs.getLong("id"));
+                    row.put("username", rs.getString("username"));
+                    row.put("role", rs.getString("role"));
+                    row.put("passwordQuestion", rs.getString("password_question"));
+                    row.put("passwordAnswer", rs.getString("password_answer"));
+                    return row;
+                },
+                username
+        );
+        if (user == null) {
+            throw new BusinessException("账号不存在");
+        }
+        return user;
+    }
+
+    private Map<String, Object> commonSecurityQuestion(Long userId) {
+        return jdbcTemplate.query(
+                "select password_question as passwordQuestion, password_answer as passwordAnswer from user where id = ?",
+                rs -> {
+                    if (!rs.next()) {
+                        throw new BusinessException("用户不存在");
+                    }
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("passwordQuestion", rs.getString("passwordQuestion"));
+                    row.put("passwordAnswer", rs.getString("passwordAnswer"));
+                    return row;
+                },
+                userId
+        );
+    }
+
+    private void validateSelfServiceRole(String role) {
+        if (!"student".equals(role) && !"dorm_admin".equals(role) && !"repairer".equals(role)) {
+            throw new BusinessException("管理员账号不支持自助找回密码，请联系系统管理员处理");
+        }
+    }
+
+    private String clean(String value) {
+        return value == null ? "" : value.trim();
+    }
+
+    private String cleanRequired(String value, String message) {
+        String result = clean(value);
+        if (result.isEmpty()) {
+            throw new BusinessException(message);
+        }
+        return result;
     }
 }
 

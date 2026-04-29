@@ -292,6 +292,15 @@ body {
   filter: brightness(0.98);
   transform: translateY(-1px);
 }
+.user-manage-dialog .el-dialog__body {
+  max-height: 62vh;
+  overflow-y: auto;
+  padding-right: 28px;
+}
+.user-manage-dialog .el-dialog__footer {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 16px;
+}
 .admin-header .el-button--primary,
 .admin-content .el-button--primary {
   border: none;

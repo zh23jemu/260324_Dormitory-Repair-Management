@@ -10,6 +10,8 @@ public record RegisterRequest(
         @NotBlank String studentNo,
         @NotBlank String college,
         @NotBlank String major,
-        @NotBlank String className
+        @NotBlank String className,
+        @NotBlank String passwordQuestion,
+        @NotBlank String passwordAnswer
 ) {
 }

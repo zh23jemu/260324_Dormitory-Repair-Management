@@ -85,32 +85,39 @@
                 <el-form-item label="班级">
                   <el-input v-model="registerForm.className" />
                 </el-form-item>
+                <el-form-item label="找回密码问题">
+                  <el-input v-model="registerForm.passwordQuestion" placeholder="例如：你的学号后四位是什么？" />
+                </el-form-item>
+                <el-form-item label="找回密码答案">
+                  <el-input v-model="registerForm.passwordAnswer" placeholder="请牢记该答案" />
+                </el-form-item>
                 <el-button type="success" class="full-width" :disabled="selectedRole !== 'student'" @click="submitRegister">注册学生账号</el-button>
               </el-form>
             </el-tab-pane>
 
-            <el-tab-pane label="找回密码" name="forgot" :disabled="selectedRole !== 'student'">
+            <el-tab-pane label="找回密码" name="forgot" :disabled="selectedRole === 'admin'">
               <el-alert
-                v-if="selectedRole !== 'student'"
+                v-if="selectedRole === 'admin'"
                 type="info"
                 :closable="false"
-                title="当前仅学生账号支持自助找回密码"
+                title="管理员账号请联系系统管理员重置密码"
                 style="margin-bottom: 14px"
               />
               <el-form :model="forgotForm" label-position="top" @submit.prevent>
                 <el-form-item label="账号">
                   <el-input v-model="forgotForm.username" />
                 </el-form-item>
-                <el-form-item label="学号">
-                  <el-input v-model="forgotForm.studentNo" />
+                <el-button class="full-width" :disabled="selectedRole === 'admin'" @click="loadForgotQuestion">获取找回问题</el-button>
+                <el-form-item v-if="forgotQuestion" label="找回密码问题" style="margin-top: 14px">
+                  <el-input :model-value="forgotQuestion" disabled />
                 </el-form-item>
-                <el-form-item label="手机号">
-                  <el-input v-model="forgotForm.phone" />
+                <el-form-item label="答案">
+                  <el-input v-model="forgotForm.answer" :disabled="!forgotQuestion" placeholder="请输入预先设置的答案" />
                 </el-form-item>
                 <el-form-item label="新密码">
-                  <el-input v-model="forgotForm.newPassword" type="password" show-password />
+                  <el-input v-model="forgotForm.newPassword" type="password" show-password :disabled="!forgotQuestion" />
                 </el-form-item>
-                <el-button type="warning" class="full-width" :disabled="selectedRole !== 'student'" @click="submitForgot">重置密码</el-button>
+                <el-button type="warning" class="full-width" :disabled="selectedRole === 'admin' || !forgotQuestion" @click="submitForgot">重置密码</el-button>
               </el-form>
             </el-tab-pane>
           </el-tabs>
@@ -132,8 +139,9 @@ const auth = useAuth()
 const activeTab = ref('login')
 const selectedRole = ref(String(route.query.role || 'student'))
 const loginForm = reactive({ username: 'student01', password: '123456' })
-const registerForm = reactive({ username: '', password: '', realName: '', phone: '', studentNo: '', college: '', major: '', className: '' })
-const forgotForm = reactive({ username: '', studentNo: '', phone: '', newPassword: '' })
+const registerForm = reactive({ username: '', password: '', realName: '', phone: '', studentNo: '', college: '', major: '', className: '', passwordQuestion: '', passwordAnswer: '' })
+const forgotForm = reactive({ username: '', answer: '', newPassword: '' })
+const forgotQuestion = ref('')
 
 const roleOptions = [
   { label: '学生', value: 'student', desc: '报修、查单、评价、留言、论坛', demo: 'student01' },
@@ -147,6 +155,13 @@ const rolePlaceholder = computed(() => roleOptions.find((item) => item.value ===
 function handleRoleChange(role) {
   selectedRole.value = role
   loginForm.username = roleOptions.find((item) => item.value === role)?.demo || ''
+  forgotQuestion.value = ''
+  forgotForm.username = ''
+  forgotForm.answer = ''
+  forgotForm.newPassword = ''
+  if (role === 'admin' && activeTab.value === 'forgot') {
+    activeTab.value = 'login'
+  }
 }
 
 async function submitLogin() {
@@ -171,12 +186,31 @@ async function submitRegister() {
 }
 
 async function submitForgot() {
-  if (selectedRole.value !== 'student') {
-    ElMessage.warning('当前仅学生账号支持找回密码')
+  if (selectedRole.value === 'admin') {
+    ElMessage.warning('管理员账号请联系系统管理员重置密码')
     return
   }
   await auth.forgotPassword(forgotForm)
   ElMessage.success('密码已重置，请使用新密码登录')
   activeTab.value = 'login'
+  loginForm.username = forgotForm.username
+  forgotQuestion.value = ''
+  forgotForm.answer = ''
+  forgotForm.newPassword = ''
+}
+
+async function loadForgotQuestion() {
+  if (selectedRole.value === 'admin') {
+    ElMessage.warning('管理员账号请联系系统管理员重置密码')
+    return
+  }
+  if (!forgotForm.username.trim()) {
+    ElMessage.warning('请输入账号')
+    return
+  }
+  const data = await auth.forgotPasswordQuestion({ username: forgotForm.username.trim() })
+  forgotQuestion.value = data.question || ''
+  forgotForm.answer = ''
+  forgotForm.newPassword = ''
 }
 </script>

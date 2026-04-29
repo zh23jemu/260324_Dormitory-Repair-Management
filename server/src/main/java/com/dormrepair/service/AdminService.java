@@ -34,21 +34,37 @@ public class AdminService {
 
     public List<Map<String, Object>> users() {
         SecurityUtils.requireRole("admin");
-        return commonQueryService.list("select u.id, u.username, u.real_name as realName, u.phone, u.avatar, u.role, u.work_type_code as workTypeCode, (select group_concat(d.dict_name, '、') from sys_dict d where d.dict_type = 'repair_work_type' and instr(',' || coalesce(u.work_type_code, '') || ',', ',' || d.dict_code || ',') > 0) as workTypeName, u.status, u.created_at as createdAt from user u order by u.id asc");
+        return commonQueryService.list("select u.id, u.username, u.real_name as realName, u.phone, u.avatar, u.role, u.work_type_code as workTypeCode, u.password_question as passwordQuestion, u.password_answer as passwordAnswer, (select group_concat(d.dict_name, '、') from sys_dict d where d.dict_type = 'repair_work_type' and instr(',' || coalesce(u.work_type_code, '') || ',', ',' || d.dict_code || ',') > 0) as workTypeName, u.status, u.created_at as createdAt from user u order by u.id asc");
     }
 
     public void createUser(UserCreateRequest request) {
         SecurityUtils.requireRole("admin");
         String now = TimeUtils.now();
         String workTypeCode = "repairer".equals(request.role()) ? request.workTypeCode() : null;
-        jdbcTemplate.update("insert into user(username, password, real_name, phone, role, work_type_code, status, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?)", request.username(), request.password(), request.realName(), request.phone(), request.role(), workTypeCode, "enabled", now, now);
+        String question = selfServiceRole(request.role()) ? cleanRequired(request.passwordQuestion(), "请设置找回密码问题") : null;
+        String answer = selfServiceRole(request.role()) ? cleanRequired(request.passwordAnswer(), "请设置找回密码答案") : null;
+        jdbcTemplate.update("insert into user(username, password, real_name, phone, role, work_type_code, password_question, password_answer, status, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", request.username(), request.password(), request.realName(), request.phone(), request.role(), workTypeCode, question, answer, "enabled", now, now);
         logService.log(SecurityUtils.currentUser().id(), "用户管理", "新增", "新增用户: " + request.username());
     }
 
     public void updateUser(Long id, UserUpdateRequest request) {
         SecurityUtils.requireRole("admin");
         String workTypeCode = "repairer".equals(request.role()) ? request.workTypeCode() : null;
-        jdbcTemplate.update("update user set real_name = ?, phone = ?, role = ?, work_type_code = ?, updated_at = ? where id = ?", request.realName(), request.phone(), request.role(), workTypeCode, TimeUtils.now(), id);
+        Map<String, Object> oldUser = commonQueryService.one("select password_answer as passwordAnswer from user where id = ?", id);
+        String answer = (String) oldUser.get("passwordAnswer");
+        if (selfServiceRole(request.role())) {
+            cleanRequired(request.passwordQuestion(), "请设置找回密码问题");
+            if (isBlank(answer) && isBlank(request.passwordAnswer())) {
+                throw new BusinessException("请设置找回密码答案");
+            }
+            if (!isBlank(request.passwordAnswer())) {
+                answer = request.passwordAnswer().trim();
+            }
+        } else {
+            answer = null;
+        }
+        String question = selfServiceRole(request.role()) ? request.passwordQuestion().trim() : null;
+        jdbcTemplate.update("update user set real_name = ?, phone = ?, role = ?, work_type_code = ?, password_question = ?, password_answer = ?, updated_at = ? where id = ?", request.realName(), request.phone(), request.role(), workTypeCode, question, answer, TimeUtils.now(), id);
         logService.log(SecurityUtils.currentUser().id(), "用户管理", "修改", "修改用户: " + id);
     }
 
@@ -103,6 +119,21 @@ public class AdminService {
     private int countByUser(String sql, Object... args) {
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, args);
         return count == null ? 0 : count;
+    }
+
+    private boolean selfServiceRole(String role) {
+        return "student".equals(role) || "dorm_admin".equals(role) || "repairer".equals(role);
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
+    }
+
+    private String cleanRequired(String value, String message) {
+        if (isBlank(value)) {
+            throw new BusinessException(message);
+        }
+        return value.trim();
     }
 
     public Map<String, Object> overview() {

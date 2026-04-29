@@ -55,6 +55,7 @@ const allMenus = [
   { path: '/admin/repairer/stats', label: '个人统计', desc: '维修员数据', roles: ['repairer'] },
   { path: '/admin/repairer/list', label: '维修员信息', desc: '同事与评价', roles: ['repairer'] },
   { path: '/admin/repairer/profile', label: '个人信息', desc: '头像与工种', roles: ['repairer'] },
+  { path: '/admin/security', label: '安全设置', desc: '找回密码问题', roles: ['dorm_admin', 'repairer'] },
   { path: '/admin/dorm-rooms', label: '楼栋宿舍', desc: '楼栋房间管理', roles: ['admin', 'dorm_admin'] },
   { path: '/admin/facilities', label: '设施台账', desc: '宿舍资产管理', roles: ['admin', 'dorm_admin'] },
   { path: '/admin/students', label: '学生住宿', desc: '入住信息维护', roles: ['admin', 'dorm_admin'] },

@@ -64,6 +64,20 @@ async function forgotPassword(payload) {
   await api.post('/auth/forgot-password', payload)
 }
 
+async function forgotPasswordQuestion(payload) {
+  const { data } = await api.get('/auth/forgot-password/question', { params: { username: payload.username } })
+  return data.data
+}
+
+async function securityQuestion() {
+  const { data } = await api.get('/auth/security-question')
+  return data.data
+}
+
+async function updateSecurityQuestion(payload) {
+  await api.put('/auth/security-question', payload)
+}
+
 async function loadMe() {
   const { data } = await api.get('/auth/me')
   state.role = data.data.role || ''
@@ -89,7 +103,10 @@ export function useAuth() {
     setAuth,
     login,
     register,
+    forgotPasswordQuestion,
     forgotPassword,
+    securityQuestion,
+    updateSecurityQuestion,
     loadMe,
     logout
   }

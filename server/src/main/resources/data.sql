@@ -1,10 +1,10 @@
-INSERT INTO user (id, username, password, real_name, phone, avatar, role, work_type_code, status, created_at, updated_at) VALUES
-(1, 'admin', '123456', '系统管理员', '13800000000', NULL, 'admin', NULL, 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00'),
-(2, 'dorm01', '123456', '一号宿管', '13800000001', NULL, 'dorm_admin', NULL, 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00'),
-(3, 'repair01', '123456', '维修员张工', '13800000002', NULL, 'repairer', 'electrician', 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00'),
-(4, 'student01', '123456', '张三', '13800000003', NULL, 'student', NULL, 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00'),
-(5, 'repair02', '123456', '维修员李工', '13800000004', NULL, 'repairer', 'carpenter', 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00'),
-(6, 'student02', '123456', '李四', '13800000005', NULL, 'student', NULL, 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00');
+INSERT INTO user (id, username, password, real_name, phone, avatar, role, work_type_code, password_question, password_answer, status, created_at, updated_at) VALUES
+(1, 'admin', '123456', '系统管理员', '13800000000', NULL, 'admin', NULL, NULL, NULL, 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00'),
+(2, 'dorm01', '123456', '一号宿管', '13800000001', NULL, 'dorm_admin', NULL, '你的工号后四位是什么？', '0001', 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00'),
+(3, 'repair01', '123456', '维修员张工', '13800000002', NULL, 'repairer', 'electrician', '你的工号后四位是什么？', '0002', 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00'),
+(4, 'student01', '123456', '张三', '13800000003', NULL, 'student', NULL, '你的学号后四位是什么？', '0001', 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00'),
+(5, 'repair02', '123456', '维修员李工', '13800000004', NULL, 'repairer', 'carpenter', '你的工号后四位是什么？', '0004', 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00'),
+(6, 'student02', '123456', '李四', '13800000005', NULL, 'student', NULL, '你的学号后四位是什么？', '0002', 'enabled', '2026-03-25 00:00:00', '2026-03-25 00:00:00');
 
 INSERT INTO dorm_building (id, building_name, building_code, gender_type, floor_count, remark) VALUES
 (1, '一号楼', 'B1', 'male', 6, '男生宿舍'),

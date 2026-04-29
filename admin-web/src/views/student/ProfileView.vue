@@ -31,6 +31,9 @@
             <van-button type="primary" block @click="saveProfile">保存信息</van-button>
           </div>
           <div style="margin-top: 12px">
+            <van-button plain type="primary" block @click="router.push('/student/security')">设置找回密码问题</van-button>
+          </div>
+          <div style="margin-top: 12px">
             <van-button plain danger block @click="logout">退出登录</van-button>
           </div>
         </div>
@@ -62,7 +65,7 @@ async function saveProfile() {
   await api.put('/student/profile', { phone: form.phone, avatar: form.avatar, buildingId: profile.value.buildingId, roomId: profile.value.roomId, bedNo: profile.value.bedNo })
   showToast('个人信息已更新')
   await loadProfile()
-  await auth.loadProfile()
+  await auth.loadMe()
 }
 
 async function uploadAvatar(file) {

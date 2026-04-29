@@ -8,6 +8,8 @@ public record UserCreateRequest(
         @NotBlank String realName,
         String phone,
         @NotBlank String role,
-        String workTypeCode
+        String workTypeCode,
+        String passwordQuestion,
+        String passwordAnswer
 ) {
 }

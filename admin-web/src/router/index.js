@@ -26,7 +26,8 @@ const routes = [
       { path: 'student/orders', name: 'student-orders', component: () => import('../views/student/OrderListView.vue'), meta: { roles: ['student'], layout: 'portal' } },
       { path: 'student/orders/:id', name: 'student-order-detail', component: () => import('../views/student/OrderDetailView.vue'), meta: { roles: ['student'], layout: 'portal' } },
       { path: 'student/messages', name: 'student-messages', component: () => import('../views/student/ServiceMessageView.vue'), meta: { roles: ['student'], layout: 'portal' } },
-      { path: 'student/profile', name: 'student-profile', component: () => import('../views/student/ProfileView.vue'), meta: { roles: ['student'], layout: 'portal' } }
+      { path: 'student/profile', name: 'student-profile', component: () => import('../views/student/ProfileView.vue'), meta: { roles: ['student'], layout: 'portal' } },
+      { path: 'student/security', name: 'student-security', component: () => import('../views/SecurityQuestionView.vue'), meta: { roles: ['student'], layout: 'portal' } }
     ]
   },
   {
@@ -41,6 +42,7 @@ const routes = [
       { path: 'repairer/stats', name: 'repairer-stats', component: () => import('../views/repairer/RepairerStatsView.vue'), meta: { roles: ['repairer'], layout: 'admin' } },
       { path: 'repairer/list', name: 'repairer-list', component: () => import('../views/repairer/RepairerInfoView.vue'), meta: { roles: ['repairer'], layout: 'admin' } },
       { path: 'repairer/profile', name: 'repairer-profile', component: () => import('../views/repairer/RepairerProfileView.vue'), meta: { roles: ['repairer'], layout: 'admin' } },
+      { path: 'security', name: 'admin-security', component: () => import('../views/SecurityQuestionView.vue'), meta: { roles: ['dorm_admin', 'repairer'], layout: 'admin' } },
       { path: 'dorm-rooms', name: 'dorm-rooms', component: () => import('../views/dorm/DormRoomManageView.vue'), meta: { roles: ['admin', 'dorm_admin'], layout: 'admin' } },
       { path: 'facilities', name: 'facilities', component: () => import('../views/dorm/FacilityManageView.vue'), meta: { roles: ['admin', 'dorm_admin'], layout: 'admin' } },
       { path: 'students', name: 'students', component: () => import('../views/dorm/StudentStayManageView.vue'), meta: { roles: ['admin', 'dorm_admin'], layout: 'admin' } },

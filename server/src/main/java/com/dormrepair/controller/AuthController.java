@@ -2,10 +2,12 @@ package com.dormrepair.controller;
 
 import com.dormrepair.common.ApiResponse;
 import com.dormrepair.dto.auth.ForgotPasswordRequest;
+import com.dormrepair.dto.auth.ForgotPasswordQuestionRequest;
 import com.dormrepair.dto.auth.LoginRequest;
 import com.dormrepair.dto.auth.PasswordRequest;
 import com.dormrepair.dto.auth.RegisterRequest;
 import com.dormrepair.dto.auth.ResetPasswordRequest;
+import com.dormrepair.dto.auth.SecurityQuestionRequest;
 import com.dormrepair.service.AuthService;
 import jakarta.validation.Valid;
 import java.util.Map;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -44,9 +47,30 @@ public class AuthController {
         return ApiResponse.success();
     }
 
+    @PostMapping("/forgot-password/question")
+    public ApiResponse<Map<String, Object>> forgotPasswordQuestion(@Valid @RequestBody ForgotPasswordQuestionRequest request) {
+        return ApiResponse.success(authService.forgotPasswordQuestion(request));
+    }
+
+    @GetMapping("/forgot-password/question")
+    public ApiResponse<Map<String, Object>> forgotPasswordQuestionByGet(@RequestParam String username) {
+        return ApiResponse.success(authService.forgotPasswordQuestion(new ForgotPasswordQuestionRequest(username)));
+    }
+
     @GetMapping("/me")
     public ApiResponse<Map<String, Object>> me() {
         return ApiResponse.success(authService.me(null));
+    }
+
+    @GetMapping("/security-question")
+    public ApiResponse<Map<String, Object>> securityQuestion() {
+        return ApiResponse.success(authService.securityQuestion());
+    }
+
+    @PutMapping("/security-question")
+    public ApiResponse<Void> updateSecurityQuestion(@Valid @RequestBody SecurityQuestionRequest request) {
+        authService.updateSecurityQuestion(request);
+        return ApiResponse.success();
     }
 
     @PutMapping("/password")
