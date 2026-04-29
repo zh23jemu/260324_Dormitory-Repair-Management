@@ -16,8 +16,10 @@
         <el-table-column prop="publisherName" label="发布人" width="120" />
         <el-table-column label="操作" width="160" fixed="right">
           <template #default="{ row }">
-            <el-button size="small" @click="openDialog(row)">编辑</el-button>
-            <el-button size="small" type="danger" plain @click="removeResource(row)">删除</el-button>
+            <div class="table-actions">
+              <el-button size="small" type="primary" plain @click="openDialog(row)">编辑</el-button>
+              <el-button size="small" type="danger" plain @click="removeResource(row)">删除</el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>

@@ -11,7 +11,9 @@
         <el-table-column prop="replyContent" label="回复内容" min-width="220" />
         <el-table-column label="操作" width="100">
           <template #default="{ row }">
-            <el-button size="small" @click="reply(row)">回复</el-button>
+            <div class="table-actions">
+              <el-button size="small" type="primary" plain @click="reply(row)">回复</el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>

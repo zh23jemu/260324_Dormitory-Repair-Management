@@ -29,7 +29,9 @@
       <el-table-column prop="createdAt" label="评价时间" width="180" />
       <el-table-column label="操作" width="100" fixed="right">
         <template #default="{ row }">
-          <el-button size="small" type="danger" plain @click="removeRating(row)">删除</el-button>
+          <div class="table-actions">
+            <el-button size="small" type="danger" plain @click="removeRating(row)">删除</el-button>
+          </div>
         </template>
       </el-table-column>
     </el-table>

@@ -13,9 +13,11 @@
       <el-table-column prop="title" label="标题" min-width="180" />
       <el-table-column label="操作" width="260">
         <template #default="{ row }">
-          <el-button size="small" @click="openDetail(row)">详情</el-button>
-          <el-button v-if="row.status === 'pending_accept'" size="small" type="primary" @click="accept(row)">接单</el-button>
-          <el-button v-if="row.status === 'processing'" size="small" type="success" @click="openFeedback(row)">提交结果</el-button>
+          <div class="table-actions">
+            <el-button size="small" plain @click="openDetail(row)">详情</el-button>
+            <el-button v-if="row.status === 'pending_accept'" size="small" type="primary" plain @click="accept(row)">接单</el-button>
+            <el-button v-if="row.status === 'processing'" size="small" type="success" plain @click="openFeedback(row)">提交结果</el-button>
+          </div>
         </template>
       </el-table-column>
     </el-table>

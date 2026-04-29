@@ -79,6 +79,10 @@ function handleLogout() {
 }
 
 function refreshCurrent() {
-  router.replace({ path: '/refreshing' }).finally(() => router.replace(route.fullPath))
+  // 先缓存当前完整路径，再跳转到临时空路由触发 router-view 重新挂载。
+  // 不能在 finally 中直接读取 route.fullPath，因为跳到 /refreshing 后当前路由已经变化，
+  // 继续读取会导致页面停留在空白刷新页，看起来像“页面不见了”。
+  const targetPath = route.fullPath
+  router.replace({ path: '/refreshing' }).finally(() => router.replace(targetPath))
 }
 </script>

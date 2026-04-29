@@ -13,8 +13,10 @@
         <el-table-column prop="status" label="状态" width="100" />
         <el-table-column label="操作" width="150">
           <template #default="{ row }">
-            <el-button size="small" @click="editRepairType(row)">编辑</el-button>
-            <el-button size="small" type="danger" plain @click="removeRepairType(row)">删除</el-button>
+            <div class="table-actions">
+              <el-button size="small" type="primary" plain @click="editRepairType(row)">编辑</el-button>
+              <el-button size="small" type="danger" plain @click="removeRepairType(row)">删除</el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -34,8 +36,10 @@
         <el-table-column prop="sortNo" label="排序" width="80" />
         <el-table-column label="操作" width="150">
           <template #default="{ row }">
-            <el-button size="small" @click="editDict(row)">编辑</el-button>
-            <el-button size="small" type="danger" plain @click="removeDict(row)">删除</el-button>
+            <div class="table-actions">
+              <el-button size="small" type="primary" plain @click="editDict(row)">编辑</el-button>
+              <el-button size="small" type="danger" plain @click="removeDict(row)">删除</el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>

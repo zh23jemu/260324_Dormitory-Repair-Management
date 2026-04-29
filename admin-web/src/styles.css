@@ -262,6 +262,11 @@ body {
   margin-left: 0;
   font-weight: 700;
 }
+.table-actions .el-button.is-plain {
+  color: #334155;
+  background: #ffffff;
+  border-color: #cbd5e1;
+}
 .table-actions .el-button--primary.is-plain {
   color: #0f766e;
   background: #ecfeff;
@@ -271,6 +276,21 @@ body {
   color: #dc2626;
   background: #fef2f2;
   border-color: #fecaca;
+}
+.table-actions .el-button--success.is-plain {
+  color: #15803d;
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+.table-actions .el-button--warning.is-plain {
+  color: #b45309;
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+.table-actions .el-button.is-plain:hover,
+.table-actions .el-button.is-plain:focus {
+  filter: brightness(0.98);
+  transform: translateY(-1px);
 }
 .admin-header .el-button--primary,
 .admin-content .el-button--primary {

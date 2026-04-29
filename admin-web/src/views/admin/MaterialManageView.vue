@@ -24,8 +24,10 @@
       </el-table-column>
       <el-table-column label="操作" width="150">
         <template #default="{ row }">
-          <el-button size="small" @click="editMaterial(row)">编辑</el-button>
-          <el-button size="small" type="danger" plain @click="removeMaterial(row)">删除</el-button>
+          <div class="table-actions">
+            <el-button size="small" type="primary" plain @click="editMaterial(row)">编辑</el-button>
+            <el-button size="small" type="danger" plain @click="removeMaterial(row)">删除</el-button>
+          </div>
         </template>
       </el-table-column>
     </el-table>

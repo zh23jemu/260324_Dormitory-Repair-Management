@@ -39,9 +39,11 @@
       <el-table-column prop="createdAt" label="发布时间" width="180" />
       <el-table-column label="操作" width="220" fixed="right">
         <template #default="{ row }">
-          <el-button v-if="row.status !== 'published'" size="small" type="success" @click="changeStatus(row, 'published')">公开</el-button>
-          <el-button v-if="row.status !== 'hidden'" size="small" plain @click="changeStatus(row, 'hidden')">隐藏</el-button>
-          <el-button size="small" type="danger" plain @click="removePost(row)">删除</el-button>
+          <div class="table-actions">
+            <el-button v-if="row.status !== 'published'" size="small" type="success" plain @click="changeStatus(row, 'published')">公开</el-button>
+            <el-button v-if="row.status !== 'hidden'" size="small" type="warning" plain @click="changeStatus(row, 'hidden')">隐藏</el-button>
+            <el-button size="small" type="danger" plain @click="removePost(row)">删除</el-button>
+          </div>
         </template>
       </el-table-column>
     </el-table>
