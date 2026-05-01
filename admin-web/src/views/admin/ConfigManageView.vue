@@ -10,7 +10,11 @@
       <el-table :data="repairTypes">
         <el-table-column prop="typeName" label="名称" />
         <el-table-column prop="sortNo" label="排序" width="80" />
-        <el-table-column prop="status" label="状态" width="100" />
+        <el-table-column label="状态" width="100">
+          <template #default="{ row }">
+            <el-tag :type="statusTagType(row.status)">{{ statusText(row.status) }}</el-tag>
+          </template>
+        </el-table-column>
         <el-table-column label="操作" width="150">
           <template #default="{ row }">
             <div class="table-actions">
@@ -181,6 +185,19 @@ async function removeDict(row) {
 
 function nextSortNo(list) {
   return Math.max(0, ...list.map((item) => Number(item.sortNo || 0))) + 1
+}
+
+function statusText(status) {
+  // 后端仍然保存 enabled/disabled，前端统一转成中文，避免表格里暴露技术状态值。
+  const statusMap = {
+    enabled: '启用',
+    disabled: '禁用'
+  }
+  return statusMap[status] || status || '-'
+}
+
+function statusTagType(status) {
+  return status === 'disabled' ? 'info' : 'success'
 }
 
 onMounted(loadAll)
