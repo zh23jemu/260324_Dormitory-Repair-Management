@@ -33,7 +33,7 @@
             <el-button size="small" plain @click="logout">退出</el-button>
           </template>
           <template v-else>
-            <el-button size="small" type="primary" @click="router.push('/login')">登录</el-button>
+            <el-button class="site-login-button" type="primary" @click="router.push('/login')">登录</el-button>
           </template>
         </div>
       </div>

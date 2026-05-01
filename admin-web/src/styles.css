@@ -427,6 +427,16 @@ body {
   background: linear-gradient(135deg, #14b8a6, #0ea5e9 56%, #2563eb);
   box-shadow: 0 14px 28px rgba(14, 165, 233, 0.24);
 }
+/* 首页未登录状态的主入口按钮需要比普通操作按钮更醒目，便于用户第一眼找到登录入口。 */
+.site-header__actions .site-login-button {
+  min-width: 92px;
+  height: 42px;
+  padding: 0 24px;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
 .site-header__actions .el-button--primary:hover,
 .portal-banner__cta .el-button--primary:hover {
   background: linear-gradient(135deg, #0f766e, #0284c7 56%, #1d4ed8);
