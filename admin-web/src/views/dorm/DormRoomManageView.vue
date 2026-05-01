@@ -1,7 +1,12 @@
 <template>
   <div class="grid-two">
     <el-card>
-      <template #header>楼栋管理</template>
+      <template #header>
+        <div class="dorm-section-header">
+          <span>楼栋管理</span>
+          <el-button type="primary" @click="openBuildingCreate">新增楼栋</el-button>
+        </div>
+      </template>
       <el-alert
         title="填写说明：楼栋名称用于页面展示，例如“一号楼”；楼栋编码用于系统唯一识别，例如“B1”；层数填写该楼栋实际楼层数量。"
         type="info"
@@ -9,18 +14,6 @@
         :closable="false"
         style="margin-bottom: 12px"
       />
-      <el-form :model="buildingForm" inline>
-        <el-form-item label="楼栋名称">
-          <el-input v-model="buildingForm.buildingName" placeholder="如：一号楼" />
-        </el-form-item>
-        <el-form-item label="楼栋编码">
-          <el-input v-model="buildingForm.buildingCode" placeholder="如：B1，不可重复" />
-        </el-form-item>
-        <el-form-item label="楼层数">
-          <el-input-number v-model="buildingForm.floorCount" :min="1" />
-        </el-form-item>
-        <el-form-item><el-button type="primary" @click="createBuilding">新增楼栋</el-button></el-form-item>
-      </el-form>
       <el-table :data="buildings" style="margin-top:12px">
         <el-table-column prop="buildingName" label="名称" />
         <el-table-column prop="buildingCode" label="编码" width="120" />
@@ -38,7 +31,12 @@
     </el-card>
 
     <el-card>
-      <template #header>宿舍管理</template>
+      <template #header>
+        <div class="dorm-section-header">
+          <span>宿舍管理</span>
+          <el-button type="primary" @click="openRoomCreate">新增宿舍</el-button>
+        </div>
+      </template>
       <el-alert
         title="填写说明：先选择所属楼栋；宿舍号填写门牌号，例如“202”；容量为可入住床位数；设施配置摘要用于概括宿舍已有设施，例如“空调、书桌、热水器”。"
         type="info"
@@ -46,23 +44,6 @@
         :closable="false"
         style="margin-bottom: 12px"
       />
-      <el-form :model="roomForm" inline>
-        <el-form-item label="所属楼栋">
-          <el-select v-model="roomForm.buildingId" placeholder="选择楼栋" style="width:140px">
-            <el-option v-for="item in buildings" :key="item.id" :label="item.buildingName" :value="item.id" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="宿舍号">
-          <el-input v-model="roomForm.roomNo" placeholder="如：202" />
-        </el-form-item>
-        <el-form-item label="床位容量">
-          <el-input-number v-model="roomForm.capacity" :min="1" />
-        </el-form-item>
-        <el-form-item label="设施配置">
-          <el-input v-model="roomForm.facilityDesc" placeholder="如：空调、书桌、热水器" style="width:240px" />
-        </el-form-item>
-        <el-form-item><el-button type="primary" @click="createRoom">新增宿舍</el-button></el-form-item>
-      </el-form>
       <el-table :data="rooms" style="margin-top:12px">
         <el-table-column prop="buildingName" label="楼栋" width="90" />
         <el-table-column prop="roomNo" label="宿舍" width="90" />
@@ -80,7 +61,7 @@
       </el-table>
     </el-card>
 
-    <el-dialog v-model="buildingDialogVisible" title="编辑楼栋信息" width="520px">
+    <el-dialog v-model="buildingDialogVisible" :title="buildingDialogTitle" width="520px">
       <el-form :model="buildingEditForm" label-width="92px">
         <el-form-item label="楼栋名称">
           <el-input v-model="buildingEditForm.buildingName" placeholder="如：一号楼" />
@@ -97,11 +78,11 @@
       </el-form>
       <template #footer>
         <el-button @click="buildingDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="updateBuilding">保存修改</el-button>
+        <el-button type="primary" @click="submitBuilding">{{ buildingSubmitText }}</el-button>
       </template>
     </el-dialog>
 
-    <el-dialog v-model="roomDialogVisible" title="编辑宿舍信息" width="560px">
+    <el-dialog v-model="roomDialogVisible" :title="roomDialogTitle" width="560px">
       <el-form :model="roomEditForm" label-width="96px">
         <el-form-item label="所属楼栋">
           <el-select v-model="roomEditForm.buildingId" placeholder="选择楼栋" style="width: 100%">
@@ -129,46 +110,88 @@
       </el-form>
       <template #footer>
         <el-button @click="roomDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="updateRoom">保存修改</el-button>
+        <el-button type="primary" @click="submitRoom">{{ roomSubmitText }}</el-button>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import api from '../../api'
 
 const buildings = ref([])
 const rooms = ref([])
-const buildingForm = reactive({ buildingName: '', buildingCode: '', floorCount: 6, genderType: '', remark: '' })
-const roomForm = reactive({ buildingId: null, roomNo: '', capacity: 4, facilityDesc: '', status: 'enabled', remark: '' })
 const buildingDialogVisible = ref(false)
 const roomDialogVisible = ref(false)
+const buildingDialogMode = ref('create')
+const roomDialogMode = ref('create')
 const buildingEditForm = reactive({ id: null, buildingName: '', buildingCode: '', floorCount: 6, genderType: '', remark: '' })
 const roomEditForm = reactive({ id: null, buildingId: null, roomNo: '', capacity: 4, facilityDesc: '', status: 'enabled', remark: '' })
+const buildingDialogTitle = computed(() => (buildingDialogMode.value === 'create' ? '新增楼栋信息' : '编辑楼栋信息'))
+const buildingSubmitText = computed(() => (buildingDialogMode.value === 'create' ? '确认新增' : '保存修改'))
+const roomDialogTitle = computed(() => (roomDialogMode.value === 'create' ? '新增宿舍信息' : '编辑宿舍信息'))
+const roomSubmitText = computed(() => (roomDialogMode.value === 'create' ? '确认新增' : '保存修改'))
 
 async function loadAll() {
   buildings.value = (await api.get('/dorm-admin/buildings')).data.data
   rooms.value = (await api.get('/dorm-admin/rooms')).data.data
 }
 
+function resetBuildingForm() {
+  Object.assign(buildingEditForm, { id: null, buildingName: '', buildingCode: '', floorCount: 6, genderType: '', remark: '' })
+}
+
+function resetRoomForm() {
+  Object.assign(roomEditForm, { id: null, buildingId: null, roomNo: '', capacity: 4, facilityDesc: '', status: 'enabled', remark: '' })
+}
+
+function openBuildingCreate() {
+  // 新增和编辑共用同一个弹窗表单，减少页面顶部长期占位，让楼栋列表区域更清爽。
+  buildingDialogMode.value = 'create'
+  resetBuildingForm()
+  buildingDialogVisible.value = true
+}
+
+function openRoomCreate() {
+  // 宿舍新增也统一走弹窗，字段布局与编辑保持一致，便于一次填写完整信息。
+  roomDialogMode.value = 'create'
+  resetRoomForm()
+  roomDialogVisible.value = true
+}
+
 async function createBuilding() {
-  await api.post('/dorm-admin/buildings', buildingForm)
+  await api.post('/dorm-admin/buildings', {
+    buildingName: buildingEditForm.buildingName,
+    buildingCode: buildingEditForm.buildingCode,
+    floorCount: buildingEditForm.floorCount,
+    genderType: buildingEditForm.genderType,
+    remark: buildingEditForm.remark
+  })
   ElMessage.success('楼栋已新增')
-  Object.assign(buildingForm, { buildingName: '', buildingCode: '', floorCount: 6, genderType: '', remark: '' })
+  buildingDialogVisible.value = false
+  resetBuildingForm()
   await loadAll()
 }
 
 async function createRoom() {
-  await api.post('/dorm-admin/rooms', roomForm)
+  await api.post('/dorm-admin/rooms', {
+    buildingId: roomEditForm.buildingId,
+    roomNo: roomEditForm.roomNo,
+    capacity: roomEditForm.capacity,
+    facilityDesc: roomEditForm.facilityDesc,
+    status: roomEditForm.status,
+    remark: roomEditForm.remark
+  })
   ElMessage.success('宿舍已新增')
-  Object.assign(roomForm, { buildingId: null, roomNo: '', capacity: 4, facilityDesc: '', status: 'enabled', remark: '' })
+  roomDialogVisible.value = false
+  resetRoomForm()
   await loadAll()
 }
 
 function openBuildingEdit(row) {
+  buildingDialogMode.value = 'edit'
   Object.assign(buildingEditForm, {
     id: row.id,
     buildingName: row.buildingName || '',
@@ -178,6 +201,14 @@ function openBuildingEdit(row) {
     remark: row.remark || ''
   })
   buildingDialogVisible.value = true
+}
+
+async function submitBuilding() {
+  if (buildingDialogMode.value === 'create') {
+    await createBuilding()
+    return
+  }
+  await updateBuilding()
 }
 
 async function updateBuilding() {
@@ -209,6 +240,7 @@ async function deleteBuilding(row) {
 }
 
 function openRoomEdit(row) {
+  roomDialogMode.value = 'edit'
   Object.assign(roomEditForm, {
     id: row.id,
     buildingId: row.buildingId,
@@ -219,6 +251,14 @@ function openRoomEdit(row) {
     remark: row.remark || ''
   })
   roomDialogVisible.value = true
+}
+
+async function submitRoom() {
+  if (roomDialogMode.value === 'create') {
+    await createRoom()
+    return
+  }
+  await updateRoom()
 }
 
 async function updateRoom() {
@@ -252,3 +292,12 @@ async function deleteRoom(row) {
 
 onMounted(loadAll)
 </script>
+
+<style scoped>
+.dorm-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+</style>
