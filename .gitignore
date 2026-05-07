@@ -16,6 +16,7 @@ pnpm-debug.log*
 lerna-debug.log*
 
 *.zip
+Dormitory-Repair-Management-delivery-*/
 dist-package/
 dist-package-code-only/
 dist-package-old-*/

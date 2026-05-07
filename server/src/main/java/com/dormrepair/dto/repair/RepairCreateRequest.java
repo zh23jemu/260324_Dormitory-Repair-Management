@@ -9,8 +9,8 @@ public record RepairCreateRequest(
         @NotBlank String title,
         @NotBlank String description,
         String expectTime,
-        Long buildingId,
-        Long roomId,
+        @NotNull Long buildingId,
+        @NotNull Long roomId,
         Long facilityId,
         List<String> imagePaths
 ) {

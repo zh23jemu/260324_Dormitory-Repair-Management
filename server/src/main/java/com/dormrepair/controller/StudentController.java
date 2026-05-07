@@ -42,6 +42,16 @@ public class StudentController {
         return ApiResponse.success(studentService.repairTypes());
     }
 
+    @GetMapping("/buildings")
+    public ApiResponse<List<Map<String, Object>>> buildings() {
+        return ApiResponse.success(studentService.buildings());
+    }
+
+    @GetMapping("/rooms")
+    public ApiResponse<List<Map<String, Object>>> rooms(@RequestParam(required = false) Long buildingId) {
+        return ApiResponse.success(studentService.rooms(buildingId));
+    }
+
     @GetMapping("/rating-indicators")
     public ApiResponse<List<Map<String, Object>>> ratingIndicators() {
         return ApiResponse.success(studentService.ratingIndicators());

@@ -18,9 +18,9 @@
           <small>覆盖水电、家具、门窗、网络等常见场景</small>
         </div>
         <div class="repair-create-hero__metric">
-          <span>设施关联</span>
-          <strong>{{ facilities.length }}</strong>
-          <small>可将工单直接关联到宿舍设施台账</small>
+          <span>可选楼栋</span>
+          <strong>{{ buildings.length }}</strong>
+          <small>维修地点由提交人按实际故障位置选择</small>
         </div>
       </div>
     </section>
@@ -60,6 +60,20 @@
                   </div>
                 </div>
                 <div class="repair-form-field">
+                  <label>维修楼栋</label>
+                  <select v-model.number="form.buildingId" class="repair-select" @change="handleBuildingChange">
+                    <option value="" disabled>请选择楼栋</option>
+                    <option v-for="item in buildings" :key="item.id" :value="item.id">{{ item.buildingName }}</option>
+                  </select>
+                </div>
+                <div class="repair-form-field">
+                  <label>维修宿舍</label>
+                  <select v-model.number="form.roomId" class="repair-select" :disabled="!form.buildingId" @change="handleRoomChange">
+                    <option value="" disabled>{{ form.buildingId ? '请选择宿舍' : '请先选择楼栋' }}</option>
+                    <option v-for="item in rooms" :key="item.id" :value="item.id">{{ item.roomNo }}</option>
+                  </select>
+                </div>
+                <div class="repair-form-field">
                   <label>当前已上传图片</label>
                   <div class="repair-create-counter">{{ uploaderFiles.length }} / 3 张</div>
                 </div>
@@ -77,7 +91,7 @@
 
             <div class="repair-form-group">
               <div class="repair-form-group__title">设施关联</div>
-              <div class="repair-form-group__desc">如果本次报修对应到宿舍内的具体设施，建议一并关联，便于后续维修记录沉淀。</div>
+              <div class="repair-form-group__desc">先选择维修地点后，可关联该宿舍下的具体设施，便于后续维修记录沉淀。</div>
               <van-radio-group v-model="form.facilityId" direction="vertical" class="repair-facility-list">
                 <van-radio :name="null" class="repair-facility-item">不关联设施</van-radio>
                 <van-radio v-for="item in facilities" :key="item.id" :name="item.id" class="repair-facility-item">
@@ -139,6 +153,10 @@
               <strong>{{ selectedFacilityName }}</strong>
             </div>
             <div class="repair-create-summary__row">
+              <span>维修地点</span>
+              <strong>{{ selectedLocationName }}</strong>
+            </div>
+            <div class="repair-create-summary__row">
               <span>期望时间</span>
               <strong>{{ form.expectTimeInput || '暂未选择' }}</strong>
             </div>
@@ -163,12 +181,14 @@ import { showNotify, showToast } from 'vant'
 import api from '../../api'
 
 const repairTypes = ref([])
+const buildings = ref([])
+const rooms = ref([])
 const facilities = ref([])
 const uploaderFiles = ref([])
 const previewVisible = ref(false)
 const previewImages = ref([])
 const previewIndex = ref(0)
-const form = reactive({ repairTypeId: null, title: '', description: '', expectTimeInput: '', facilityId: null, imagePaths: [] })
+const form = reactive({ repairTypeId: null, buildingId: '', roomId: '', title: '', description: '', expectTimeInput: '', facilityId: null, imagePaths: [] })
 
 const selectedRepairTypeName = computed(() => {
   return repairTypes.value.find((item) => item.id === form.repairTypeId)?.typeName || '暂未选择'
@@ -182,16 +202,58 @@ const selectedFacilityName = computed(() => {
   return facility ? `${facility.facilityName} / ${facility.facilityType}` : '不关联设施'
 })
 
+const selectedLocationName = computed(() => {
+  const building = buildings.value.find((item) => String(item.id) === String(form.buildingId))
+  const room = rooms.value.find((item) => String(item.id) === String(form.roomId))
+  if (!building && !room) {
+    return '暂未选择'
+  }
+  return `${building?.buildingName || ''} ${room?.roomNo || ''}`.trim() || '暂未选择'
+})
+
 function toApiDateTime(value) {
   return value ? `${value.replace('T', ' ')}:00` : ''
 }
 
 async function loadBase() {
   repairTypes.value = (await api.get('/student/repair-types')).data.data
-  facilities.value = (await api.get('/student/facilities')).data.data
+  buildings.value = (await api.get('/student/buildings')).data.data
   if (!form.repairTypeId && repairTypes.value.length) {
     form.repairTypeId = repairTypes.value[0].id
   }
+}
+
+async function loadRooms() {
+  if (!form.buildingId) {
+    rooms.value = []
+    return
+  }
+  rooms.value = (await api.get('/student/rooms', { params: { buildingId: form.buildingId } })).data.data
+}
+
+async function loadFacilities() {
+  if (!form.roomId) {
+    facilities.value = []
+    return
+  }
+  facilities.value = (await api.get('/student/facilities', { params: { roomId: form.roomId } })).data.data
+}
+
+async function handleBuildingChange() {
+  /*
+   * 维修地点改为由学生按实际故障位置选择。
+   * 楼栋变化后需要清空宿舍和设施，避免提交到旧楼栋下的房间或设施。
+   */
+  form.roomId = null
+  form.facilityId = null
+  facilities.value = []
+  await loadRooms()
+}
+
+async function handleRoomChange() {
+  // 宿舍变化后只加载该宿舍的设施，保证设施关联和维修地点一致。
+  form.facilityId = null
+  await loadFacilities()
 }
 
 async function afterRead(file) {
@@ -213,8 +275,18 @@ function previewUploadImage(file) {
 }
 
 async function submitRepair() {
+  if (!form.buildingId) {
+    showToast('请选择维修楼栋')
+    return
+  }
+  if (!form.roomId) {
+    showToast('请选择维修宿舍')
+    return
+  }
   await api.post('/student/repair-orders', {
     repairTypeId: form.repairTypeId,
+    buildingId: form.buildingId,
+    roomId: form.roomId,
     title: form.title,
     description: form.description,
     expectTime: toApiDateTime(form.expectTimeInput),
@@ -222,7 +294,9 @@ async function submitRepair() {
     imagePaths: form.imagePaths
   })
   showNotify({ type: 'success', message: '报修提交成功' })
-  Object.assign(form, { repairTypeId: repairTypes.value[0]?.id || null, title: '', description: '', expectTimeInput: '', facilityId: null, imagePaths: [] })
+  Object.assign(form, { repairTypeId: repairTypes.value[0]?.id || null, buildingId: '', roomId: '', title: '', description: '', expectTimeInput: '', facilityId: null, imagePaths: [] })
+  rooms.value = []
+  facilities.value = []
   uploaderFiles.value = []
 }
 

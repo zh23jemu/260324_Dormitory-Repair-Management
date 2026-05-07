@@ -36,19 +36,19 @@ public class StudentService {
         Long buildingId = request.buildingId();
         Long roomId = request.roomId();
         Long facilityId = request.facilityId();
-        if (buildingId == null || roomId == null) {
-            Map<String, Object> profile = commonQueryService.one("select building_id, room_id from student_profile where user_id = ?", user.id());
-            if (buildingId == null && profile.get("building_id") != null) {
-                buildingId = ((Number) profile.get("building_id")).longValue();
-            }
-            if (roomId == null && profile.get("room_id") != null) {
-                roomId = ((Number) profile.get("room_id")).longValue();
-            }
+        Integer roomCount = jdbcTemplate.queryForObject(
+                "select count(*) from dorm_room where id = ? and building_id = ? and status = 'enabled'",
+                Integer.class,
+                roomId,
+                buildingId
+        );
+        if (roomCount == null || roomCount == 0) {
+            throw new BusinessException("请选择有效的维修楼栋和宿舍");
         }
         if (facilityId != null) {
-            Integer count = jdbcTemplate.queryForObject("select count(*) from dorm_facility where id = ?", Integer.class, facilityId);
+            Integer count = jdbcTemplate.queryForObject("select count(*) from dorm_facility where id = ? and room_id = ?", Integer.class, facilityId, roomId);
             if (count == null || count == 0) {
-                throw new BusinessException("所选设施不存在");
+                throw new BusinessException("所选设施不属于当前维修地点");
             }
         }
         jdbcTemplate.update(
@@ -70,6 +70,22 @@ public class StudentService {
     public List<Map<String, Object>> repairTypes() {
         SecurityUtils.requireRole("student");
         return commonQueryService.list("select id, type_name as typeName, sort_no as sortNo, status from repair_type where status = 'enabled' order by sort_no asc, id asc");
+    }
+
+    public List<Map<String, Object>> buildings() {
+        SecurityUtils.requireRole("student");
+        return commonQueryService.list("select id, building_name as buildingName, building_code as buildingCode, floor_count as floorCount from dorm_building order by id asc");
+    }
+
+    public List<Map<String, Object>> rooms(Long buildingId) {
+        SecurityUtils.requireRole("student");
+        if (buildingId == null) {
+            return List.of();
+        }
+        return commonQueryService.list(
+                "select id, building_id as buildingId, room_no as roomNo, capacity, current_count as currentCount, facility_desc as facilityDesc from dorm_room where building_id = ? and status = 'enabled' order by room_no asc, id asc",
+                buildingId
+        );
     }
 
     public List<Map<String, Object>> ratingIndicators() {

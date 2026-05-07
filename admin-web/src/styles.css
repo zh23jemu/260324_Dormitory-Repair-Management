@@ -1394,12 +1394,31 @@ body {
 }
 .repair-form-field .van-cell,
 .repair-datetime-box,
+.repair-select,
 .repair-create-counter,
 .repair-upload-box {
   border-radius: 16px;
   background: #ffffff;
   border: 1px solid rgba(226, 232, 240, 0.9);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+.repair-select {
+  width: 100%;
+  min-height: 52px;
+  padding: 0 16px;
+  color: #0f172a;
+  font-size: 14px;
+  outline: none;
+  appearance: auto;
+}
+.repair-select:disabled {
+  color: #94a3b8;
+  background: #f8fafc;
+  cursor: not-allowed;
+}
+.repair-select:focus {
+  border-color: rgba(14, 165, 233, 0.58);
+  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.12);
 }
 .repair-form-field .van-cell {
   padding: 14px 16px;
