@@ -1674,6 +1674,25 @@ body {
 .student-card__action {
   min-width: 160px;
 }
+.student-status-select {
+  width: 100%;
+  min-width: 148px;
+  height: 44px;
+  padding: 0 40px 0 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(186, 230, 253, 0.94);
+  color: #0f4c81;
+  font-size: 14px;
+  font-weight: 700;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(240, 249, 255, 0.92));
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  outline: none;
+  cursor: pointer;
+}
+.student-status-select:focus {
+  border-color: rgba(14, 165, 233, 0.55);
+  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.12);
+}
 .student-order-grid {
   display: grid;
   gap: 14px;

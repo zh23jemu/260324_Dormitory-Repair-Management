@@ -23,9 +23,11 @@
               <p>按状态过滤并查看每条工单的报修类型、位置和处理进度。</p>
             </div>
             <div class="student-card__action">
-              <van-dropdown-menu>
-                <van-dropdown-item v-model="status" :options="statusOptions" />
-              </van-dropdown-menu>
+              <select v-model="status" class="student-status-select" aria-label="工单状态筛选">
+                <option v-for="item in statusOptions" :key="item.value" :value="item.value">
+                  {{ item.text }}
+                </option>
+              </select>
             </div>
           </div>
 
