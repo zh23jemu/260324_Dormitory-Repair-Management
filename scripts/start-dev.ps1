@@ -1,4 +1,4 @@
-$serverPort = 2360
+$serverPort = 2460
 $apiBaseUrl = "http://localhost:$serverPort/api"
 
 Start-Process cmd.exe -ArgumentList '/k',"cd /d C:\Coding\260324_Dormitory-Repair-Management\server && mvn -Dspring-boot.run.arguments=--server.port=$serverPort spring-boot:run"

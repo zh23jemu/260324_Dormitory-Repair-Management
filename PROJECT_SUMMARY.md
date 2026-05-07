@@ -92,7 +92,7 @@ PC 管理端为 Vite + Vue 3 项目：
 
 默认地址与端口：
 
-- 后端：`http://localhost:2360`
+- 后端：`http://localhost:2460`
 - 管理端：`http://localhost:5183`
 - 学生端：`http://localhost:5184`
 
@@ -281,7 +281,7 @@ PC 管理端为 Vite + Vue 3 项目：
 当前两个前端都有几个重要约定：
 
 - 已按角色拆分为多个视图组件，并通过 Vue Router 组织页面
-- 前端默认 API 地址为 `http://localhost:2360/api`，也可通过 `VITE_API_BASE_URL` 覆盖
+- 前端默认 API 地址为 `http://localhost:2460/api`，也可通过 `VITE_API_BASE_URL` 覆盖
 - 管理端默认账号占位是 `admin`
 - 学生端默认账号占位是 `student01`
 

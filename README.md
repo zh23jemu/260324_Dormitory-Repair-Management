@@ -17,17 +17,17 @@
 
 ```powershell
 cd C:\Coding\260324_Dormitory-Repair-Management\server
-cmd /c "mvn -Dspring-boot.run.arguments=--server.port=2360 spring-boot:run"
+cmd /c "mvn -Dspring-boot.run.arguments=--server.port=2460 spring-boot:run"
 ```
 
-后端地址：`http://localhost:2360`
+后端地址：`http://localhost:2460`
 
 ### 2. 启动统一前端
 
 ```powershell
 cd C:\Coding\260324_Dormitory-Repair-Management\admin-web
 npm install
-$env:VITE_API_BASE_URL='http://localhost:2360/api'
+$env:VITE_API_BASE_URL='http://localhost:2460/api'
 npm run dev
 ```
 
@@ -48,7 +48,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\start-dev.ps1
 说明：
 
 - 一键启动只会拉起后端和统一前端
-- Windows `PowerShell` 下推荐使用 `cmd /c "mvn -Dspring-boot.run.arguments=--server.port=2360 spring-boot:run"`
+- Windows `PowerShell` 下推荐使用 `cmd /c "mvn -Dspring-boot.run.arguments=--server.port=2460 spring-boot:run"`
 - 不建议写成 `mvn spring-boot:run "-Dspring-boot.run.arguments=..."`，部分环境会出现参数解析异常
 
 ## 预置账号
