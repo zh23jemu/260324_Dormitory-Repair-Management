@@ -32,12 +32,24 @@
               </template>
             </van-cell>
           </van-cell-group>
-          <div v-for="item in detail.recentOrders || []" :key="`rating-${item.id}`" class="rating-card" v-if="item.ratingContent">
-            <strong>{{ item.orderNo }}</strong>
-            <p>{{ item.ratingContent }}</p>
-            <span>{{ item.ratedAt || item.completedAt }}</span>
-          </div>
+          <template v-for="item in detail.recentOrders || []" :key="`rating-${item.id}`">
+            <div v-if="item.ratingContent" class="rating-card">
+              <strong>{{ item.orderNo }}</strong>
+              <p>{{ item.ratingContent }}</p>
+              <span>{{ item.ratedAt || item.completedAt }}</span>
+            </div>
+          </template>
           <van-empty v-if="!(detail.recentOrders || []).length" description="暂无已完成工单评价" />
+        </div>
+      </div>
+    </section>
+
+    <section class="student-layout" v-else>
+      <div class="student-main">
+        <div class="student-card">
+          <van-empty :description="loading ? '维修人员信息加载中' : errorMessage">
+            <van-button v-if="!loading" type="primary" size="small" @click="loadDetail">重新加载</van-button>
+          </van-empty>
         </div>
       </div>
     </section>
@@ -51,8 +63,21 @@ import api from '../../api'
 
 const route = useRoute()
 const detail = ref(null)
+const loading = ref(false)
+const errorMessage = ref('维修人员信息加载失败')
 
-onMounted(async () => {
-  detail.value = (await api.get(`/portal/repairers/${route.params.id}`)).data.data
-})
+async function loadDetail() {
+  loading.value = true
+  errorMessage.value = '维修人员信息加载失败'
+  try {
+    detail.value = (await api.get(`/portal/repairers/${route.params.id}`)).data.data
+  } catch (error) {
+    detail.value = null
+    errorMessage.value = error?.response?.data?.message || error?.message || '维修人员信息加载失败'
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(loadDetail)
 </script>
