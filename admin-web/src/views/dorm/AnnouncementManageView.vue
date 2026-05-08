@@ -40,7 +40,14 @@
       <el-table-column prop="content" label="内容" min-width="260" />
       <el-table-column label="配图" width="110">
         <template #default="{ row }">
-          <el-image v-if="row.imagePath" :src="fileUrl(row.imagePath)" :preview-src-list="[fileUrl(row.imagePath)]" style="width:64px;height:44px;border-radius:8px" fit="cover" />
+          <el-image
+            v-if="row.imagePath"
+            :src="fileUrl(row.imagePath)"
+            :preview-src-list="[fileUrl(row.imagePath)]"
+            :preview-teleported="true"
+            style="width:64px;height:44px;border-radius:8px"
+            fit="cover"
+          />
           <span v-else>无</span>
         </template>
       </el-table-column>
