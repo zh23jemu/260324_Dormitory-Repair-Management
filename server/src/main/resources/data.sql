@@ -95,6 +95,11 @@ INSERT INTO forum_post (id, student_id, title, content, image_path, status, crea
 (1, 4, '宿舍热水器报修体验分享', '昨天提交报修后，维修员当天就完成处理，整体进度在系统里看得比较清楚。', NULL, 'published', '2026-03-25 13:00:00', '2026-03-25 13:00:00'),
 (2, 6, '建议报修时补充故障照片', '上传故障照片后，宿管和维修员判断问题会更快，建议大家尽量拍清楚。', NULL, 'published', '2026-03-25 13:30:00', '2026-03-25 13:30:00');
 
+INSERT INTO forum_comment (id, forum_post_id, user_id, content, created_at) VALUES
+(1, 1, 6, '确实，状态流转很清楚，能减少很多等待焦虑。', '2026-03-25 13:35:00'),
+(2, 1, 5, '建议维修完成后再补一条处理说明，方便后续参考。', '2026-03-25 13:40:00'),
+(3, 2, 4, '赞同，尤其是漏水、电路类问题，照片能帮很大忙。', '2026-03-25 13:45:00');
+
 INSERT INTO sys_dict (id, dict_type, dict_code, dict_name, sort_no, status) VALUES
 (1, 'repair_priority', 'normal', '普通', 1, 'enabled'),
 (2, 'repair_priority', 'urgent', '紧急', 2, 'enabled'),

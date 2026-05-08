@@ -10,6 +10,7 @@ import com.dormrepair.security.JwtUser;
 import com.dormrepair.util.OrderNoUtils;
 import com.dormrepair.util.SecurityUtils;
 import com.dormrepair.util.TimeUtils;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -163,13 +164,20 @@ public class StudentService {
         return detail;
     }
 
-    public Map<String, Object> forumPosts(Integer pageNum, Integer pageSize) {
-        return commonQueryService.page(
-                "select fp.id, fp.title, fp.content, fp.image_path as imagePath, fp.status, fp.created_at as createdAt, u.real_name as studentName, u.avatar as studentAvatar " +
-                        "from forum_post fp left join user u on fp.student_id = u.id where fp.status = 'published' order by fp.id desc",
-                pageNum,
-                pageSize
-        );
+    public Map<String, Object> forumPosts(String keyword, Integer pageNum, Integer pageSize) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("select fp.id, fp.title, fp.content, fp.image_path as imagePath, fp.status, fp.created_at as createdAt, u.real_name as studentName, u.avatar as studentAvatar ");
+        sql.append("from forum_post fp left join user u on fp.student_id = u.id where fp.status = 'published' ");
+        List<Object> args = new ArrayList<>();
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            String likeKeyword = "%" + keyword.trim() + "%";
+            sql.append("and (fp.title like ? or fp.content like ? or u.real_name like ?) ");
+            args.add(likeKeyword);
+            args.add(likeKeyword);
+            args.add(likeKeyword);
+        }
+        sql.append("order by fp.id desc");
+        return commonQueryService.page(sql.toString(), pageNum, pageSize, args.toArray());
     }
 
     public void createForumPost(ForumPostRequest request) {

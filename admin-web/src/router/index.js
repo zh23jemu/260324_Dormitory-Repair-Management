@@ -20,6 +20,7 @@ const routes = [
       { path: 'home', name: 'home', component: () => import('../views/student/HomeView.vue'), meta: { public: true, layout: 'portal' } },
       { path: 'announcements', name: 'announcements', component: () => import('../views/student/AnnouncementListView.vue'), meta: { public: true, layout: 'portal' } },
       { path: 'forum', name: 'forum', component: () => import('../views/student/ForumView.vue'), meta: { roles: ['student'], layout: 'portal' } },
+      { path: 'forum/create', name: 'forum-create', component: () => import('../views/student/ForumCreateView.vue'), meta: { roles: ['student'], layout: 'portal' } },
       { path: 'repairers', name: 'repairers', component: () => import('../views/student/RepairerListView.vue'), meta: { roles: ['student'], layout: 'portal' } },
       { path: 'repairers/:id', name: 'repairer-detail', component: () => import('../views/student/RepairerDetailView.vue'), meta: { roles: ['student'], layout: 'portal' } },
       { path: 'student/repair/create', name: 'student-repair-create', component: () => import('../views/student/RepairCreateView.vue'), meta: { roles: ['student'], layout: 'portal' } },

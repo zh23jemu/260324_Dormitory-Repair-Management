@@ -4,7 +4,7 @@
       <div class="portal-banner__copy">
         <div class="portal-banner__eyebrow">高校后勤一站式服务平台</div>
         <h1>报修服务平台</h1>
-        <p>统一浏览全部报修记录、服务统计、维修排行、论坛动态与公告信息。学生、宿管、维修员、管理员均从同一主页进入系统。</p>
+        <p>统一浏览全部报修记录、服务统计、维修排行与公告信息。学生、宿管、维修员、管理员均从同一主页进入系统。</p>
         <div class="portal-banner__cta">
           <el-button type="primary" size="large" @click="goProtected('/student/repair/create')">我要报修</el-button>
           <el-button size="large" @click="$router.push('/login')">角色登录</el-button>
@@ -16,7 +16,7 @@
           <div class="portal-illustration-card__list">
             <span>全部报修记录公开浏览</span>
             <span>服务统计与维修排行</span>
-            <span>论坛与公告统一展示</span>
+            <span>公告与报修信息统一展示</span>
             <span>按角色进入不同工作台</span>
           </div>
           <div class="portal-illustration-card__image" aria-hidden="true"></div>
@@ -128,10 +128,6 @@
               <span>首页直接查看发布时间与发布者</span>
             </div>
             <div class="portal-feature-list__item">
-              <strong>论坛交流</strong>
-              <span>公开浏览帖子，登录后发帖和评论</span>
-            </div>
-            <div class="portal-feature-list__item">
               <strong>服务透明</strong>
               <span>展示历史报修记录、评分和维修排行</span>
             </div>
@@ -158,42 +154,6 @@
           </article>
         </div>
         <el-empty v-else description="暂无公告" />
-      </div>
-
-      <div class="portal-panel">
-        <div class="portal-section-title">公开论坛</div>
-        <div v-if="forumPosts.length" class="portal-forum-list">
-          <article v-for="post in forumPosts.slice(0, 6)" :key="post.id" class="portal-forum-item">
-            <div class="portal-forum-item__author">
-              <el-avatar :src="fileUrl(post.avatar) || defaultAvatar" :size="42" />
-              <div>
-                <strong>{{ post.username || post.studentName || '同学' }}</strong>
-                <span>发帖时间：{{ post.createdAt }}</span>
-              </div>
-            </div>
-            <h3>{{ post.title }}</h3>
-            <p>{{ post.content }}</p>
-            <img v-if="post.imagePath" :src="fileUrl(post.imagePath)" alt="论坛帖子配图" />
-            <div class="portal-forum-item__comments">
-              <div v-for="comment in (post.comments || []).slice(0, 3)" :key="comment.id" class="portal-comment-item">
-                <el-avatar :src="fileUrl(comment.avatar) || defaultAvatar" :size="26" />
-                <div>
-                  <strong>{{ comment.username || comment.realName || '用户' }}</strong>
-                  <span>{{ comment.content }} · {{ comment.createdAt }}</span>
-                </div>
-              </div>
-            </div>
-            <div class="portal-forum-item__actions">
-              <el-input
-                v-if="commentForms[post.id] !== undefined"
-                v-model="commentForms[post.id]"
-                placeholder="写下你的评论"
-              />
-              <el-button size="small" @click="submitComment(post)">评论</el-button>
-            </div>
-          </article>
-        </div>
-        <el-empty v-else description="暂无论坛帖子" />
       </div>
     </section>
 
@@ -233,13 +193,10 @@ const router = useRouter()
 const auth = useAuth()
 const announcements = ref([])
 const orders = ref([])
-const forumPosts = ref([])
 const repairerRanking = ref([])
 const statistics = ref({})
-const commentForms = reactive({})
 const orderDialogVisible = ref(false)
 const currentOrder = ref(null)
-const defaultAvatar = 'https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg'
 const keyword = ref('')
 const selectedBuilding = ref('all')
 const selectedType = ref('all')
@@ -261,7 +218,6 @@ async function loadPortal() {
   const { data } = await api.get('/portal/home')
   announcements.value = data.data.announcements || []
   orders.value = data.data.orders || []
-  forumPosts.value = data.data.forumPosts || []
   repairerRanking.value = data.data.repairerRanking || []
   statistics.value = data.data.statistics || {}
 }
@@ -312,25 +268,6 @@ async function openOrderDetail(item) {
   } catch (error) {
     // 只保留基础信息，不再打断用户查看首页工单。
   }
-}
-
-async function submitComment(post) {
-  if (!auth.hasToken()) {
-    router.push(`/login?redirect=${encodeURIComponent('/home')}&role=student`)
-    return
-  }
-  if (commentForms[post.id] === undefined) {
-    commentForms[post.id] = ''
-    return
-  }
-  if (!commentForms[post.id].trim()) {
-    ElMessage.warning('请输入评论内容')
-    return
-  }
-  await api.post(`/portal/forum-posts/${post.id}/comments`, { content: commentForms[post.id].trim() })
-  ElMessage.success('评论已发布')
-  commentForms[post.id] = ''
-  await loadPortal()
 }
 
 onMounted(loadPortal)

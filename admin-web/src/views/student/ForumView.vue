@@ -3,51 +3,27 @@
     <section class="student-hero">
       <div class="student-hero__copy">
         <div class="student-hero__eyebrow">学生交流社区</div>
-        <h1>公开论坛</h1>
-        <p>分享报修经验、宿舍设施使用建议和服务反馈，登录后可发布帖子。</p>
+        <h1>学生论坛</h1>
+        <p>这里只展示已发布帖子。你可以按关键字检索内容，登录后再进入发帖页面。</p>
       </div>
     </section>
 
     <section class="student-layout">
       <div class="student-main">
-        <div class="student-card student-card--accent student-forum-composer">
-          <div class="student-card__header">
-            <div>
-              <h2>发布帖子</h2>
-              <p>围绕宿舍报修、维修体验、设施使用建议等主题进行公开交流。</p>
-            </div>
-          </div>
-          <div class="student-form-stack student-forum-composer__stack">
-            <div class="repair-form-group">
-              <div class="repair-form-group__title">帖子内容</div>
-              <div class="repair-form-group__desc">建议使用清晰、具体的标题和正文，方便其他同学快速理解你的经验或建议。</div>
-              <div class="repair-form-grid student-forum-form-grid">
-                <div class="repair-form-field repair-form-field--full">
-                  <label>帖子标题</label>
-                  <van-field v-model="form.title" placeholder="请输入帖子标题，例如：建议报修时补充故障照片" class="student-form-field" />
-                </div>
-                <div class="repair-form-field repair-form-field--full">
-                  <label>正文内容</label>
-                  <van-field
-                    v-model="form.content"
-                    type="textarea"
-                    rows="5"
-                    autosize
-                    placeholder="分享报修经验、宿舍设施使用建议、维修沟通建议等公开交流内容"
-                    class="student-form-field student-form-field--textarea"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div class="repair-form-group">
-              <div class="repair-form-group__title">图片附件</div>
-              <div class="repair-form-group__desc">可上传 1 张配图，用于补充说明问题场景、示意内容或经验截图。</div>
-              <div class="student-upload-panel student-upload-panel--spacious">
-                <van-uploader v-model="files" :after-read="afterRead" :max-count="1" />
-              </div>
-            </div>
-            <van-button type="primary" block class="student-primary-button" @click="submitPost">发布帖子</van-button>
+        <div class="student-card student-forum-toolbar">
+          <form class="student-forum-toolbar__search" @submit.prevent="searchPosts">
+            <el-input
+              v-model="keyword"
+              clearable
+              placeholder="输入关键字检索标题、内容或发布者"
+              @clear="resetSearch"
+              @keydown.enter.prevent="searchPosts"
+            />
+            <el-button type="primary" native-type="submit">搜索</el-button>
+            <el-button @click="resetSearch">重置</el-button>
+          </form>
+          <div class="student-forum-toolbar__actions">
+            <el-button type="primary" plain @click="goCreatePost">发布帖子</el-button>
           </div>
         </div>
 
@@ -55,7 +31,7 @@
           <div class="student-card__header">
             <div>
               <h2>帖子列表</h2>
-              <p>最新帖子按时间展示，便于快速浏览公开交流内容。</p>
+              <p>帖子、评论和发帖入口均仅对登录学生开放，评论会显示头像与发布时间。</p>
             </div>
           </div>
           <div v-if="posts.length" class="student-forum-grid">
@@ -70,9 +46,26 @@
               <h3>{{ item.title }}</h3>
               <p>{{ item.content }}</p>
               <img v-if="item.imagePath" :src="fileUrl(item.imagePath)" alt="帖子图片" />
+              <div class="student-forum-card__comment-summary">共 {{ item.commentCount || 0 }} 条评论</div>
+              <div v-if="(item.comments || []).length" class="student-forum-card__comments">
+                <div v-for="comment in item.comments" :key="comment.id" class="student-forum-card__comment">
+                  <el-avatar :src="fileUrl(comment.avatar) || defaultAvatar" :size="30" />
+                  <div class="student-forum-card__comment-body">
+                    <div class="student-forum-card__comment-head">
+                      <strong>{{ comment.username || comment.realName || '用户' }}</strong>
+                      <span>{{ comment.createdAt }}</span>
+                    </div>
+                    <p>{{ comment.content }}</p>
+                  </div>
+                </div>
+              </div>
+              <div class="student-forum-card__comment-form">
+                <el-input v-model="commentForms[item.id]" placeholder="写下评论，大家都会看到" />
+                <el-button type="primary" @click="submitComment(item)">发表评论</el-button>
+              </div>
             </article>
           </div>
-          <van-empty v-else description="暂无帖子" />
+          <el-empty v-else description="暂无帖子" />
           <el-pagination
             v-model:current-page="page.pageNum"
             v-model:page-size="page.pageSize"
@@ -100,40 +93,155 @@ import { applyPageResult, createPageState, pageParams } from '../../utils/pagina
 const router = useRouter()
 const auth = useAuth()
 const posts = ref([])
-const files = ref([])
 const page = reactive(createPageState())
-const form = reactive({ title: '', content: '', imagePath: '' })
+const keyword = ref('')
+const commentForms = reactive({})
 const defaultAvatar = 'https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg'
 
 async function loadPosts() {
-  posts.value = applyPageResult(page, (await api.get('/portal/forum-posts', { params: pageParams(page) })).data.data)
-}
-
-async function afterRead(file) {
-  const formData = new FormData()
-  formData.append('file', file.file)
-  const { data } = await api.post('/common/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
-  form.imagePath = data.data.filePath
-  file.url = fileUrl(form.imagePath)
-}
-
-async function submitPost() {
   if (!auth.hasToken()) {
     router.push(`/login?redirect=${encodeURIComponent('/forum')}&role=student`)
     return
   }
-  if (!form.title || !form.content) {
-    showToast('请填写标题和内容')
+  const params = {
+    ...pageParams(page)
+  }
+  if (keyword.value.trim()) {
+    params.keyword = keyword.value.trim()
+  }
+  posts.value = applyPageResult(page, (await api.get('/portal/forum-posts', { params })).data.data)
+  posts.value.forEach((item) => {
+    if (commentForms[item.id] === undefined) {
+      commentForms[item.id] = ''
+    }
+  })
+}
+
+function searchPosts() {
+  page.pageNum = 1
+  loadPosts()
+}
+
+function resetSearch() {
+  keyword.value = ''
+  page.pageNum = 1
+  loadPosts()
+}
+
+function goCreatePost() {
+  router.push('/forum/create')
+}
+
+async function submitComment(post) {
+  if (!auth.hasToken()) {
+    router.push(`/login?redirect=${encodeURIComponent('/forum')}&role=student`)
     return
   }
-  await api.post('/student/forum-posts', form)
-  showToast('帖子已发布')
-  form.title = ''
-  form.content = ''
-  form.imagePath = ''
-  files.value = []
+  const content = String(commentForms[post.id] || '').trim()
+  if (!content) {
+    showToast('请输入评论内容')
+    return
+  }
+  await api.post(`/portal/forum-posts/${post.id}/comments`, { content })
+  showToast('评论已发布')
+  commentForms[post.id] = ''
   await loadPosts()
 }
 
 onMounted(loadPosts)
 </script>
+
+<style scoped>
+.student-forum-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.student-forum-toolbar__search {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.student-forum-toolbar__actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.student-forum-card__comment-summary {
+  margin-top: 14px;
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.student-forum-card__comments {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid rgba(37, 99, 235, 0.12);
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(239, 246, 255, 0.9), rgba(240, 253, 250, 0.75));
+}
+
+.student-forum-card__comment {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.student-forum-card__comment-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.student-forum-card__comment-head {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.student-forum-card__comment-head strong {
+  color: #0f172a;
+  font-size: 13px;
+}
+
+.student-forum-card__comment-body p {
+  margin: 4px 0 0;
+  color: #334155;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.student-forum-card__comment-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+@media (max-width: 640px) {
+  .student-forum-toolbar__search {
+    grid-template-columns: 1fr;
+  }
+
+  .student-forum-toolbar__actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .student-forum-card__comment-form {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

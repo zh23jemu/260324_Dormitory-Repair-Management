@@ -1,6 +1,7 @@
 PRAGMA foreign_keys = OFF;
 
 DROP TABLE IF EXISTS service_message;
+DROP TABLE IF EXISTS forum_comment;
 DROP TABLE IF EXISTS forum_post;
 DROP TABLE IF EXISTS repair_resource;
 DROP TABLE IF EXISTS repair_rating;
@@ -218,6 +219,16 @@ CREATE TABLE forum_post (
     FOREIGN KEY (student_id) REFERENCES user(id)
 );
 
+CREATE TABLE forum_comment (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    forum_post_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    content TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (forum_post_id) REFERENCES forum_post(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES user(id)
+);
+
 CREATE TABLE repair_resource (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
@@ -280,3 +291,4 @@ CREATE INDEX idx_dorm_facility_room_id ON dorm_facility(room_id);
 CREATE INDEX idx_resource_status ON repair_resource(status);
 CREATE INDEX idx_service_message_student_id ON service_message(student_id);
 CREATE INDEX idx_forum_post_status ON forum_post(status);
+CREATE INDEX idx_forum_comment_post_id ON forum_comment(forum_post_id);

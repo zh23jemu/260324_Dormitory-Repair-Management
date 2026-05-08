@@ -101,6 +101,9 @@ public class AdminService {
         if (countByUser("select count(*) from forum_post where student_id = ?", id) > 0) {
             throw new BusinessException("该用户已发布论坛帖子，不能删除");
         }
+        if (countByUser("select count(*) from forum_comment where user_id = ?", id) > 0) {
+            throw new BusinessException("该用户已发布论坛评论，不能删除");
+        }
         if (countByUser("select count(*) from service_message where student_id = ? or replied_by = ?", id, id) > 0) {
             throw new BusinessException("该用户已关联服务留言，不能删除");
         }

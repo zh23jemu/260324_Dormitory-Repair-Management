@@ -5,6 +5,7 @@ import com.dormrepair.dto.student.ForumCommentRequest;
 import com.dormrepair.security.JwtUser;
 import com.dormrepair.util.SecurityUtils;
 import com.dormrepair.util.TimeUtils;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +27,7 @@ public class PortalService {
 
     /**
      * 公共门户首页数据。
-     * 用于统一门户首页展示公告、全部报修记录、服务统计、维修排行和论坛动态，不要求登录。
+     * 用于统一门户首页展示公告、全部报修记录、服务统计和维修排行，不再展示公开论坛内容。
      */
     public Map<String, Object> home() {
         Map<String, Object> map = new HashMap<>();
@@ -34,7 +35,6 @@ public class PortalService {
         map.put("orders", repairOrders(1, 8).get("records"));
         map.put("statistics", statistics());
         map.put("repairerRanking", repairerRanking());
-        map.put("forumPosts", forumPosts(1, 6).get("records"));
         return map;
     }
 
@@ -90,20 +90,32 @@ public class PortalService {
         return detail;
     }
 
-    public Map<String, Object> forumPosts(Integer pageNum, Integer pageSize) {
-        Map<String, Object> page = commonQueryService.page(
-                "select fp.id, fp.title, fp.content, fp.image_path as imagePath, fp.created_at as createdAt, fp.updated_at as updatedAt, " +
-                        "u.username as username, u.real_name as studentName, u.avatar as avatar, " +
-                        "0 as commentCount " +
-                        "from forum_post fp left join user u on fp.student_id = u.id " +
-                        "where fp.status = 'published' order by fp.id desc",
-                pageNum,
-                pageSize
-        );
+    public Map<String, Object> forumPosts(String keyword, Integer pageNum, Integer pageSize) {
+        // 论坛浏览已收紧为登录后访问，避免首页和匿名接口暴露公开社区内容。
+        SecurityUtils.requireRole("student");
+        StringBuilder sql = new StringBuilder();
+        sql.append("select fp.id, fp.title, fp.content, fp.image_path as imagePath, fp.created_at as createdAt, fp.updated_at as updatedAt, ");
+        sql.append("u.username as username, u.real_name as studentName, u.avatar as avatar, ");
+        sql.append("0 as commentCount ");
+        sql.append("from forum_post fp left join user u on fp.student_id = u.id ");
+        sql.append("where fp.status = 'published' ");
+        List<Object> args = new ArrayList<>();
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            String likeKeyword = "%" + keyword.trim() + "%";
+            sql.append("and (fp.title like ? or fp.content like ? or u.username like ? or u.real_name like ?) ");
+            args.add(likeKeyword);
+            args.add(likeKeyword);
+            args.add(likeKeyword);
+            args.add(likeKeyword);
+        }
+        sql.append("order by fp.id desc");
+        Map<String, Object> page = commonQueryService.page(sql.toString(), pageNum, pageSize, args.toArray());
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> posts = (List<Map<String, Object>>) page.get("records");
         for (Map<String, Object> post : posts) {
-            post.put("comments", List.of());
+            Long postId = ((Number) post.get("id")).longValue();
+            post.put("comments", forumComments(postId));
+            post.put("commentCount", forumCommentCount(postId));
         }
         return page;
     }
@@ -148,13 +160,37 @@ public class PortalService {
     }
 
     public void createForumComment(Long postId, ForumCommentRequest request) {
+        // 评论属于学生论坛互动内容，必须登录且必须是学生身份。
+        SecurityUtils.requireRole("student");
         JwtUser user = SecurityUtils.currentUser();
         Integer postCount = jdbcTemplate.queryForObject("select count(*) from forum_post where id = ? and status = 'published'", Integer.class, postId);
         if (postCount == null || postCount == 0) {
             throw new BusinessException("帖子不存在或已隐藏");
         }
+        String content = request.content() == null ? "" : request.content().trim();
+        if (content.isEmpty()) {
+            throw new BusinessException("评论内容不能为空");
+        }
         String now = TimeUtils.now();
-        logService.log(user.id(), "论坛评论", "新增", "评论论坛帖子: " + postId + "，内容：" + request.content());
+        jdbcTemplate.update(
+                "insert into forum_comment(forum_post_id, user_id, content, created_at) values (?, ?, ?, ?)",
+                postId, user.id(), content, now
+        );
+        logService.log(user.id(), "论坛评论", "新增", "评论论坛帖子: " + postId + "，内容：" + content);
+    }
+
+    private int forumCommentCount(Long postId) {
+        Integer count = jdbcTemplate.queryForObject("select count(*) from forum_comment where forum_post_id = ?", Integer.class, postId);
+        return count == null ? 0 : count;
+    }
+
+    private List<Map<String, Object>> forumComments(Long postId) {
+        return commonQueryService.list(
+                "select fc.id, fc.content, fc.created_at as createdAt, u.username as username, u.real_name as realName, u.avatar as avatar " +
+                        "from forum_comment fc left join user u on fc.user_id = u.id " +
+                        "where fc.forum_post_id = ? order by fc.id desc limit 6",
+                postId
+        );
     }
 
     private Map<String, Object> statistics() {

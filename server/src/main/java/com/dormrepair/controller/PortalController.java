@@ -39,10 +39,11 @@ public class PortalController {
 
     @GetMapping("/forum-posts")
     public ApiResponse<Map<String, Object>> forumPosts(
+            @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Integer pageNum,
             @RequestParam(required = false) Integer pageSize
     ) {
-        return ApiResponse.success(portalService.forumPosts(pageNum, pageSize));
+        return ApiResponse.success(portalService.forumPosts(keyword, pageNum, pageSize));
     }
 
     @GetMapping("/repairers")
