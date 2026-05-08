@@ -21,7 +21,13 @@
             <van-field v-model="form.title" label="标题" placeholder="例如：希望增加维修进度提醒" />
             <van-field v-model="form.content" label="内容" type="textarea" rows="4" placeholder="请填写建议、意见或使用中遇到的问题" />
             <div class="student-upload-panel">
-              <van-uploader v-model="files" :after-read="afterRead" :max-count="1" />
+              <van-uploader
+                v-model="files"
+                :after-read="afterRead"
+                :max-count="1"
+                :preview-full-image="false"
+                @click-preview="previewFile"
+              />
             </div>
             <van-button type="primary" block @click="submitMessage">提交留言</van-button>
           </div>
@@ -40,7 +46,7 @@
                 <span class="student-status-pill">{{ commonStatusText(item.status) }}</span>
               </div>
               <p>{{ item.content }}</p>
-              <img v-if="item.imagePath" :src="fileUrl(item.imagePath)" alt="留言图片" class="student-message-card__image" />
+              <img v-if="item.imagePath" :src="fileUrl(item.imagePath)" alt="留言图片" class="student-message-card__image" @click="openPreview(fileUrl(item.imagePath))" />
               <div v-if="item.replyContent" class="student-message-card__reply">
                 <strong>管理员回复</strong>
                 <p>{{ item.replyContent }}</p>
@@ -60,6 +66,21 @@
         </div>
       </div>
     </section>
+
+    <el-dialog
+      v-model="previewVisible"
+      title="图片预览"
+      width="760px"
+      destroy-on-close
+      append-to-body
+      :close-on-click-modal="true"
+      :close-on-press-escape="true"
+      @closed="previewUrl = ''"
+    >
+      <div class="preview-wrap" @click.self="closePreview">
+        <img v-if="previewUrl" :src="previewUrl" alt="留言图片预览" class="preview-image" @click="closePreview" />
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -75,6 +96,8 @@ const form = reactive({ title: '', content: '', imagePath: '' })
 const messages = ref([])
 const files = ref([])
 const page = reactive(createPageState())
+const previewVisible = ref(false)
+const previewUrl = ref('')
 
 async function loadMessages() {
   const { data } = await api.get('/student/service-messages', { params: pageParams(page) })
@@ -114,6 +137,20 @@ async function afterRead(file) {
   } catch (error) {
     showToast('图片上传失败')
   }
+}
+
+function openPreview(url) {
+  // 学生端统一使用自定义预览弹窗，避免 Vant 内置预览在 PC 门户布局中出现无法关闭的问题。
+  previewUrl.value = url
+  previewVisible.value = Boolean(url)
+}
+
+function previewFile(file) {
+  openPreview(file.url || file.content || '')
+}
+
+function closePreview() {
+  previewVisible.value = false
 }
 
 onMounted(loadMessages)

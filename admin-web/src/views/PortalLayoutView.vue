@@ -72,6 +72,7 @@ const navItems = [
   { label: '公告信息', to: '/announcements', requiresAuth: false },
   { label: '我要报修', to: '/student/repair/create', requiresAuth: true, roles: ['student'] },
   { label: '我的工单', to: '/student/orders', requiresAuth: true, roles: ['student'] },
+  { label: '服务留言', to: '/student/messages', requiresAuth: true, roles: ['student'] },
   { label: '论坛交流', to: '/forum', requiresAuth: true, roles: ['student'] },
   { label: '维修员信息', to: '/repairers', requiresAuth: true, roles: ['student'] }
 ]

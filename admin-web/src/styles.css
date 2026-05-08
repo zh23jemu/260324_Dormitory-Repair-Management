@@ -2385,6 +2385,21 @@ body {
   object-fit: contain;
   cursor: zoom-out;
 }
+
+/* Element Plus 图片预览会挂载到 body。统一抬高预览层级，避免被弹窗、表格文字或后台布局遮挡。 */
+.el-image-viewer__wrapper {
+  z-index: 30000 !important;
+}
+
+.el-image-viewer__mask {
+  z-index: 30000 !important;
+  background: rgba(15, 23, 42, 0.86) !important;
+}
+
+.el-image-viewer__canvas,
+.el-image-viewer__btn {
+  z-index: 30001 !important;
+}
 .empty-text {
   color: #64748b;
 }
