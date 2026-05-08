@@ -56,6 +56,7 @@ public class AuthService {
     }
 
     public void register(RegisterRequest request) {
+        validateStudentPhone(request.phone());
         Integer count = jdbcTemplate.queryForObject("select count(*) from user where username = ?", Integer.class, request.username());
         if (count != null && count > 0) {
             throw new BusinessException("用户名已存在");
@@ -79,6 +80,12 @@ public class AuthService {
                 userId, request.studentNo(), null, request.college(), request.major(), request.className(), now, now
         );
         logService.log(userId, "认证", "注册", request.username() + " 注册学生账号");
+    }
+
+    private void validateStudentPhone(String phone) {
+        if (phone == null || !phone.trim().matches("^\\d{11}$")) {
+            throw new BusinessException("学生手机号必须为 11 位数字");
+        }
     }
 
     public Map<String, Object> forgotPasswordQuestion(ForgotPasswordQuestionRequest request) {

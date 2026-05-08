@@ -27,7 +27,7 @@
             <div class="student-info-item student-info-item--full"><span>宿舍</span><strong>{{ `${profile.buildingName || ''} ${profile.roomNo || ''} ${profile.bedNo || ''}` }}</strong></div>
           </div>
           <div style="margin-top: 14px">
-            <van-field v-model="form.phone" label="手机号" placeholder="请输入手机号" />
+            <van-field v-model="form.phone" label="手机号" maxlength="11" placeholder="请输入 11 位手机号" />
             <van-button type="primary" block @click="saveProfile">保存信息</van-button>
           </div>
           <div style="margin-top: 12px">
@@ -62,6 +62,10 @@ async function loadProfile() {
 }
 
 async function saveProfile() {
+  if (!isValidPhone(form.phone)) {
+    showToast('手机号必须为 11 位数字')
+    return
+  }
   await api.put('/student/profile', { phone: form.phone, avatar: form.avatar, buildingId: profile.value.buildingId, roomId: profile.value.roomId, bedNo: profile.value.bedNo })
   showToast('个人信息已更新')
   await loadProfile()
@@ -79,6 +83,10 @@ async function uploadAvatar(file) {
 function logout() {
   auth.logout()
   router.replace('/home')
+}
+
+function isValidPhone(phone) {
+  return /^\d{11}$/.test(String(phone || '').trim())
 }
 
 onMounted(loadProfile)

@@ -259,6 +259,7 @@ public class StudentService {
 
     public void updateProfile(StudentProfileUpdateRequest request) {
         SecurityUtils.requireRole("student");
+        validateStudentPhone(request.phone());
         JwtUser user = SecurityUtils.currentUser();
         String now = TimeUtils.now();
         jdbcTemplate.update("update user set phone = ?, avatar = ?, updated_at = ? where id = ?", request.phone(), request.avatar(), now, user.id());
@@ -285,5 +286,11 @@ public class StudentService {
 
     private String baseRepairOrderSql() {
         return "select ro.id, ro.order_no as orderNo, ro.title, ro.description, ro.expect_time as expectTime, ro.status, ro.reject_reason as rejectReason, ro.submitted_at as submittedAt, ro.assigned_at as assignedAt, ro.completed_at as completedAt, rt.type_name as repairTypeName, db.building_name as buildingName, dr.room_no as roomNo, u.real_name as studentName, ru.real_name as repairerName, rf.result_desc as resultDesc, rf.materials_used as materialsUsed, df.id as facilityId, df.facility_name as facilityName, df.facility_type as facilityType from repair_order ro left join repair_type rt on ro.repair_type_id = rt.id left join dorm_building db on ro.building_id = db.id left join dorm_room dr on ro.room_id = dr.id left join dorm_facility df on ro.facility_id = df.id left join user u on ro.student_id = u.id left join user ru on ro.assigned_repairer_id = ru.id left join repair_feedback rf on ro.id = rf.repair_order_id";
+    }
+
+    private void validateStudentPhone(String phone) {
+        if (phone == null || !phone.trim().matches("^\\d{11}$")) {
+            throw new BusinessException("学生手机号必须为 11 位数字");
+        }
     }
 }

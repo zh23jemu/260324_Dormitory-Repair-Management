@@ -71,7 +71,7 @@
                   <el-input v-model="registerForm.realName" />
                 </el-form-item>
                 <el-form-item label="手机号">
-                  <el-input v-model="registerForm.phone" />
+                  <el-input v-model="registerForm.phone" maxlength="11" placeholder="请输入 11 位手机号" />
                 </el-form-item>
                 <el-form-item label="学号">
                   <el-input v-model="registerForm.studentNo" />
@@ -247,6 +247,10 @@ async function submitRegister() {
     ElMessage.warning('当前仅学生账号支持在线注册')
     return
   }
+  if (!isValidPhone(registerForm.phone)) {
+    ElMessage.warning('手机号必须为 11 位数字')
+    return
+  }
   await auth.register(registerForm)
   ElMessage.success('注册成功，请登录')
   activeTab.value = 'login'
@@ -280,5 +284,9 @@ async function loadForgotQuestion() {
   forgotQuestion.value = data.question || ''
   forgotForm.answer = ''
   forgotForm.newPassword = ''
+}
+
+function isValidPhone(phone) {
+  return /^\d{11}$/.test(String(phone || '').trim())
 }
 </script>
