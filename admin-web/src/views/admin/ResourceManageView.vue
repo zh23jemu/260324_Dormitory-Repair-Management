@@ -12,7 +12,11 @@
         <el-table-column prop="category" label="分类" width="120" />
         <el-table-column prop="summary" label="摘要" min-width="220" />
         <el-table-column prop="sortNo" label="排序" width="80" />
-        <el-table-column prop="status" label="状态" width="100" />
+        <el-table-column label="状态" width="100">
+          <template #default="{ row }">
+            <el-tag :type="commonStatusTagType(row.status)">{{ commonStatusText(row.status) }}</el-tag>
+          </template>
+        </el-table-column>
         <el-table-column prop="publisherName" label="发布人" width="120" />
         <el-table-column label="操作" width="160" fixed="right">
           <template #default="{ row }">
@@ -51,6 +55,7 @@
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import api from '../../api'
+import { commonStatusTagType, commonStatusText } from '../../utils/status'
 
 const resources = ref([])
 const dialogVisible = ref(false)

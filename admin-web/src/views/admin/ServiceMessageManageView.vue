@@ -6,7 +6,11 @@
         <el-table-column prop="studentName" label="学生" width="100" />
         <el-table-column prop="title" label="标题" min-width="160" />
         <el-table-column prop="content" label="内容" min-width="220" />
-        <el-table-column prop="status" label="状态" width="100" />
+        <el-table-column label="状态" width="100">
+          <template #default="{ row }">
+            <el-tag :type="commonStatusTagType(row.status)">{{ commonStatusText(row.status) }}</el-tag>
+          </template>
+        </el-table-column>
         <el-table-column prop="createdAt" label="提交时间" width="180" />
         <el-table-column prop="replyContent" label="回复内容" min-width="220" />
         <el-table-column label="操作" width="100">
@@ -25,6 +29,7 @@
 import { onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import api from '../../api'
+import { commonStatusTagType, commonStatusText } from '../../utils/status'
 
 const messages = ref([])
 

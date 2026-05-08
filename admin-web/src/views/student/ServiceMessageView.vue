@@ -37,7 +37,7 @@
             <article v-for="item in messages" :key="item.id" class="student-message-card">
               <div class="student-message-card__head">
                 <strong>{{ item.title }}</strong>
-                <span class="student-status-pill">{{ item.status }}</span>
+                <span class="student-status-pill">{{ commonStatusText(item.status) }}</span>
               </div>
               <p>{{ item.content }}</p>
               <img v-if="item.imagePath" :src="fileUrl(item.imagePath)" alt="留言图片" class="student-message-card__image" />
@@ -59,6 +59,7 @@ import { onMounted, reactive, ref } from 'vue'
 import { showToast } from 'vant'
 import api from '../../api'
 import { fileUrl } from '../../utils/file'
+import { commonStatusText } from '../../utils/status'
 
 const form = reactive({ title: '', content: '', imagePath: '' })
 const messages = ref([])

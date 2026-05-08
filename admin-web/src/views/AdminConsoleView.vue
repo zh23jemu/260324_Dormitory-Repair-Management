@@ -65,7 +65,9 @@
           <el-table-column prop="repairTypeName" label="类型" width="100" />
           <el-table-column prop="buildingName" label="楼栋" width="100" />
           <el-table-column prop="roomNo" label="宿舍" width="90" />
-          <el-table-column prop="status" label="状态" width="130" />
+          <el-table-column label="状态" width="130">
+            <template #default="scope">{{ repairOrderStatusText(scope.row.status) }}</template>
+          </el-table-column>
           <el-table-column prop="title" label="标题" min-width="180" />
           <el-table-column label="操作" width="280">
             <template #default="scope">
@@ -94,7 +96,9 @@
           <el-table-column prop="orderNo" label="工单号" min-width="160" />
           <el-table-column prop="studentName" label="学生" width="120" />
           <el-table-column prop="repairTypeName" label="类型" width="100" />
-          <el-table-column prop="status" label="状态" width="130" />
+          <el-table-column label="状态" width="130">
+            <template #default="scope">{{ repairOrderStatusText(scope.row.status) }}</template>
+          </el-table-column>
           <el-table-column prop="title" label="标题" min-width="180" />
           <el-table-column label="操作" width="260">
             <template #default="scope">
@@ -203,7 +207,9 @@
               <el-table-column prop="realName" label="姓名" />
               <el-table-column prop="role" label="角色" />
               <el-table-column prop="workTypeName" label="工种" />
-              <el-table-column prop="status" label="状态" />
+              <el-table-column label="状态">
+                <template #default="scope">{{ commonStatusText(scope.row.status) }}</template>
+              </el-table-column>
             </el-table>
           </el-card>
           <el-card>
@@ -225,7 +231,9 @@
             <el-table :data="repairTypes" size="small">
               <el-table-column prop="typeName" label="名称" />
               <el-table-column prop="sortNo" label="排序" width="80" />
-              <el-table-column prop="status" label="状态" width="90" />
+              <el-table-column label="状态" width="90">
+                <template #default="scope">{{ commonStatusText(scope.row.status) }}</template>
+              </el-table-column>
               <el-table-column label="操作" width="150">
                 <template #default="scope">
                   <el-button size="small" @click="editRepairType(scope.row)">编辑</el-button>
@@ -271,7 +279,7 @@
       <div v-if="currentOrder" class="detail-layout">
         <div class="detail-grid">
           <div><strong>工单号：</strong>{{ currentOrder.orderNo }}</div>
-          <div><strong>状态：</strong>{{ currentOrder.status }}</div>
+          <div><strong>状态：</strong>{{ repairOrderStatusText(currentOrder.status) }}</div>
           <div><strong>学生：</strong>{{ currentOrder.studentName }}</div>
           <div><strong>维修人员：</strong>{{ currentOrder.repairerName || '待分配' }}</div>
           <div><strong>类型：</strong>{{ currentOrder.repairTypeName }}</div>
@@ -376,6 +384,7 @@ import { ElMessage } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import * as echarts from 'echarts'
 import api from '../api'
+import { commonStatusText, repairOrderStatusText } from '../utils/status'
 
 const token = ref(localStorage.getItem('admin_token') || '')
 const route = useRoute()
@@ -787,7 +796,7 @@ async function removeRepairType(row) {
 function exportCsv(fileName, rows, columns) {
   if (!rows?.length) return ElMessage.warning('当前没有可导出的数据')
   const header = columns.map(([, label]) => label).join(',')
-  const body = rows.map((row) => columns.map(([key]) => `\"${String(row[key] ?? '').replaceAll('\"', '\"\"')}\"`).join(',')).join('\\n')
+  const body = rows.map((row) => columns.map(([key]) => `\"${String(formatExportCell(key, row[key]) ?? '').replaceAll('\"', '\"\"')}\"`).join(',')).join('\\n')
   const blob = new Blob([`\\ufeff${header}\\n${body}`], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
@@ -795,6 +804,14 @@ function exportCsv(fileName, rows, columns) {
   link.download = `${fileName}.csv`
   link.click()
   URL.revokeObjectURL(url)
+}
+
+function formatExportCell(key, value) {
+  // 导出文件也是给用户阅读的内容，状态列统一转换为中文，避免暴露后端状态码。
+  if (key === 'status') {
+    return commonStatusText(repairOrderStatusText(value))
+  }
+  return value
 }
 
 function handleResize() {

@@ -30,7 +30,11 @@
         <el-table-column prop="brand" label="品牌" width="100" />
         <el-table-column prop="modelNumber" label="型号" width="100" />
         <el-table-column prop="purchaseDate" label="购置日期" width="120" />
-        <el-table-column prop="status" label="状态" width="100" />
+        <el-table-column label="状态" width="100">
+          <template #default="{ row }">
+            <el-tag :type="commonStatusTagType(row.status)">{{ commonStatusText(row.status) }}</el-tag>
+          </template>
+        </el-table-column>
         <el-table-column prop="remark" label="备注" min-width="150" />
         <el-table-column label="操作" width="160" fixed="right">
           <template #default="{ row }">
@@ -76,6 +80,7 @@
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import api from '../../api'
+import { commonStatusTagType, commonStatusText } from '../../utils/status'
 
 const query = reactive({ roomId: null, keyword: '', status: '' })
 const facilities = ref([])

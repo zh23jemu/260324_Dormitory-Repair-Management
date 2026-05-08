@@ -14,3 +14,38 @@ export const REPAIR_ORDER_STATUS_TEXT = {
 export function repairOrderStatusText(status) {
   return REPAIR_ORDER_STATUS_TEXT[status] || status || '-'
 }
+
+// 通用状态文案映射，优先覆盖各业务模块中容易直接暴露英文状态码的场景。
+export const COMMON_STATUS_TEXT = {
+  enabled: '启用',
+  disabled: '禁用',
+  draft: '草稿',
+  published: '已发布',
+  hidden: '隐藏',
+  normal: '正常',
+  fault: '故障',
+  repairing: '维修中',
+  pending: '待处理',
+  replied: '已回复',
+  unread: '未读',
+  read: '已读',
+  active: '启用',
+  inactive: '停用'
+}
+
+export function commonStatusText(status) {
+  return COMMON_STATUS_TEXT[status] || status || '-'
+}
+
+export function commonStatusTagType(status) {
+  if (['disabled', 'hidden', 'fault', 'pending', 'inactive'].includes(status)) {
+    return 'danger'
+  }
+  if (['draft', 'repairing', 'unread'].includes(status)) {
+    return 'warning'
+  }
+  if (['published', 'enabled', 'normal', 'replied', 'read', 'active'].includes(status)) {
+    return 'success'
+  }
+  return 'info'
+}
