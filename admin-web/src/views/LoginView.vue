@@ -77,13 +77,19 @@
                   <el-input v-model="registerForm.studentNo" />
                 </el-form-item>
                 <el-form-item label="学院">
-                  <el-input v-model="registerForm.college" />
+                  <el-select v-model="registerForm.college" placeholder="请选择学院" filterable @change="handleCollegeChange">
+                    <el-option v-for="item in collegeOptions" :key="item" :label="item" :value="item" />
+                  </el-select>
                 </el-form-item>
                 <el-form-item label="专业">
-                  <el-input v-model="registerForm.major" />
+                  <el-select v-model="registerForm.major" placeholder="请选择专业" filterable :disabled="!registerForm.college" @change="handleMajorChange">
+                    <el-option v-for="item in majorOptions" :key="item" :label="item" :value="item" />
+                  </el-select>
                 </el-form-item>
                 <el-form-item label="班级">
-                  <el-input v-model="registerForm.className" />
+                  <el-select v-model="registerForm.className" placeholder="请选择班级" filterable :disabled="!registerForm.major">
+                    <el-option v-for="item in classOptions" :key="item" :label="item" :value="item" />
+                  </el-select>
                 </el-form-item>
                 <el-form-item label="找回密码问题">
                   <el-input v-model="registerForm.passwordQuestion" placeholder="例如：你的学号后四位是什么？" />
@@ -150,7 +156,60 @@ const roleOptions = [
   { label: '管理员', value: 'admin', desc: '统计、配置、用户、日志、全局管理', demo: 'admin' }
 ]
 
+// 注册信息中的学院、专业、班级采用固定选项，避免学生随意录入造成统计口径混乱。
+const collegeOptions = [
+  '计算机学院',
+  '软件学院',
+  '机电工程学院',
+  '土木工程学院',
+  '管理学院',
+  '艺术学院',
+  '外国语学院'
+]
+
+const majorOptionsMap = {
+  '计算机学院': ['计算机科学与技术', '软件工程', '网络工程', '人工智能'],
+  '软件学院': ['软件工程', '数据科学与大数据技术', '信息安全', '物联网工程'],
+  '机电工程学院': ['机械设计制造及其自动化', '电气工程及其自动化', '自动化', '机器人工程'],
+  '土木工程学院': ['土木工程', '工程管理', '建筑环境与能源应用工程', '给排水科学与工程'],
+  '管理学院': ['工商管理', '会计学', '市场营销', '人力资源管理'],
+  '艺术学院': ['视觉传达设计', '环境设计', '产品设计', '数字媒体艺术'],
+  '外国语学院': ['英语', '商务英语', '日语', '翻译']
+}
+
+const classOptionsMap = {
+  '计算机科学与技术': ['计科1班', '计科2班', '计科3班'],
+  '软件工程': ['软件1班', '软件2班', '软件3班'],
+  '网络工程': ['网工1班', '网工2班'],
+  '人工智能': ['人工智能1班', '人工智能2班'],
+  '数据科学与大数据技术': ['大数据1班', '大数据2班'],
+  '信息安全': ['信安1班', '信安2班'],
+  '物联网工程': ['物联网1班', '物联网2班'],
+  '机械设计制造及其自动化': ['机制1班', '机制2班'],
+  '电气工程及其自动化': ['电气1班', '电气2班'],
+  '自动化': ['自动化1班', '自动化2班'],
+  '机器人工程': ['机器人1班', '机器人2班'],
+  '土木工程': ['土木1班', '土木2班'],
+  '工程管理': ['工管1班', '工管2班'],
+  '建筑环境与能源应用工程': ['建环1班', '建环2班'],
+  '给排水科学与工程': ['给排水1班', '给排水2班'],
+  '工商管理': ['工商1班', '工商2班'],
+  '会计学': ['会计1班', '会计2班'],
+  '市场营销': ['营销1班', '营销2班'],
+  '人力资源管理': ['人资1班', '人资2班'],
+  '视觉传达设计': ['视传1班', '视传2班'],
+  '环境设计': ['环设1班', '环设2班'],
+  '产品设计': ['产品1班', '产品2班'],
+  '数字媒体艺术': ['数媒1班', '数媒2班'],
+  '英语': ['英语1班', '英语2班'],
+  '商务英语': ['商英1班', '商英2班'],
+  '日语': ['日语1班', '日语2班'],
+  翻译: ['翻译1班', '翻译2班']
+}
+
 const rolePlaceholder = computed(() => roleOptions.find((item) => item.value === selectedRole.value)?.demo || '请输入账号')
+const majorOptions = computed(() => majorOptionsMap[registerForm.college] || [])
+const classOptions = computed(() => classOptionsMap[registerForm.major] || [])
 
 function handleRoleChange(role) {
   selectedRole.value = role
@@ -162,6 +221,15 @@ function handleRoleChange(role) {
   if (role === 'admin' && activeTab.value === 'forgot') {
     activeTab.value = 'login'
   }
+}
+
+function handleCollegeChange() {
+  registerForm.major = ''
+  registerForm.className = ''
+}
+
+function handleMajorChange() {
+  registerForm.className = ''
 }
 
 async function submitLogin() {
