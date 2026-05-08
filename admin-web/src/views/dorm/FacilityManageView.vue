@@ -15,7 +15,7 @@
             <el-option label="维修中" value="repairing" />
           </el-select>
         </el-form-item>
-        <el-form-item><el-button type="primary" @click="loadFacilities">查询</el-button></el-form-item>
+        <el-form-item><el-button type="primary" @click="searchFacilities">查询</el-button></el-form-item>
         <el-form-item><el-button @click="openDialog()">新增设施</el-button></el-form-item>
       </el-form>
     </el-card>
@@ -45,6 +45,15 @@
           </template>
         </el-table-column>
       </el-table>
+      <el-pagination
+        v-model:current-page="page.pageNum"
+        v-model:page-size="page.pageSize"
+        :total="page.total"
+        layout="total, sizes, prev, pager, next, jumper"
+        class="table-pagination"
+        @current-change="loadFacilities"
+        @size-change="loadFacilities"
+      />
     </el-card>
 
     <el-dialog v-model="dialogVisible" :title="form.id ? '编辑设施' : '新增设施'" width="560px">
@@ -81,8 +90,10 @@ import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import api from '../../api'
 import { commonStatusTagType, commonStatusText } from '../../utils/status'
+import { applyPageResult, createPageState, pageParams } from '../../utils/pagination'
 
 const query = reactive({ roomId: null, keyword: '', status: '' })
+const page = reactive(createPageState())
 const facilities = ref([])
 const rooms = ref([])
 const dialogVisible = ref(false)
@@ -93,7 +104,12 @@ async function loadRooms() {
 }
 
 async function loadFacilities() {
-  facilities.value = (await api.get('/dorm-admin/facilities', { params: query })).data.data
+  facilities.value = applyPageResult(page, (await api.get('/dorm-admin/facilities', { params: { ...query, ...pageParams(page) } })).data.data)
+}
+
+async function searchFacilities() {
+  page.pageNum = 1
+  await loadFacilities()
 }
 
 function openDialog(row) {

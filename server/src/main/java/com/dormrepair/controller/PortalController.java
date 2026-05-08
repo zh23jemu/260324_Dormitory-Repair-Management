@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -29,18 +30,27 @@ public class PortalController {
     }
 
     @GetMapping("/announcements")
-    public ApiResponse<List<Map<String, Object>>> announcements() {
-        return ApiResponse.success(portalService.announcements());
+    public ApiResponse<Map<String, Object>> announcements(
+            @RequestParam(required = false) Integer pageNum,
+            @RequestParam(required = false) Integer pageSize
+    ) {
+        return ApiResponse.success(portalService.announcements(pageNum, pageSize));
     }
 
     @GetMapping("/forum-posts")
-    public ApiResponse<List<Map<String, Object>>> forumPosts() {
-        return ApiResponse.success(portalService.forumPosts());
+    public ApiResponse<Map<String, Object>> forumPosts(
+            @RequestParam(required = false) Integer pageNum,
+            @RequestParam(required = false) Integer pageSize
+    ) {
+        return ApiResponse.success(portalService.forumPosts(pageNum, pageSize));
     }
 
     @GetMapping("/repairers")
-    public ApiResponse<List<Map<String, Object>>> repairers() {
-        return ApiResponse.success(portalService.repairers());
+    public ApiResponse<Map<String, Object>> repairers(
+            @RequestParam(required = false) Integer pageNum,
+            @RequestParam(required = false) Integer pageSize
+    ) {
+        return ApiResponse.success(portalService.repairers(pageNum, pageSize));
     }
 
     @GetMapping("/repairers/{id}")

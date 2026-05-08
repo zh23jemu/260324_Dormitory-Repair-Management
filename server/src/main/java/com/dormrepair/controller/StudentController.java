@@ -33,8 +33,11 @@ public class StudentController {
     }
 
     @GetMapping("/announcements")
-    public ApiResponse<List<Map<String, Object>>> announcements() {
-        return ApiResponse.success(dormAdminService.announcements());
+    public ApiResponse<Map<String, Object>> announcements(
+            @RequestParam(required = false) Integer pageNum,
+            @RequestParam(required = false) Integer pageSize
+    ) {
+        return ApiResponse.success(dormAdminService.announcements(pageNum, pageSize));
     }
 
     @GetMapping("/repair-types")
@@ -68,8 +71,11 @@ public class StudentController {
     }
 
     @GetMapping("/resources")
-    public ApiResponse<List<Map<String, Object>>> resources() {
-        return ApiResponse.success(studentService.repairResources());
+    public ApiResponse<Map<String, Object>> resources(
+            @RequestParam(required = false) Integer pageNum,
+            @RequestParam(required = false) Integer pageSize
+    ) {
+        return ApiResponse.success(studentService.repairResources(pageNum, pageSize));
     }
 
     @GetMapping("/resources/{id}")
@@ -78,8 +84,11 @@ public class StudentController {
     }
 
     @GetMapping("/repairers")
-    public ApiResponse<List<Map<String, Object>>> repairers() {
-        return ApiResponse.success(studentService.repairers());
+    public ApiResponse<Map<String, Object>> repairers(
+            @RequestParam(required = false) Integer pageNum,
+            @RequestParam(required = false) Integer pageSize
+    ) {
+        return ApiResponse.success(studentService.repairers(pageNum, pageSize));
     }
 
     @GetMapping("/repairers/{id}")
@@ -88,8 +97,11 @@ public class StudentController {
     }
 
     @GetMapping("/forum-posts")
-    public ApiResponse<List<Map<String, Object>>> forumPosts() {
-        return ApiResponse.success(studentService.forumPosts());
+    public ApiResponse<Map<String, Object>> forumPosts(
+            @RequestParam(required = false) Integer pageNum,
+            @RequestParam(required = false) Integer pageSize
+    ) {
+        return ApiResponse.success(studentService.forumPosts(pageNum, pageSize));
     }
 
     @PostMapping("/forum-posts")
@@ -105,8 +117,12 @@ public class StudentController {
     }
 
     @GetMapping("/repair-orders")
-    public ApiResponse<List<Map<String, Object>>> myOrders(@RequestParam(required = false) String status) {
-        return ApiResponse.success(studentService.myRepairOrders(status));
+    public ApiResponse<Map<String, Object>> myOrders(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Integer pageNum,
+            @RequestParam(required = false) Integer pageSize
+    ) {
+        return ApiResponse.success(studentService.myRepairOrders(status, pageNum, pageSize));
     }
 
     @GetMapping("/repair-orders/{id}")
@@ -132,8 +148,11 @@ public class StudentController {
     }
 
     @GetMapping("/service-messages")
-    public ApiResponse<List<Map<String, Object>>> serviceMessages() {
-        return ApiResponse.success(studentService.serviceMessages());
+    public ApiResponse<Map<String, Object>> serviceMessages(
+            @RequestParam(required = false) Integer pageNum,
+            @RequestParam(required = false) Integer pageSize
+    ) {
+        return ApiResponse.success(studentService.serviceMessages(pageNum, pageSize));
     }
 
     @PostMapping("/service-messages")

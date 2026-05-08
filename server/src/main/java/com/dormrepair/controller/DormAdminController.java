@@ -34,17 +34,24 @@ public class DormAdminController {
     }
 
     @GetMapping("/repair-orders/pending-review")
-    public ApiResponse<List<Map<String, Object>>> pendingReview() {
-        return ApiResponse.success(dormAdminService.pendingReviewOrders());
+    public ApiResponse<Map<String, Object>> pendingReview(
+            @RequestParam(required = false) Integer pageNum,
+            @RequestParam(required = false) Integer pageSize
+    ) {
+        return ApiResponse.success(dormAdminService.pendingReviewOrders(pageNum, pageSize));
     }
 
     @GetMapping("/repair-orders")
-    public ApiResponse<List<Map<String, Object>>> repairOrders(@RequestParam(required = false) String status) {
-        return ApiResponse.success(dormAdminService.repairOrders(status));
+    public ApiResponse<Map<String, Object>> repairOrders(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Integer pageNum,
+            @RequestParam(required = false) Integer pageSize
+    ) {
+        return ApiResponse.success(dormAdminService.repairOrders(status, pageNum, pageSize));
     }
 
     @PostMapping("/repair-orders/query")
-    public ApiResponse<List<Map<String, Object>>> repairOrders(@RequestBody RepairOrderQueryRequest request) {
+    public ApiResponse<Map<String, Object>> repairOrders(@RequestBody RepairOrderQueryRequest request) {
         return ApiResponse.success(dormAdminService.repairOrders(request));
     }
 
@@ -127,12 +134,14 @@ public class DormAdminController {
     }
 
     @GetMapping("/facilities")
-    public ApiResponse<List<Map<String, Object>>> facilities(
+    public ApiResponse<Map<String, Object>> facilities(
             @RequestParam(required = false) Long roomId,
             @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String status
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Integer pageNum,
+            @RequestParam(required = false) Integer pageSize
     ) {
-        return ApiResponse.success(dormAdminService.facilities(roomId, keyword, status));
+        return ApiResponse.success(dormAdminService.facilities(roomId, keyword, status, pageNum, pageSize));
     }
 
     @PostMapping("/facilities")
@@ -154,8 +163,11 @@ public class DormAdminController {
     }
 
     @GetMapping("/students")
-    public ApiResponse<List<Map<String, Object>>> students() {
-        return ApiResponse.success(dormAdminService.students());
+    public ApiResponse<Map<String, Object>> students(
+            @RequestParam(required = false) Integer pageNum,
+            @RequestParam(required = false) Integer pageSize
+    ) {
+        return ApiResponse.success(dormAdminService.students(pageNum, pageSize));
     }
 
     @PutMapping("/students/{id}/room")
@@ -165,8 +177,11 @@ public class DormAdminController {
     }
 
     @GetMapping("/announcements")
-    public ApiResponse<List<Map<String, Object>>> announcements() {
-        return ApiResponse.success(dormAdminService.announcements());
+    public ApiResponse<Map<String, Object>> announcements(
+            @RequestParam(required = false) Integer pageNum,
+            @RequestParam(required = false) Integer pageSize
+    ) {
+        return ApiResponse.success(dormAdminService.announcements(pageNum, pageSize));
     }
 
     @PostMapping("/announcements")

@@ -93,7 +93,7 @@ public class StudentService {
         return commonQueryService.list("select id, dict_code as dictCode, dict_name as dictName, sort_no as sortNo from sys_dict where dict_type = 'rating_indicator' and status = 'enabled' order by sort_no asc, id asc");
     }
 
-    public List<Map<String, Object>> myRepairOrders(String status) {
+    public Map<String, Object> myRepairOrders(String status, Integer pageNum, Integer pageSize) {
         SecurityUtils.requireRole("student");
         JwtUser user = SecurityUtils.currentUser();
         String sql = baseRepairOrderSql() + " where ro.student_id = ?";
@@ -101,7 +101,7 @@ public class StudentService {
             sql += " and ro.status = '" + status + "'";
         }
         sql += " order by ro.id desc";
-        return commonQueryService.list(sql, user.id());
+        return commonQueryService.page(sql, pageNum, pageSize, user.id());
     }
 
     public List<Map<String, Object>> facilities(Long roomId) {
@@ -123,21 +123,23 @@ public class StudentService {
         );
     }
 
-    public List<Map<String, Object>> repairResources() {
-        return commonQueryService.list("select rr.id, rr.title, rr.category, rr.summary, rr.content, rr.cover_image as coverImage, rr.sort_no as sortNo, rr.status, rr.created_at as createdAt from repair_resource rr where rr.status = 'published' order by rr.sort_no asc, rr.id desc");
+    public Map<String, Object> repairResources(Integer pageNum, Integer pageSize) {
+        return commonQueryService.page("select rr.id, rr.title, rr.category, rr.summary, rr.content, rr.cover_image as coverImage, rr.sort_no as sortNo, rr.status, rr.created_at as createdAt from repair_resource rr where rr.status = 'published' order by rr.sort_no asc, rr.id desc", pageNum, pageSize);
     }
 
     public Map<String, Object> repairResourceDetail(Long id) {
         return commonQueryService.one("select rr.id, rr.title, rr.category, rr.summary, rr.content, rr.cover_image as coverImage, rr.sort_no as sortNo, rr.status, rr.created_at as createdAt, u.real_name as publisherName from repair_resource rr left join user u on rr.publisher_id = u.id where rr.id = ? and rr.status = 'published'", id);
     }
 
-    public List<Map<String, Object>> repairers() {
-        return commonQueryService.list(
+    public Map<String, Object> repairers(Integer pageNum, Integer pageSize) {
+        return commonQueryService.page(
                 "select u.id, u.real_name as realName, u.phone, u.avatar, u.work_type_code as workTypeCode, (select group_concat(d.dict_name, '、') from sys_dict d where d.dict_type = 'repair_work_type' and instr(',' || coalesce(u.work_type_code, '') || ',', ',' || d.dict_code || ',') > 0) as workTypeName, " +
                         "(select count(*) from repair_order ro where ro.assigned_repairer_id = u.id) as totalCount, " +
                         "(select count(*) from repair_order ro where ro.assigned_repairer_id = u.id and ro.status in ('pending_rating', 'completed')) as completedCount, " +
                         "(select round(avg(rr.score), 2) from repair_rating rr left join repair_order ro on rr.repair_order_id = ro.id where ro.assigned_repairer_id = u.id) as avgScore " +
-                        "from user u where u.role = 'repairer' and u.status = 'enabled' order by u.id asc"
+                        "from user u where u.role = 'repairer' and u.status = 'enabled' order by u.id asc",
+                pageNum,
+                pageSize
         );
     }
 
@@ -161,10 +163,12 @@ public class StudentService {
         return detail;
     }
 
-    public List<Map<String, Object>> forumPosts() {
-        return commonQueryService.list(
+    public Map<String, Object> forumPosts(Integer pageNum, Integer pageSize) {
+        return commonQueryService.page(
                 "select fp.id, fp.title, fp.content, fp.image_path as imagePath, fp.status, fp.created_at as createdAt, u.real_name as studentName, u.avatar as studentAvatar " +
-                        "from forum_post fp left join user u on fp.student_id = u.id where fp.status = 'published' order by fp.id desc"
+                        "from forum_post fp left join user u on fp.student_id = u.id where fp.status = 'published' order by fp.id desc",
+                pageNum,
+                pageSize
         );
     }
 
@@ -179,11 +183,13 @@ public class StudentService {
         logService.log(user.id(), "学生论坛", "新增", "发布论坛帖子: " + request.title());
     }
 
-    public List<Map<String, Object>> serviceMessages() {
+    public Map<String, Object> serviceMessages(Integer pageNum, Integer pageSize) {
         SecurityUtils.requireRole("student");
-        return commonQueryService.list(
+        return commonQueryService.page(
                 "select sm.id, sm.title, sm.content, sm.image_path as imagePath, sm.status, sm.reply_content as replyContent, sm.replied_at as repliedAt, sm.created_at as createdAt " +
                         "from service_message sm where sm.student_id = ? order by sm.id desc",
+                pageNum,
+                pageSize,
                 SecurityUtils.currentUser().id()
         );
     }

@@ -9,6 +9,15 @@
         <el-table-column prop="completedCount" label="已完成" width="90" />
         <el-table-column prop="avgScore" label="平均评分" width="100" />
       </el-table>
+      <el-pagination
+        v-model:current-page="page.pageNum"
+        v-model:page-size="page.pageSize"
+        :total="page.total"
+        layout="total, sizes, prev, pager, next"
+        class="table-pagination"
+        @current-change="loadRepairers"
+        @size-change="loadRepairers"
+      />
     </el-card>
     <el-card>
       <template #header>{{ detail?.realName || '评价信息' }}</template>
@@ -30,14 +39,16 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import api from '../../api'
+import { applyPageResult, createPageState, pageParams } from '../../utils/pagination'
 
 const repairers = ref([])
 const detail = ref(null)
+const page = reactive(createPageState())
 
 async function loadRepairers() {
-  repairers.value = (await api.get('/repairer/repairers')).data.data
+  repairers.value = applyPageResult(page, (await api.get('/repairer/repairers', { params: pageParams(page) })).data.data)
 }
 
 async function loadDetail(row) {

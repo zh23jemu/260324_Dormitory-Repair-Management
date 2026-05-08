@@ -385,6 +385,7 @@ import { Plus } from '@element-plus/icons-vue'
 import * as echarts from 'echarts'
 import api from '../api'
 import { commonStatusText, repairOrderStatusText } from '../utils/status'
+import { readPageData } from '../utils/pagination'
 
 const token = ref(localStorage.getItem('admin_token') || '')
 const route = useRoute()
@@ -509,20 +510,20 @@ function normalizeTabByRole() {
 
 async function refreshAll() {
   if (isDorm.value) {
-    orders.value = (await api.get('/dorm-admin/repair-orders')).data.data
+    orders.value = readPageData((await api.get('/dorm-admin/repair-orders', { params: { pageSize: 100 } })).data.data).records
     buildings.value = (await api.get('/dorm-admin/buildings')).data.data
     rooms.value = (await api.get('/dorm-admin/rooms')).data.data
-    students.value = (await api.get('/dorm-admin/students')).data.data
-    announcements.value = (await api.get('/dorm-admin/announcements')).data.data
+    students.value = readPageData((await api.get('/dorm-admin/students', { params: { pageSize: 100 } })).data.data).records
+    announcements.value = readPageData((await api.get('/dorm-admin/announcements', { params: { pageSize: 100 } })).data.data).records
   }
   if (isRepairer.value) {
-    repairerOrders.value = (await api.get('/repairer/repair-orders')).data.data
+    repairerOrders.value = readPageData((await api.get('/repairer/repair-orders', { params: { pageSize: 100 } })).data.data).records
     await loadRepairerStats()
   }
   if (isAdmin.value) {
     Object.assign(overview, (await api.get('/admin/statistics/overview')).data.data)
-    users.value = (await api.get('/admin/users')).data.data
-    logs.value = (await api.get('/admin/logs')).data.data
+    users.value = readPageData((await api.get('/admin/users', { params: { pageSize: 100 } })).data.data).records
+    logs.value = readPageData((await api.get('/admin/logs', { params: { pageSize: 100 } })).data.data).records
     dicts.value = (await api.get('/admin/dicts')).data.data
     repairTypes.value = (await api.get('/admin/repair-types')).data.data
     repairTypeStats.value = (await api.get('/admin/statistics/repair-type')).data.data

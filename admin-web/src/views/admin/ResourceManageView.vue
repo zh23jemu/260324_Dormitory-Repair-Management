@@ -27,6 +27,15 @@
           </template>
         </el-table-column>
       </el-table>
+      <el-pagination
+        v-model:current-page="page.pageNum"
+        v-model:page-size="page.pageSize"
+        :total="page.total"
+        layout="total, sizes, prev, pager, next, jumper"
+        class="table-pagination"
+        @current-change="loadAll"
+        @size-change="loadAll"
+      />
     </el-card>
 
     <el-dialog v-model="dialogVisible" :title="form.id ? '编辑知识内容' : '新增知识内容'" width="680px">
@@ -56,13 +65,15 @@ import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import api from '../../api'
 import { commonStatusTagType, commonStatusText } from '../../utils/status'
+import { applyPageResult, createPageState, pageParams } from '../../utils/pagination'
 
 const resources = ref([])
+const page = reactive(createPageState())
 const dialogVisible = ref(false)
 const form = reactive({ id: null, title: '', category: '', summary: '', content: '', sortNo: 1, status: 'published' })
 
 async function loadAll() {
-  resources.value = (await api.get('/admin/resources')).data.data
+  resources.value = applyPageResult(page, (await api.get('/admin/resources', { params: pageParams(page) })).data.data)
 }
 
 function openDialog(row) {

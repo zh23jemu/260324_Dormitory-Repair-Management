@@ -9,17 +9,30 @@
           <p>{{ item.summary }}</p>
         </div>
       </div>
+      <el-pagination
+        v-model:current-page="page.pageNum"
+        v-model:page-size="page.pageSize"
+        :total="page.total"
+        layout="total, sizes, prev, pager, next"
+        class="student-pagination"
+        @current-change="loadResources"
+        @size-change="loadResources"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import api from '../../api'
+import { applyPageResult, createPageState, pageParams } from '../../utils/pagination'
 
 const resources = ref([])
+const page = reactive(createPageState())
 
-onMounted(async () => {
-  resources.value = (await api.get('/student/resources')).data.data
-})
+async function loadResources() {
+  resources.value = applyPageResult(page, (await api.get('/student/resources', { params: pageParams(page) })).data.data)
+}
+
+onMounted(loadResources)
 </script>

@@ -73,6 +73,15 @@
             </article>
           </div>
           <van-empty v-else description="暂无帖子" />
+          <el-pagination
+            v-model:current-page="page.pageNum"
+            v-model:page-size="page.pageSize"
+            :total="page.total"
+            layout="total, sizes, prev, pager, next"
+            class="student-pagination"
+            @current-change="loadPosts"
+            @size-change="loadPosts"
+          />
         </div>
       </div>
     </section>
@@ -86,16 +95,18 @@ import { showToast } from 'vant'
 import api from '../../api'
 import { fileUrl } from '../../utils/file'
 import { useAuth } from '../../utils/auth'
+import { applyPageResult, createPageState, pageParams } from '../../utils/pagination'
 
 const router = useRouter()
 const auth = useAuth()
 const posts = ref([])
 const files = ref([])
+const page = reactive(createPageState())
 const form = reactive({ title: '', content: '', imagePath: '' })
 const defaultAvatar = 'https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg'
 
 async function loadPosts() {
-  posts.value = (await api.get('/portal/forum-posts')).data.data
+  posts.value = applyPageResult(page, (await api.get('/portal/forum-posts', { params: pageParams(page) })).data.data)
 }
 
 async function afterRead(file) {

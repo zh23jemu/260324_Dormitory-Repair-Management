@@ -29,6 +29,15 @@
         </template>
       </el-table-column>
     </el-table>
+    <el-pagination
+      v-model:current-page="page.pageNum"
+      v-model:page-size="page.pageSize"
+      :total="page.total"
+      layout="total, sizes, prev, pager, next, jumper"
+      class="table-pagination"
+      @current-change="loadUsers"
+      @size-change="loadUsers"
+    />
 
     <el-dialog
       v-model="dialogVisible"
@@ -86,15 +95,21 @@
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import api from '../../api'
+import { applyPageResult, createPageState, pageParams } from '../../utils/pagination'
 
 const users = ref([])
 const workTypes = ref([])
+const page = reactive(createPageState())
 const dialogVisible = ref(false)
 const form = reactive({ id: null, username: '', realName: '', role: 'repairer', workTypeCodes: [], phone: '', status: 'enabled', passwordQuestion: '', passwordAnswer: '' })
 
 async function loadAll() {
-  users.value = (await api.get('/admin/users')).data.data
+  await loadUsers()
   workTypes.value = (await api.get('/admin/dicts')).data.data.filter((item) => item.dictType === 'repair_work_type')
+}
+
+async function loadUsers() {
+  users.value = applyPageResult(page, (await api.get('/admin/users', { params: pageParams(page) })).data.data)
 }
 
 function resetForm() {

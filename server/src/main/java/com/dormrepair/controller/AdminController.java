@@ -38,8 +38,11 @@ public class AdminController {
     }
 
     @GetMapping("/users")
-    public ApiResponse<List<Map<String, Object>>> users() {
-        return ApiResponse.success(adminService.users());
+    public ApiResponse<Map<String, Object>> users(
+            @RequestParam(required = false) Integer pageNum,
+            @RequestParam(required = false) Integer pageSize
+    ) {
+        return ApiResponse.success(adminService.users(pageNum, pageSize));
     }
 
     @PostMapping("/users")
@@ -103,8 +106,11 @@ public class AdminController {
     }
 
     @GetMapping("/logs")
-    public ApiResponse<List<Map<String, Object>>> logs() {
-        return ApiResponse.success(adminService.logs());
+    public ApiResponse<Map<String, Object>> logs(
+            @RequestParam(required = false) Integer pageNum,
+            @RequestParam(required = false) Integer pageSize
+    ) {
+        return ApiResponse.success(adminService.logs(pageNum, pageSize));
     }
 
     @GetMapping("/dicts")
@@ -131,8 +137,11 @@ public class AdminController {
     }
 
     @GetMapping("/resources")
-    public ApiResponse<List<Map<String, Object>>> resources() {
-        return ApiResponse.success(adminService.resources());
+    public ApiResponse<Map<String, Object>> resources(
+            @RequestParam(required = false) Integer pageNum,
+            @RequestParam(required = false) Integer pageSize
+    ) {
+        return ApiResponse.success(adminService.resources(pageNum, pageSize));
     }
 
     @PostMapping("/resources")
@@ -154,8 +163,11 @@ public class AdminController {
     }
 
     @GetMapping("/service-messages")
-    public ApiResponse<List<Map<String, Object>>> serviceMessages() {
-        return ApiResponse.success(adminService.serviceMessages());
+    public ApiResponse<Map<String, Object>> serviceMessages(
+            @RequestParam(required = false) Integer pageNum,
+            @RequestParam(required = false) Integer pageSize
+    ) {
+        return ApiResponse.success(adminService.serviceMessages(pageNum, pageSize));
     }
 
     @PutMapping("/service-messages/{id}/reply")
@@ -165,8 +177,12 @@ public class AdminController {
     }
 
     @GetMapping("/forum-posts")
-    public ApiResponse<List<Map<String, Object>>> forumPosts(@RequestParam(required = false) String status) {
-        return ApiResponse.success(adminService.forumPosts(status));
+    public ApiResponse<Map<String, Object>> forumPosts(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Integer pageNum,
+            @RequestParam(required = false) Integer pageSize
+    ) {
+        return ApiResponse.success(adminService.forumPosts(status, pageNum, pageSize));
     }
 
     @PutMapping("/forum-posts/{id}/status")
@@ -182,8 +198,12 @@ public class AdminController {
     }
 
     @GetMapping("/ratings")
-    public ApiResponse<List<Map<String, Object>>> ratings(@RequestParam(required = false) Integer score) {
-        return ApiResponse.success(adminService.ratings(score));
+    public ApiResponse<Map<String, Object>> ratings(
+            @RequestParam(required = false) Integer score,
+            @RequestParam(required = false) Integer pageNum,
+            @RequestParam(required = false) Integer pageSize
+    ) {
+        return ApiResponse.success(adminService.ratings(score, pageNum, pageSize));
     }
 
     @DeleteMapping("/ratings/{id}")
@@ -216,8 +236,11 @@ public class AdminController {
     }
 
     @GetMapping("/materials")
-    public ApiResponse<List<Map<String, Object>>> materials() {
-        return ApiResponse.success(adminService.materials());
+    public ApiResponse<Map<String, Object>> materials(
+            @RequestParam(required = false) Integer pageNum,
+            @RequestParam(required = false) Integer pageSize
+    ) {
+        return ApiResponse.success(adminService.materials(pageNum, pageSize));
     }
 
     @PostMapping("/materials")

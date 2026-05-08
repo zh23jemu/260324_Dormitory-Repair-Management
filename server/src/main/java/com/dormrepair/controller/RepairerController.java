@@ -27,8 +27,12 @@ public class RepairerController {
     }
 
     @GetMapping("/repair-orders")
-    public ApiResponse<List<Map<String, Object>>> myOrders(@RequestParam(required = false) String status) {
-        return ApiResponse.success(repairerService.myOrders(status));
+    public ApiResponse<Map<String, Object>> myOrders(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Integer pageNum,
+            @RequestParam(required = false) Integer pageSize
+    ) {
+        return ApiResponse.success(repairerService.myOrders(status, pageNum, pageSize));
     }
 
     @GetMapping("/repair-orders/{id}")
@@ -48,8 +52,11 @@ public class RepairerController {
     }
 
     @GetMapping("/repairers")
-    public ApiResponse<List<Map<String, Object>>> repairers() {
-        return ApiResponse.success(repairerService.repairers());
+    public ApiResponse<Map<String, Object>> repairers(
+            @RequestParam(required = false) Integer pageNum,
+            @RequestParam(required = false) Integer pageSize
+    ) {
+        return ApiResponse.success(repairerService.repairers(pageNum, pageSize));
     }
 
     @GetMapping("/repairers/{id}")

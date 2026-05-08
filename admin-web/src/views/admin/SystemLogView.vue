@@ -8,16 +8,29 @@
       <el-table-column prop="operationDesc" label="描述" min-width="220" />
       <el-table-column prop="createdAt" label="时间" width="180" />
     </el-table>
+    <el-pagination
+      v-model:current-page="page.pageNum"
+      v-model:page-size="page.pageSize"
+      :total="page.total"
+      layout="total, sizes, prev, pager, next, jumper"
+      class="table-pagination"
+      @current-change="loadLogs"
+      @size-change="loadLogs"
+    />
   </el-card>
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import api from '../../api'
+import { applyPageResult, createPageState, pageParams } from '../../utils/pagination'
 
 const logs = ref([])
+const page = reactive(createPageState())
 
-onMounted(async () => {
-  logs.value = (await api.get('/admin/logs')).data.data
-})
+async function loadLogs() {
+  logs.value = applyPageResult(page, (await api.get('/admin/logs', { params: pageParams(page) })).data.data)
+}
+
+onMounted(loadLogs)
 </script>

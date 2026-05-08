@@ -21,20 +21,31 @@
           </template>
         </el-table-column>
       </el-table>
+      <el-pagination
+        v-model:current-page="page.pageNum"
+        v-model:page-size="page.pageSize"
+        :total="page.total"
+        layout="total, sizes, prev, pager, next, jumper"
+        class="table-pagination"
+        @current-change="loadAll"
+        @size-change="loadAll"
+      />
     </el-card>
   </div>
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import api from '../../api'
 import { commonStatusTagType, commonStatusText } from '../../utils/status'
+import { applyPageResult, createPageState, pageParams } from '../../utils/pagination'
 
 const messages = ref([])
+const page = reactive(createPageState())
 
 async function loadAll() {
-  messages.value = (await api.get('/admin/service-messages')).data.data
+  messages.value = applyPageResult(page, (await api.get('/admin/service-messages', { params: pageParams(page) })).data.data)
 }
 
 async function reply(row) {

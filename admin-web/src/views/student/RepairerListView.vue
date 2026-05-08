@@ -20,6 +20,15 @@
           <p>平均评分：{{ item.avgScore || 0 }}</p>
         </div>
       </div>
+      <el-pagination
+        v-model:current-page="page.pageNum"
+        v-model:page-size="page.pageSize"
+        :total="page.total"
+        layout="total, sizes, prev, pager, next"
+        class="student-pagination"
+        @current-change="loadRepairers"
+        @size-change="loadRepairers"
+      />
         </div>
       </div>
     </section>
@@ -27,12 +36,16 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import api from '../../api'
+import { applyPageResult, createPageState, pageParams } from '../../utils/pagination'
 
 const repairers = ref([])
+const page = reactive(createPageState())
 
-onMounted(async () => {
-  repairers.value = (await api.get('/portal/repairers')).data.data
-})
+async function loadRepairers() {
+  repairers.value = applyPageResult(page, (await api.get('/portal/repairers', { params: pageParams(page) })).data.data)
+}
+
+onMounted(loadRepairers)
 </script>

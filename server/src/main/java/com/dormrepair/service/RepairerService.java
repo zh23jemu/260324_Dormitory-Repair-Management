@@ -27,7 +27,7 @@ public class RepairerService {
         this.logService = logService;
     }
 
-    public List<Map<String, Object>> myOrders(String status) {
+    public Map<String, Object> myOrders(String status, Integer pageNum, Integer pageSize) {
         SecurityUtils.requireRole("repairer");
         JwtUser user = SecurityUtils.currentUser();
         String sql = "select ro.id, ro.order_no as orderNo, ro.title, ro.description, ro.status, ro.expect_time as expectTime, rt.type_name as repairTypeName, db.building_name as buildingName, dr.room_no as roomNo, su.real_name as studentName from repair_order ro left join repair_type rt on ro.repair_type_id = rt.id left join dorm_building db on ro.building_id = db.id left join dorm_room dr on ro.room_id = dr.id left join user su on ro.student_id = su.id where ro.assigned_repairer_id = ?";
@@ -35,7 +35,7 @@ public class RepairerService {
             sql += " and ro.status = '" + status + "'";
         }
         sql += " order by ro.id desc";
-        return commonQueryService.list(sql, user.id());
+        return commonQueryService.page(sql, pageNum, pageSize, user.id());
     }
 
     public Map<String, Object> myProfile() {
@@ -83,15 +83,17 @@ public class RepairerService {
         logService.log(user.id(), "维修员个人信息", "修改", "更新维修员个人信息");
     }
 
-    public List<Map<String, Object>> repairers() {
+    public Map<String, Object> repairers(Integer pageNum, Integer pageSize) {
         SecurityUtils.requireRole("repairer");
-        return commonQueryService.list(
+        return commonQueryService.page(
                 "select u.id, u.real_name as realName, u.phone, u.avatar, u.work_type_code as workTypeCode, " +
                         "(select group_concat(d.dict_name, '、') from sys_dict d where d.dict_type = 'repair_work_type' and instr(',' || coalesce(u.work_type_code, '') || ',', ',' || d.dict_code || ',') > 0) as workTypeName, " +
                         "(select count(*) from repair_order ro where ro.assigned_repairer_id = u.id and ro.status in ('processing', 'pending_rating', 'completed')) as acceptedCount, " +
                         "(select count(*) from repair_order ro where ro.assigned_repairer_id = u.id and ro.status in ('pending_rating', 'completed')) as completedCount, " +
                         "(select round(avg(rr.score), 2) from repair_rating rr left join repair_order ro on rr.repair_order_id = ro.id where ro.assigned_repairer_id = u.id) as avgScore " +
-                        "from user u where u.role = 'repairer' and u.status = 'enabled' order by u.id asc"
+                        "from user u where u.role = 'repairer' and u.status = 'enabled' order by u.id asc",
+                pageNum,
+                pageSize
         );
     }
 

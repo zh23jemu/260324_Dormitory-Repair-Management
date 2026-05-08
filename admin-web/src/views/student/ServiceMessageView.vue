@@ -48,6 +48,15 @@
             </article>
           </div>
           <van-empty v-else description="暂无留言" />
+          <el-pagination
+            v-model:current-page="page.pageNum"
+            v-model:page-size="page.pageSize"
+            :total="page.total"
+            layout="total, sizes, prev, pager, next"
+            class="student-pagination"
+            @current-change="loadMessages"
+            @size-change="loadMessages"
+          />
         </div>
       </div>
     </section>
@@ -60,14 +69,16 @@ import { showToast } from 'vant'
 import api from '../../api'
 import { fileUrl } from '../../utils/file'
 import { commonStatusText } from '../../utils/status'
+import { applyPageResult, createPageState, pageParams } from '../../utils/pagination'
 
 const form = reactive({ title: '', content: '', imagePath: '' })
 const messages = ref([])
 const files = ref([])
+const page = reactive(createPageState())
 
 async function loadMessages() {
-  const { data } = await api.get('/student/service-messages')
-  messages.value = data.data || []
+  const { data } = await api.get('/student/service-messages', { params: pageParams(page) })
+  messages.value = applyPageResult(page, data.data)
 }
 
 async function submitMessage() {

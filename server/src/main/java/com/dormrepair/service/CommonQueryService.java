@@ -2,6 +2,7 @@ package com.dormrepair.service;
 
 import com.dormrepair.common.BusinessException;
 import java.sql.ResultSetMetaData;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +27,26 @@ public class CommonQueryService {
             }
             return row;
         }, args);
+    }
+
+    public Map<String, Object> page(String sql, Integer pageNum, Integer pageSize, Object... args) {
+        // 所有列表页统一走后端分页，避免前端一次性加载过多记录导致页面卡顿或排版被撑开。
+        int safePageNum = pageNum == null || pageNum < 1 ? 1 : pageNum;
+        int safePageSize = pageSize == null || pageSize < 1 ? 10 : Math.min(pageSize, 100);
+        int offset = (safePageNum - 1) * safePageSize;
+
+        Integer total = jdbcTemplate.queryForObject("select count(*) from (" + sql + ") page_count", Integer.class, args);
+        List<Object> pageArgs = new ArrayList<>(List.of(args));
+        pageArgs.add(safePageSize);
+        pageArgs.add(offset);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("records", list(sql + " limit ? offset ?", pageArgs.toArray()));
+        result.put("total", total == null ? 0 : total);
+        result.put("pageNum", safePageNum);
+        result.put("pageSize", safePageSize);
+        result.put("pages", total == null || total == 0 ? 0 : (int) Math.ceil(total / (double) safePageSize));
+        return result;
     }
 
     public Map<String, Object> one(String sql, Object... args) {

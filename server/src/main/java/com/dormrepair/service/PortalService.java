@@ -30,25 +30,27 @@ public class PortalService {
      */
     public Map<String, Object> home() {
         Map<String, Object> map = new HashMap<>();
-        map.put("announcements", announcements());
-        map.put("orders", repairOrders());
+        map.put("announcements", announcements(1, 6).get("records"));
+        map.put("orders", repairOrders(1, 8).get("records"));
         map.put("statistics", statistics());
         map.put("repairerRanking", repairerRanking());
-        map.put("forumPosts", forumPosts());
+        map.put("forumPosts", forumPosts(1, 6).get("records"));
         return map;
     }
 
-    public List<Map<String, Object>> announcements() {
-        return commonQueryService.list(
+    public Map<String, Object> announcements(Integer pageNum, Integer pageSize) {
+        return commonQueryService.page(
                 "select a.id, a.title, a.content, a.image_path as imagePath, a.published_at as publishedAt, a.created_at as createdAt, " +
                         "u.username as publisherUsername, u.real_name as publisherName, u.avatar as publisherAvatar " +
                         "from announcement a left join user u on a.publisher_id = u.id " +
-                        "where a.status = 'published' order by coalesce(a.published_at, a.created_at) desc, a.id desc"
+                        "where a.status = 'published' order by coalesce(a.published_at, a.created_at) desc, a.id desc",
+                pageNum,
+                pageSize
         );
     }
 
-    public List<Map<String, Object>> repairOrders() {
-        return commonQueryService.list(
+    public Map<String, Object> repairOrders(Integer pageNum, Integer pageSize) {
+        return commonQueryService.page(
                 "select ro.id, ro.order_no as orderNo, ro.title, ro.description, ro.status, ro.submitted_at as submittedAt, ro.completed_at as completedAt, " +
                         "rt.type_name as repairTypeName, db.building_name as buildingName, dr.room_no as roomNo, " +
                         "su.username as studentUsername, su.real_name as studentName, su.avatar as studentAvatar, ru.real_name as repairerName " +
@@ -58,32 +60,40 @@ public class PortalService {
                         "left join dorm_room dr on ro.room_id = dr.id " +
                         "left join user su on ro.student_id = su.id " +
                         "left join user ru on ro.assigned_repairer_id = ru.id " +
-                        "order by ro.id desc limit 30"
+                        "order by ro.id desc",
+                pageNum,
+                pageSize
         );
     }
 
-    public List<Map<String, Object>> forumPosts() {
-        List<Map<String, Object>> posts = commonQueryService.list(
+    public Map<String, Object> forumPosts(Integer pageNum, Integer pageSize) {
+        Map<String, Object> page = commonQueryService.page(
                 "select fp.id, fp.title, fp.content, fp.image_path as imagePath, fp.created_at as createdAt, fp.updated_at as updatedAt, " +
                         "u.username as username, u.real_name as studentName, u.avatar as avatar, " +
                         "0 as commentCount " +
                         "from forum_post fp left join user u on fp.student_id = u.id " +
-                        "where fp.status = 'published' order by fp.id desc limit 20"
+                        "where fp.status = 'published' order by fp.id desc",
+                pageNum,
+                pageSize
         );
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> posts = (List<Map<String, Object>>) page.get("records");
         for (Map<String, Object> post : posts) {
             post.put("comments", List.of());
         }
-        return posts;
+        return page;
     }
 
-    public List<Map<String, Object>> repairers() {
-        return commonQueryService.list(
+    public Map<String, Object> repairers(Integer pageNum, Integer pageSize) {
+        return commonQueryService.page(
                 "select u.id, u.username, u.real_name as realName, u.phone, u.avatar, u.work_type_code as workTypeCode, " +
                         "(select group_concat(d.dict_name, '、') from sys_dict d where d.dict_type = 'repair_work_type' and instr(',' || coalesce(u.work_type_code, '') || ',', ',' || d.dict_code || ',') > 0) as workTypeName, " +
                         "(select count(*) from repair_order ro where ro.assigned_repairer_id = u.id) as totalCount, " +
                         "(select count(*) from repair_order ro where ro.assigned_repairer_id = u.id and ro.status in ('pending_rating', 'completed')) as completedCount, " +
                         "(select round(avg(rr.score), 2) from repair_rating rr left join repair_order ro on rr.repair_order_id = ro.id where ro.assigned_repairer_id = u.id) as avgScore " +
-                        "from user u where u.role = 'repairer' and u.status = 'enabled' order by completedCount desc, totalCount desc, u.id asc"
+                        "from user u where u.role = 'repairer' and u.status = 'enabled' order by completedCount desc, totalCount desc, u.id asc",
+                pageNum,
+                pageSize
         );
     }
 

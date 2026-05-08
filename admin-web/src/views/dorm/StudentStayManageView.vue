@@ -73,6 +73,15 @@
         </template>
       </el-table-column>
     </el-table>
+    <el-pagination
+      v-model:current-page="page.pageNum"
+      v-model:page-size="page.pageSize"
+      :total="page.total"
+      layout="total, sizes, prev, pager, next, jumper"
+      class="table-pagination"
+      @current-change="loadStudents"
+      @size-change="loadStudents"
+    />
   </el-card>
 </template>
 
@@ -80,10 +89,12 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import api from '../../api'
+import { applyPageResult, createPageState, pageParams } from '../../utils/pagination'
 
 const students = ref([])
 const rooms = ref([])
 const buildings = ref([])
+const page = reactive(createPageState())
 const editingId = ref(null)
 const saving = ref(false)
 
@@ -101,14 +112,17 @@ const editableRooms = computed(() => {
 })
 
 async function loadAll() {
-  const [studentRes, roomRes, buildingRes] = await Promise.all([
-    api.get('/dorm-admin/students'),
+  const [roomRes, buildingRes] = await Promise.all([
     api.get('/dorm-admin/rooms'),
     api.get('/dorm-admin/buildings'),
   ])
-  students.value = studentRes.data.data || []
   rooms.value = roomRes.data.data || []
   buildings.value = buildingRes.data.data || []
+  await loadStudents()
+}
+
+async function loadStudents() {
+  students.value = applyPageResult(page, (await api.get('/dorm-admin/students', { params: pageParams(page) })).data.data)
 }
 
 function isEditing(row) {

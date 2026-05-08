@@ -7,6 +7,8 @@ public record RepairOrderQueryRequest(
         Long buildingId,
         Long repairerId,
         String dateFrom,
-        String dateTo
+        String dateTo,
+        Integer pageNum,
+        Integer pageSize
 ) {
 }

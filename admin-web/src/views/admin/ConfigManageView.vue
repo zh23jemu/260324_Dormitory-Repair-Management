@@ -7,7 +7,7 @@
           <el-button type="primary" size="small" @click="openRepairTypeDialog()">新增</el-button>
         </div>
       </template>
-      <el-table :data="repairTypes">
+      <el-table :data="pagedRepairTypes.records">
         <el-table-column prop="typeName" label="名称" />
         <el-table-column prop="sortNo" label="排序" width="80" />
         <el-table-column label="状态" width="100">
@@ -24,6 +24,13 @@
           </template>
         </el-table-column>
       </el-table>
+      <el-pagination
+        v-model:current-page="repairTypePage.pageNum"
+        v-model:page-size="repairTypePage.pageSize"
+        :total="pagedRepairTypes.total"
+        layout="total, sizes, prev, pager, next"
+        class="table-pagination"
+      />
     </el-card>
 
     <el-card>
@@ -33,7 +40,7 @@
           <el-button type="primary" size="small" @click="openDictDialog()">新增</el-button>
         </div>
       </template>
-      <el-table :data="dicts">
+      <el-table :data="pagedDicts.records">
         <el-table-column prop="dictType" label="类型" width="150" />
         <el-table-column prop="dictCode" label="编码" width="140" />
         <el-table-column prop="dictName" label="名称" />
@@ -47,6 +54,13 @@
           </template>
         </el-table-column>
       </el-table>
+      <el-pagination
+        v-model:current-page="dictPage.pageNum"
+        v-model:page-size="dictPage.pageSize"
+        :total="pagedDicts.total"
+        layout="total, sizes, prev, pager, next"
+        class="table-pagination"
+      />
     </el-card>
 
     <el-dialog v-model="repairTypeDialogVisible" :title="repairTypeForm.id ? '编辑报修类型' : '新增报修类型'" width="520px">
@@ -100,17 +114,22 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import api from '../../api'
+import { createPageState, paginateClient } from '../../utils/pagination'
 
 const repairTypes = ref([])
 const dicts = ref([])
+const repairTypePage = reactive(createPageState())
+const dictPage = reactive(createPageState())
 const repairTypeDialogVisible = ref(false)
 const dictDialogVisible = ref(false)
 
 const repairTypeForm = reactive({ id: null, typeName: '', sortNo: 1, status: 'enabled' })
 const dictForm = reactive({ id: null, dictType: 'repair_work_type', dictCode: '', dictName: '', sortNo: 1, status: 'enabled' })
+const pagedRepairTypes = computed(() => paginateClient(repairTypes.value, repairTypePage))
+const pagedDicts = computed(() => paginateClient(dicts.value, dictPage))
 
 async function loadAll() {
   repairTypes.value = (await api.get('/admin/repair-types')).data.data

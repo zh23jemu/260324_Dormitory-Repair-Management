@@ -31,17 +31,17 @@ public class DormAdminService {
         this.logService = logService;
     }
 
-    public List<Map<String, Object>> repairOrders(String status) {
+    public Map<String, Object> repairOrders(String status, Integer pageNum, Integer pageSize) {
         SecurityUtils.requireRole("dorm_admin", "admin");
         String sql = baseOrderSql() + " where 1=1";
         if (status != null && !status.isBlank()) {
             sql += " and ro.status = '" + status + "'";
         }
         sql += " order by ro.id desc";
-        return commonQueryService.list(sql);
+        return commonQueryService.page(sql, pageNum, pageSize);
     }
 
-    public List<Map<String, Object>> repairOrders(RepairOrderQueryRequest request) {
+    public Map<String, Object> repairOrders(RepairOrderQueryRequest request) {
         SecurityUtils.requireRole("dorm_admin", "admin");
         StringBuilder sql = new StringBuilder(baseOrderSql()).append(" where 1=1");
         List<Object> args = new ArrayList<>();
@@ -80,11 +80,11 @@ public class DormAdminService {
             }
         }
         sql.append(" order by ro.id desc");
-        return commonQueryService.list(sql.toString(), args.toArray());
+        return commonQueryService.page(sql.toString(), request == null ? null : request.pageNum(), request == null ? null : request.pageSize(), args.toArray());
     }
 
-    public List<Map<String, Object>> pendingReviewOrders() {
-        return repairOrders("pending_review");
+    public Map<String, Object> pendingReviewOrders(Integer pageNum, Integer pageSize) {
+        return repairOrders("pending_review", pageNum, pageSize);
     }
 
     public Map<String, Object> repairOrderDetail(Long id) {
@@ -193,7 +193,7 @@ public class DormAdminService {
         return commonQueryService.list("select dr.id, dr.room_no as roomNo, dr.capacity, dr.current_count as currentCount, dr.facility_desc as facilityDesc, dr.status, dr.remark, db.id as buildingId, db.building_name as buildingName from dorm_room dr left join dorm_building db on dr.building_id = db.id order by dr.id asc");
     }
 
-    public List<Map<String, Object>> facilities(Long roomId, String keyword, String status) {
+    public Map<String, Object> facilities(Long roomId, String keyword, String status, Integer pageNum, Integer pageSize) {
         StringBuilder sql = new StringBuilder(
                 "select df.id, df.room_id as roomId, df.facility_name as facilityName, df.facility_type as facilityType, df.brand, df.model_number as modelNumber, df.purchase_date as purchaseDate, df.status, df.remark, df.created_at as createdAt, dr.room_no as roomNo, db.building_name as buildingName " +
                         "from dorm_facility df left join dorm_room dr on df.room_id = dr.id left join dorm_building db on dr.building_id = db.id where 1=1"
@@ -215,7 +215,7 @@ public class DormAdminService {
             args.add(status);
         }
         sql.append(" order by df.id desc");
-        return commonQueryService.list(sql.toString(), args.toArray());
+        return commonQueryService.page(sql.toString(), pageNum, pageSize, args.toArray());
     }
 
     public void createFacility(FacilityRequest request) {
@@ -282,8 +282,8 @@ public class DormAdminService {
         logService.log(SecurityUtils.currentUser().id(), "楼栋宿舍", "删除", "删除宿舍: " + id);
     }
 
-    public List<Map<String, Object>> students() {
-        return commonQueryService.list("select sp.id, sp.student_no as studentNo, u.real_name as realName, u.phone, sp.college, sp.major, sp.class_name as className, sp.building_id as buildingId, sp.room_id as roomId, sp.bed_no as bedNo, db.building_name as buildingName, dr.room_no as roomNo from student_profile sp left join user u on sp.user_id = u.id left join dorm_building db on sp.building_id = db.id left join dorm_room dr on sp.room_id = dr.id order by db.id asc, dr.id asc, sp.id asc");
+    public Map<String, Object> students(Integer pageNum, Integer pageSize) {
+        return commonQueryService.page("select sp.id, sp.student_no as studentNo, u.real_name as realName, u.phone, sp.college, sp.major, sp.class_name as className, sp.building_id as buildingId, sp.room_id as roomId, sp.bed_no as bedNo, db.building_name as buildingName, dr.room_no as roomNo from student_profile sp left join user u on sp.user_id = u.id left join dorm_building db on sp.building_id = db.id left join dorm_room dr on sp.room_id = dr.id order by db.id asc, dr.id asc, sp.id asc", pageNum, pageSize);
     }
 
     public void updateStudentRoom(Long id, StudentRoomRequest request) {
@@ -291,8 +291,8 @@ public class DormAdminService {
         jdbcTemplate.update("update student_profile set building_id = ?, room_id = ?, bed_no = ?, updated_at = ? where id = ?", request.buildingId(), request.roomId(), request.bedNo(), TimeUtils.now(), id);
     }
 
-    public List<Map<String, Object>> announcements() {
-        return commonQueryService.list("select a.id, a.title, a.content, a.image_path as imagePath, a.status, a.published_at as publishedAt, a.created_at as createdAt, u.real_name as publisherName from announcement a left join user u on a.publisher_id = u.id order by a.id desc");
+    public Map<String, Object> announcements(Integer pageNum, Integer pageSize) {
+        return commonQueryService.page("select a.id, a.title, a.content, a.image_path as imagePath, a.status, a.published_at as publishedAt, a.created_at as createdAt, u.real_name as publisherName from announcement a left join user u on a.publisher_id = u.id order by a.id desc", pageNum, pageSize);
     }
 
     public void createAnnouncement(AnnouncementRequest request) {

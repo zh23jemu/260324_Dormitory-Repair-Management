@@ -9,7 +9,7 @@
       <div class="student-hero__metrics">
         <div class="student-hero__metric">
           <span>工单总数</span>
-          <strong>{{ orders.length }}</strong>
+          <strong>{{ page.total }}</strong>
         </div>
       </div>
     </section>
@@ -42,6 +42,15 @@
             </article>
           </div>
           <van-empty v-else description="暂无工单" />
+          <el-pagination
+            v-model:current-page="page.pageNum"
+            v-model:page-size="page.pageSize"
+            :total="page.total"
+            layout="total, sizes, prev, pager, next"
+            class="student-pagination"
+            @current-change="loadOrders"
+            @size-change="loadOrders"
+          />
         </div>
       </div>
     </section>
@@ -52,9 +61,11 @@
 import { onMounted, ref, watch } from 'vue'
 import api from '../../api'
 import { repairOrderStatusText } from '../../utils/status'
+import { applyPageResult, createPageState, pageParams } from '../../utils/pagination'
 
 const status = ref('')
 const orders = ref([])
+const page = ref(createPageState())
 const statusOptions = [
   { text: '全部状态', value: '' },
   { text: '待审核', value: 'pending_review' },
@@ -65,9 +76,12 @@ const statusOptions = [
 ]
 
 async function loadOrders() {
-  orders.value = (await api.get('/student/repair-orders', { params: { status: status.value || undefined } })).data.data
+  orders.value = applyPageResult(page.value, (await api.get('/student/repair-orders', { params: { status: status.value || undefined, ...pageParams(page.value) } })).data.data)
 }
 
-watch(status, loadOrders)
+watch(status, async () => {
+  page.value.pageNum = 1
+  await loadOrders()
+})
 onMounted(loadOrders)
 </script>

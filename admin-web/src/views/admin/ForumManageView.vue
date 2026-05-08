@@ -47,6 +47,15 @@
         </template>
       </el-table-column>
     </el-table>
+    <el-pagination
+      v-model:current-page="page.pageNum"
+      v-model:page-size="page.pageSize"
+      :total="page.total"
+      layout="total, sizes, prev, pager, next, jumper"
+      class="table-pagination"
+      @current-change="loadPosts"
+      @size-change="loadPosts"
+    />
   </el-card>
 </template>
 
@@ -55,9 +64,11 @@ import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import api from '../../api'
 import { fileUrl } from '../../utils/file'
+import { applyPageResult, createPageState, pageParams } from '../../utils/pagination'
 
 const posts = ref([])
 const query = reactive({ status: '' })
+const page = reactive(createPageState())
 
 function statusText(status) {
   return { published: '公开', hidden: '隐藏' }[status] || status || '-'
@@ -65,13 +76,14 @@ function statusText(status) {
 
 async function loadPosts() {
   // 管理员需要看到全部论坛帖子；当选择状态时，交给后端按状态过滤。
-  const params = {}
+  const params = pageParams(page)
   if (query.status) params.status = query.status
-  posts.value = (await api.get('/admin/forum-posts', { params })).data.data
+  posts.value = applyPageResult(page, (await api.get('/admin/forum-posts', { params })).data.data)
 }
 
 async function resetQuery() {
   query.status = ''
+  page.pageNum = 1
   await loadPosts()
 }
 

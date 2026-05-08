@@ -32,9 +32,9 @@ public class AdminService {
         this.logService = logService;
     }
 
-    public List<Map<String, Object>> users() {
+    public Map<String, Object> users(Integer pageNum, Integer pageSize) {
         SecurityUtils.requireRole("admin");
-        return commonQueryService.list("select u.id, u.username, u.real_name as realName, u.phone, u.avatar, u.role, u.work_type_code as workTypeCode, u.password_question as passwordQuestion, u.password_answer as passwordAnswer, (select group_concat(d.dict_name, '、') from sys_dict d where d.dict_type = 'repair_work_type' and instr(',' || coalesce(u.work_type_code, '') || ',', ',' || d.dict_code || ',') > 0) as workTypeName, u.status, u.created_at as createdAt from user u order by u.id asc");
+        return commonQueryService.page("select u.id, u.username, u.real_name as realName, u.phone, u.avatar, u.role, u.work_type_code as workTypeCode, u.password_question as passwordQuestion, u.password_answer as passwordAnswer, (select group_concat(d.dict_name, '、') from sys_dict d where d.dict_type = 'repair_work_type' and instr(',' || coalesce(u.work_type_code, '') || ',', ',' || d.dict_code || ',') > 0) as workTypeName, u.status, u.created_at as createdAt from user u order by u.id asc", pageNum, pageSize);
     }
 
     public void createUser(UserCreateRequest request) {
@@ -185,9 +185,9 @@ public class AdminService {
         );
     }
 
-    public List<Map<String, Object>> logs() {
+    public Map<String, Object> logs(Integer pageNum, Integer pageSize) {
         SecurityUtils.requireRole("admin");
-        return commonQueryService.list("select sl.id, sl.module_name as moduleName, sl.operation_type as operationType, sl.operation_desc as operationDesc, sl.ip, sl.created_at as createdAt, u.real_name as userName from sys_log sl left join user u on sl.user_id = u.id order by sl.id desc");
+        return commonQueryService.page("select sl.id, sl.module_name as moduleName, sl.operation_type as operationType, sl.operation_desc as operationDesc, sl.ip, sl.created_at as createdAt, u.real_name as userName from sys_log sl left join user u on sl.user_id = u.id order by sl.id desc", pageNum, pageSize);
     }
 
     public List<Map<String, Object>> dicts() {
@@ -262,9 +262,9 @@ public class AdminService {
         return result.isBlank() ? null : result;
     }
 
-    public List<Map<String, Object>> resources() {
+    public Map<String, Object> resources(Integer pageNum, Integer pageSize) {
         SecurityUtils.requireRole("admin");
-        return commonQueryService.list("select rr.id, rr.title, rr.category, rr.summary, rr.content, rr.cover_image as coverImage, rr.sort_no as sortNo, rr.status, rr.created_at as createdAt, u.real_name as publisherName from repair_resource rr left join user u on rr.publisher_id = u.id order by rr.sort_no asc, rr.id desc");
+        return commonQueryService.page("select rr.id, rr.title, rr.category, rr.summary, rr.content, rr.cover_image as coverImage, rr.sort_no as sortNo, rr.status, rr.created_at as createdAt, u.real_name as publisherName from repair_resource rr left join user u on rr.publisher_id = u.id order by rr.sort_no asc, rr.id desc", pageNum, pageSize);
     }
 
     public void createResource(ResourceRequest request) {
@@ -294,11 +294,13 @@ public class AdminService {
         logService.log(SecurityUtils.currentUser().id(), "报修知识", "删除", "删除知识库内容: " + id);
     }
 
-    public List<Map<String, Object>> serviceMessages() {
+    public Map<String, Object> serviceMessages(Integer pageNum, Integer pageSize) {
         SecurityUtils.requireRole("admin", "dorm_admin");
-        return commonQueryService.list(
+        return commonQueryService.page(
                 "select sm.id, sm.title, sm.content, sm.image_path as imagePath, sm.status, sm.reply_content as replyContent, sm.replied_at as repliedAt, sm.created_at as createdAt, su.real_name as studentName, su.phone as studentPhone, au.real_name as repliedByName " +
-                        "from service_message sm left join user su on sm.student_id = su.id left join user au on sm.replied_by = au.id order by sm.id desc"
+                        "from service_message sm left join user su on sm.student_id = su.id left join user au on sm.replied_by = au.id order by sm.id desc",
+                pageNum,
+                pageSize
         );
     }
 
@@ -314,7 +316,7 @@ public class AdminService {
      * 管理员论坛管理列表。
      * 学生端只展示 published 状态的帖子，管理员端需要看到全部状态，便于审核、隐藏和删除。
      */
-    public List<Map<String, Object>> forumPosts(String status) {
+    public Map<String, Object> forumPosts(String status, Integer pageNum, Integer pageSize) {
         SecurityUtils.requireRole("admin", "dorm_admin");
         String sql = "select fp.id, fp.title, fp.content, fp.image_path as imagePath, fp.status, fp.created_at as createdAt, fp.updated_at as updatedAt, " +
                 "u.real_name as studentName, u.phone as studentPhone " +
@@ -323,7 +325,7 @@ public class AdminService {
             sql += " and fp.status = '" + status + "'";
         }
         sql += " order by fp.id desc";
-        return commonQueryService.list(sql);
+        return commonQueryService.page(sql, pageNum, pageSize);
     }
 
     /**
@@ -354,7 +356,7 @@ public class AdminService {
      * 管理员评价管理列表。
      * 关联工单、学生、维修员和报修类型，让后台可以按服务过程查看评价来源。
      */
-    public List<Map<String, Object>> ratings(Integer score) {
+    public Map<String, Object> ratings(Integer score, Integer pageNum, Integer pageSize) {
         SecurityUtils.requireRole("admin", "dorm_admin");
         String sql = "select rr.id, rr.repair_order_id as repairOrderId, rr.score, rr.content, rr.created_at as createdAt, " +
                 "ro.order_no as orderNo, ro.title as orderTitle, rt.type_name as repairTypeName, " +
@@ -368,7 +370,7 @@ public class AdminService {
             sql += " and rr.score = " + score;
         }
         sql += " order by rr.id desc";
-        return commonQueryService.list(sql);
+        return commonQueryService.page(sql, pageNum, pageSize);
     }
 
     /**
@@ -429,9 +431,9 @@ public class AdminService {
         logService.log(SecurityUtils.currentUser().id(), "基础配置", "删除", "删除报修类型: " + id);
     }
 
-    public List<Map<String, Object>> materials() {
+    public Map<String, Object> materials(Integer pageNum, Integer pageSize) {
         SecurityUtils.requireRole("admin");
-        return commonQueryService.list("select id, material_name as materialName, material_type as materialType, unit, stock_qty as stockQty, warning_qty as warningQty, remark, created_at as createdAt, updated_at as updatedAt from repair_material order by id asc");
+        return commonQueryService.page("select id, material_name as materialName, material_type as materialType, unit, stock_qty as stockQty, warning_qty as warningQty, remark, created_at as createdAt, updated_at as updatedAt from repair_material order by id asc", pageNum, pageSize);
     }
 
     public void createMaterial(MaterialRequest request) {

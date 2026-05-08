@@ -35,6 +35,15 @@
         </template>
       </el-table-column>
     </el-table>
+    <el-pagination
+      v-model:current-page="page.pageNum"
+      v-model:page-size="page.pageSize"
+      :total="page.total"
+      layout="total, sizes, prev, pager, next, jumper"
+      class="table-pagination"
+      @current-change="loadRatings"
+      @size-change="loadRatings"
+    />
   </el-card>
 </template>
 
@@ -42,19 +51,22 @@
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import api from '../../api'
+import { applyPageResult, createPageState, pageParams } from '../../utils/pagination'
 
 const ratings = ref([])
 const query = reactive({ score: null })
+const page = reactive(createPageState())
 
 async function loadRatings() {
   // 评价管理用于管理员查看服务质量反馈，支持按星级快速定位差评或异常评价。
-  const params = {}
+  const params = pageParams(page)
   if (query.score) params.score = query.score
-  ratings.value = (await api.get('/admin/ratings', { params })).data.data
+  ratings.value = applyPageResult(page, (await api.get('/admin/ratings', { params })).data.data)
 }
 
 async function resetQuery() {
   query.score = null
+  page.pageNum = 1
   await loadRatings()
 }
 

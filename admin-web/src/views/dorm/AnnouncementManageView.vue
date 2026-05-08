@@ -62,6 +62,15 @@
         </template>
       </el-table-column>
     </el-table>
+    <el-pagination
+      v-model:current-page="page.pageNum"
+      v-model:page-size="page.pageSize"
+      :total="page.total"
+      layout="total, sizes, prev, pager, next, jumper"
+      class="table-pagination"
+      @current-change="loadAll"
+      @size-change="loadAll"
+    />
   </el-card>
 </template>
 
@@ -70,12 +79,14 @@ import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import api from '../../api'
 import { fileUrl } from '../../utils/file'
+import { applyPageResult, createPageState, pageParams } from '../../utils/pagination'
 
 const announcements = ref([])
+const page = reactive(createPageState())
 const form = reactive({ id: null, title: '', content: '', imagePath: '', status: 'published' })
 
 async function loadAll() {
-  announcements.value = (await api.get('/dorm-admin/announcements')).data.data
+  announcements.value = applyPageResult(page, (await api.get('/dorm-admin/announcements', { params: pageParams(page) })).data.data)
 }
 
 function resetForm() {

@@ -21,6 +21,15 @@
         </template>
       </el-table-column>
     </el-table>
+    <el-pagination
+      v-model:current-page="page.pageNum"
+      v-model:page-size="page.pageSize"
+      :total="page.total"
+      layout="total, sizes, prev, pager, next, jumper"
+      class="table-pagination"
+      @current-change="loadOrders"
+      @size-change="loadOrders"
+    />
   </el-card>
 
   <RepairOrderDetailDialog v-model="detailVisible" :order="currentOrder" />
@@ -32,10 +41,12 @@ import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import api from '../../api'
 import { repairOrderStatusText } from '../../utils/status'
+import { applyPageResult, createPageState, pageParams } from '../../utils/pagination'
 import RepairFeedbackDialog from './components/RepairFeedbackDialog.vue'
 import RepairOrderDetailDialog from './components/RepairOrderDetailDialog.vue'
 
 const orders = ref([])
+const page = reactive(createPageState())
 const materials = ref([])
 const currentOrder = ref(null)
 const currentRepairOrder = ref(null)
@@ -44,7 +55,7 @@ const feedbackVisible = ref(false)
 const feedbackForm = reactive({ resultDesc: '', materialsUsed: '', finishTime: '', imagePaths: [], materialUsages: [] })
 
 async function loadOrders() {
-  orders.value = (await api.get('/repairer/repair-orders')).data.data
+  orders.value = applyPageResult(page, (await api.get('/repairer/repair-orders', { params: pageParams(page) })).data.data)
 }
 
 async function loadMaterials() {

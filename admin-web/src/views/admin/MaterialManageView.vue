@@ -28,6 +28,15 @@
         </template>
       </el-table-column>
     </el-table>
+    <el-pagination
+      v-model:current-page="page.pageNum"
+      v-model:page-size="page.pageSize"
+      :total="page.total"
+      layout="total, sizes, prev, pager, next, jumper"
+      class="table-pagination"
+      @current-change="loadMaterials"
+      @size-change="loadMaterials"
+    />
 
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="560px" append-to-body destroy-on-close>
       <el-form :model="form" label-width="96px">
@@ -64,8 +73,10 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import api from '../../api'
+import { applyPageResult, createPageState, pageParams } from '../../utils/pagination'
 
 const materials = ref([])
+const page = reactive(createPageState())
 const dialogVisible = ref(false)
 const form = reactive({ id: null, materialName: '', materialType: '', unit: '个', stockQty: 0, warningQty: 0, remark: '' })
 const defaultMaterialTypes = ['水电耗材', '家具耗材', '网络耗材', '门窗耗材', '卫浴耗材', '公共设施耗材', '其他耗材']
@@ -81,7 +92,7 @@ const materialTypeOptions = computed(() => {
 })
 
 async function loadMaterials() {
-  materials.value = (await api.get('/admin/materials')).data.data
+  materials.value = applyPageResult(page, (await api.get('/admin/materials', { params: pageParams(page) })).data.data)
 }
 
 function resetForm() {

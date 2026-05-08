@@ -28,7 +28,7 @@
             <el-option v-for="item in repairers" :key="item.id" :label="item.realName" :value="item.id" />
           </el-select>
         </el-form-item>
-        <el-form-item><el-button type="primary" @click="loadOrders">查询</el-button></el-form-item>
+        <el-form-item><el-button type="primary" @click="searchOrders">查询</el-button></el-form-item>
       </el-form>
     </el-card>
 
@@ -61,6 +61,15 @@
           </template>
         </el-table-column>
       </el-table>
+      <el-pagination
+        v-model:current-page="page.pageNum"
+        v-model:page-size="page.pageSize"
+        :total="page.total"
+        layout="total, sizes, prev, pager, next, jumper"
+        class="table-pagination"
+        @current-change="loadOrders"
+        @size-change="loadOrders"
+      />
     </el-card>
 
     <OrderDetailDialog v-model="detailVisible" :order="currentOrder" />
@@ -73,10 +82,12 @@ import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import api from '../../api'
 import { repairOrderStatusText } from '../../utils/status'
+import { applyPageResult, createPageState, pageParams } from '../../utils/pagination'
 import AssignRepairerDialog from './components/AssignRepairerDialog.vue'
 import OrderDetailDialog from './components/OrderDetailDialog.vue'
 
 const query = reactive({ keyword: '', status: '', repairTypeId: null, buildingId: null, repairerId: null })
+const page = reactive(createPageState())
 const orders = ref([])
 const repairTypes = ref([])
 const buildings = ref([])
@@ -94,7 +105,12 @@ async function loadBase() {
 }
 
 async function loadOrders() {
-  orders.value = (await api.post('/dorm-admin/repair-orders/query', query)).data.data
+  orders.value = applyPageResult(page, (await api.post('/dorm-admin/repair-orders/query', { ...query, ...pageParams(page) })).data.data)
+}
+
+async function searchOrders() {
+  page.pageNum = 1
+  await loadOrders()
 }
 
 async function openDetail(row) {

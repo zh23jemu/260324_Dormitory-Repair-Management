@@ -27,6 +27,15 @@
         </div>
       </div>
       <van-empty v-else description="暂无公告" />
+      <el-pagination
+        v-model:current-page="page.pageNum"
+        v-model:page-size="page.pageSize"
+        :total="page.total"
+        layout="total, sizes, prev, pager, next"
+        class="student-pagination"
+        @current-change="loadAnnouncements"
+        @size-change="loadAnnouncements"
+      />
         </div>
       </div>
     </section>
@@ -34,13 +43,17 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import api from '../../api'
 import { fileUrl } from '../../utils/file'
+import { applyPageResult, createPageState, pageParams } from '../../utils/pagination'
 
 const announcements = ref([])
+const page = reactive(createPageState())
 
-onMounted(async () => {
-  announcements.value = (await api.get('/portal/announcements')).data.data
-})
+async function loadAnnouncements() {
+  announcements.value = applyPageResult(page, (await api.get('/portal/announcements', { params: pageParams(page) })).data.data)
+}
+
+onMounted(loadAnnouncements)
 </script>

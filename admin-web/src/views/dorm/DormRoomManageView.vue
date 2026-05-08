@@ -14,7 +14,7 @@
         :closable="false"
         style="margin-bottom: 12px"
       />
-      <el-table :data="buildings" style="margin-top:12px">
+      <el-table :data="pagedBuildings.records" style="margin-top:12px">
         <el-table-column prop="buildingName" label="名称" />
         <el-table-column prop="buildingCode" label="编码" width="120" />
         <el-table-column prop="floorCount" label="层数" width="90" />
@@ -28,6 +28,13 @@
           </template>
         </el-table-column>
       </el-table>
+      <el-pagination
+        v-model:current-page="buildingPage.pageNum"
+        v-model:page-size="buildingPage.pageSize"
+        :total="pagedBuildings.total"
+        layout="total, sizes, prev, pager, next"
+        class="table-pagination"
+      />
     </el-card>
 
     <el-card>
@@ -44,7 +51,7 @@
         :closable="false"
         style="margin-bottom: 12px"
       />
-      <el-table :data="rooms" style="margin-top:12px">
+      <el-table :data="pagedRooms.records" style="margin-top:12px">
         <el-table-column prop="buildingName" label="楼栋" width="90" />
         <el-table-column prop="roomNo" label="宿舍" width="90" />
         <el-table-column prop="capacity" label="容量" width="90" />
@@ -59,6 +66,13 @@
           </template>
         </el-table-column>
       </el-table>
+      <el-pagination
+        v-model:current-page="roomPage.pageNum"
+        v-model:page-size="roomPage.pageSize"
+        :total="pagedRooms.total"
+        layout="total, sizes, prev, pager, next"
+        class="table-pagination"
+      />
     </el-card>
 
     <el-dialog v-model="buildingDialogVisible" :title="buildingDialogTitle" width="520px">
@@ -120,9 +134,12 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import api from '../../api'
+import { createPageState, paginateClient } from '../../utils/pagination'
 
 const buildings = ref([])
 const rooms = ref([])
+const buildingPage = reactive(createPageState())
+const roomPage = reactive(createPageState())
 const buildingDialogVisible = ref(false)
 const roomDialogVisible = ref(false)
 const buildingDialogMode = ref('create')
@@ -133,6 +150,8 @@ const buildingDialogTitle = computed(() => (buildingDialogMode.value === 'create
 const buildingSubmitText = computed(() => (buildingDialogMode.value === 'create' ? '确认新增' : '保存修改'))
 const roomDialogTitle = computed(() => (roomDialogMode.value === 'create' ? '新增宿舍信息' : '编辑宿舍信息'))
 const roomSubmitText = computed(() => (roomDialogMode.value === 'create' ? '确认新增' : '保存修改'))
+const pagedBuildings = computed(() => paginateClient(buildings.value, buildingPage))
+const pagedRooms = computed(() => paginateClient(rooms.value, roomPage))
 
 async function loadAll() {
   buildings.value = (await api.get('/dorm-admin/buildings')).data.data
