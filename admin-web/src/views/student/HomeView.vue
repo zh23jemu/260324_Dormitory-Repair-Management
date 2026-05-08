@@ -42,7 +42,7 @@
           </div>
 
           <div v-if="filteredOrders.length" class="portal-order-list">
-            <article v-for="item in filteredOrders" :key="item.id" class="portal-order-card">
+            <article v-for="item in filteredOrders" :key="item.id" class="portal-order-card portal-order-card--clickable" @click="openOrderDetail(item)">
               <div class="portal-order-card__head">
                 <div class="portal-order-card__title-row">
                   <el-tag type="warning" effect="plain">{{ repairOrderStatusText(item.status) }}</el-tag>
@@ -60,6 +60,7 @@
                 <span>类型：{{ item.repairTypeName || '未分类' }}</span>
                 <span v-if="item.repairerName">维修员：{{ item.repairerName }}</span>
               </div>
+              <div class="portal-order-card__view-hint">点击查看详情</div>
             </article>
           </div>
           <el-empty v-else description="没有匹配的报修记录" />
@@ -195,6 +196,27 @@
         <el-empty v-else description="暂无论坛帖子" />
       </div>
     </section>
+
+    <el-dialog v-model="orderDialogVisible" title="工单详情" width="780px" class="portal-order-dialog">
+      <div v-if="currentOrder" class="portal-order-detail">
+        <div class="portal-order-detail__eyebrow">基础信息</div>
+        <div class="portal-order-detail__grid">
+          <div><span>工单号</span><strong>{{ currentOrder.orderNo }}</strong></div>
+          <div><span>报修类型</span><strong>{{ currentOrder.repairTypeName || '未分类' }}</strong></div>
+          <div><span>报修位置</span><strong>{{ orderLocation(currentOrder) }}</strong></div>
+          <div><span>关联设施</span><strong>{{ facilityText(currentOrder) }}</strong></div>
+          <div><span>期望时间</span><strong>{{ currentOrder.expectTime || '未填写' }}</strong></div>
+          <div><span>维修员</span><strong>{{ currentOrder.repairerName || '待分配' }}</strong></div>
+          <div class="portal-order-detail__grid--full"><span>维修结果</span><strong>{{ currentOrder.resultDesc || '暂无维修结果' }}</strong></div>
+        </div>
+
+        <div class="portal-order-detail__eyebrow">报修内容</div>
+        <div class="portal-order-detail__block">
+          <div class="portal-order-detail__block-title">描述</div>
+          <p>{{ currentOrder.description || '暂无描述' }}</p>
+        </div>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -215,6 +237,8 @@ const forumPosts = ref([])
 const repairerRanking = ref([])
 const statistics = ref({})
 const commentForms = reactive({})
+const orderDialogVisible = ref(false)
+const currentOrder = ref(null)
 const defaultAvatar = 'https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg'
 const keyword = ref('')
 const selectedBuilding = ref('all')
@@ -265,6 +289,31 @@ function orderLocation(item) {
   return [item.buildingName, item.roomNo].filter(Boolean).join(' / ') || '未填写位置'
 }
 
+function facilityText(item) {
+  const name = item.facilityName || ''
+  const type = item.facilityType || ''
+  if (!name && !type) return '未关联设施'
+  if (name && type) return `${name}（${type}）`
+  return name || type || '未关联设施'
+}
+
+async function openOrderDetail(item) {
+  orderDialogVisible.value = true
+  currentOrder.value = { ...item }
+
+  // 先直接展示首页已有的工单摘要，避免详情接口在后端未重启或短暂异常时直接弹错。
+  // 如果公开详情接口可用，再静默补充处理结果、评价等更完整字段。
+  try {
+    const response = await fetch(`${api.defaults.baseURL}/portal/repair-orders/${item.id}`)
+    const payload = await response.json()
+    if (response.ok && payload?.code === 200 && payload?.data) {
+      currentOrder.value = { ...currentOrder.value, ...payload.data }
+    }
+  } catch (error) {
+    // 只保留基础信息，不再打断用户查看首页工单。
+  }
+}
+
 async function submitComment(post) {
   if (!auth.hasToken()) {
     router.push(`/login?redirect=${encodeURIComponent('/home')}&role=student`)
@@ -286,3 +335,99 @@ async function submitComment(post) {
 
 onMounted(loadPortal)
 </script>
+
+<style scoped>
+.portal-order-card--clickable {
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.portal-order-card--clickable:hover {
+  transform: translateY(-3px);
+  border-color: rgba(37, 99, 235, 0.28);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+}
+
+.portal-order-card__view-hint {
+  margin-top: 12px;
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.portal-order-detail {
+  display: grid;
+  gap: 18px;
+}
+
+.portal-order-detail__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(14, 116, 144, 0.1), rgba(37, 99, 235, 0.08));
+}
+
+.portal-order-detail__header h3 {
+  margin: 6px 0 0;
+  color: #0f172a;
+  font-size: 22px;
+}
+
+.portal-order-detail__eyebrow {
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.portal-order-detail__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.portal-order-detail__grid > div,
+.portal-order-detail__block {
+  padding: 14px 16px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 16px;
+  background: rgba(248, 250, 252, 0.9);
+}
+
+.portal-order-detail__grid span {
+  display: block;
+  margin-bottom: 6px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.portal-order-detail__grid strong {
+  color: #0f172a;
+}
+
+.portal-order-detail__block-title {
+  margin-bottom: 8px;
+  color: #0f172a;
+  font-weight: 800;
+}
+
+.portal-order-detail__block p {
+  margin: 0;
+  color: #334155;
+  line-height: 1.8;
+}
+
+@media (max-width: 720px) {
+  .portal-order-detail__header,
+  .portal-order-detail__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-order-detail__header {
+    display: grid;
+  }
+}
+</style>

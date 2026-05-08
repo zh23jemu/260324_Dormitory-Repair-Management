@@ -58,6 +58,11 @@ public class PortalController {
         return ApiResponse.success(portalService.repairerDetail(id));
     }
 
+    @GetMapping("/repair-orders/{id}")
+    public ApiResponse<Map<String, Object>> repairOrderDetail(@PathVariable Long id) {
+        return ApiResponse.success(portalService.repairOrderDetail(id));
+    }
+
     @PostMapping("/forum-posts/{postId}/comments")
     public ApiResponse<Void> createForumComment(@PathVariable Long postId, @Valid @RequestBody ForumCommentRequest request) {
         portalService.createForumComment(postId, request);

@@ -52,18 +52,42 @@ public class PortalService {
     public Map<String, Object> repairOrders(Integer pageNum, Integer pageSize) {
         return commonQueryService.page(
                 "select ro.id, ro.order_no as orderNo, ro.title, ro.description, ro.status, ro.submitted_at as submittedAt, ro.completed_at as completedAt, " +
-                        "rt.type_name as repairTypeName, db.building_name as buildingName, dr.room_no as roomNo, " +
+                        "rt.type_name as repairTypeName, db.building_name as buildingName, dr.room_no as roomNo, df.facility_name as facilityName, df.facility_type as facilityType, " +
                         "su.username as studentUsername, su.real_name as studentName, su.avatar as studentAvatar, ru.real_name as repairerName " +
                         "from repair_order ro " +
                         "left join repair_type rt on ro.repair_type_id = rt.id " +
                         "left join dorm_building db on ro.building_id = db.id " +
                         "left join dorm_room dr on ro.room_id = dr.id " +
+                        "left join dorm_facility df on ro.facility_id = df.id " +
                         "left join user su on ro.student_id = su.id " +
                         "left join user ru on ro.assigned_repairer_id = ru.id " +
                         "order by ro.id desc",
                 pageNum,
                 pageSize
         );
+    }
+
+    public Map<String, Object> repairOrderDetail(Long id) {
+        // 公开首页查看工单详情时只展示基础信息和服务结果，不暴露图片和时间线，降低页面复杂度。
+        Map<String, Object> detail = commonQueryService.one(
+                "select ro.id, ro.order_no as orderNo, ro.title, ro.description, ro.expect_time as expectTime, ro.status, ro.submitted_at as submittedAt, ro.assigned_at as assignedAt, ro.completed_at as completedAt, " +
+                        "rt.type_name as repairTypeName, db.building_name as buildingName, dr.room_no as roomNo, df.facility_name as facilityName, df.facility_type as facilityType, " +
+                        "su.username as studentUsername, su.real_name as studentName, ru.real_name as repairerName, " +
+                        "rf.result_desc as resultDesc, rf.materials_used as materialsUsed, rf.finish_time as finishTime, " +
+                        "rr.score as ratingScore, rr.content as ratingContent, rr.created_at as ratedAt " +
+                        "from repair_order ro " +
+                        "left join repair_type rt on ro.repair_type_id = rt.id " +
+                        "left join dorm_building db on ro.building_id = db.id " +
+                        "left join dorm_room dr on ro.room_id = dr.id " +
+                        "left join dorm_facility df on ro.facility_id = df.id " +
+                        "left join user su on ro.student_id = su.id " +
+                        "left join user ru on ro.assigned_repairer_id = ru.id " +
+                        "left join repair_feedback rf on ro.id = rf.repair_order_id " +
+                        "left join repair_rating rr on ro.id = rr.repair_order_id " +
+                        "where ro.id = ?",
+                id
+        );
+        return detail;
     }
 
     public Map<String, Object> forumPosts(Integer pageNum, Integer pageSize) {
