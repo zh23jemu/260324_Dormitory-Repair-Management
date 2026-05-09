@@ -26,7 +26,7 @@
     </div>
     <div class="grid-two">
       <el-card><template #header>工单状态分布</template><div ref="statusChartRef" class="chart-box"></div></el-card>
-      <el-card><template #header>维修人员处理量排行</template><div ref="repairerChartRef" class="chart-box"></div></el-card>
+      <el-card><template #header>楼栋工单数量排行</template><div ref="buildingRankChartRef" class="chart-box"></div></el-card>
     </div>
   </div>
 </template>
@@ -43,23 +43,21 @@ const dateRange = ref([])
 const repairTypeStats = ref([])
 const buildingHeatStats = ref([])
 const statusStats = ref([])
-const repairerStats = ref([])
 const typeChartRef = ref(null)
 const buildingChartRef = ref(null)
 const statusChartRef = ref(null)
-const repairerChartRef = ref(null)
+const buildingRankChartRef = ref(null)
 
 let typeChart = null
 let buildingChart = null
 let statusChart = null
-let repairerChart = null
+let buildingRankChart = null
 
 async function loadData() {
   Object.assign(overview, (await api.get('/admin/statistics/overview')).data.data)
   repairTypeStats.value = (await api.get('/admin/statistics/repair-type')).data.data
   buildingHeatStats.value = (await api.get('/admin/statistics/building-heat')).data.data
   statusStats.value = (await api.get('/admin/statistics/status')).data.data
-  repairerStats.value = (await api.get('/admin/statistics/repairer-workload')).data.data
   await nextTick()
   renderCharts()
 }
@@ -88,13 +86,13 @@ function renderCharts() {
       series: [{ type: 'pie', radius: '62%', data: statusStats.value.map((item) => ({ name: repairOrderStatusText(item.name), value: Number(item.value || 0) })) }]
     })
   }
-  if (repairerChartRef.value) {
-    repairerChart ||= echarts.init(repairerChartRef.value)
-    repairerChart.setOption({
+  if (buildingRankChartRef.value) {
+    buildingRankChart ||= echarts.init(buildingRankChartRef.value)
+    buildingRankChart.setOption({
       tooltip: {},
       xAxis: { type: 'value' },
-      yAxis: { type: 'category', data: repairerStats.value.map((item) => item.name) },
-      series: [{ type: 'bar', data: repairerStats.value.map((item) => Number(item.value || 0)), itemStyle: { color: '#14b8a6' } }]
+      yAxis: { type: 'category', data: buildingHeatStats.value.map((item) => item.name).reverse() },
+      series: [{ type: 'bar', data: buildingHeatStats.value.map((item) => Number(item.value || 0)).reverse(), itemStyle: { color: '#14b8a6' } }]
     })
   }
 }
@@ -103,7 +101,7 @@ function handleResize() {
   typeChart?.resize()
   buildingChart?.resize()
   statusChart?.resize()
-  repairerChart?.resize()
+  buildingRankChart?.resize()
 }
 
 onMounted(async () => {
@@ -116,6 +114,6 @@ onUnmounted(() => {
   typeChart?.dispose()
   buildingChart?.dispose()
   statusChart?.dispose()
-  repairerChart?.dispose()
+  buildingRankChart?.dispose()
 })
 </script>

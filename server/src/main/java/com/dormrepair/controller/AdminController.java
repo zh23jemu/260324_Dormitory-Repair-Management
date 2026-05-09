@@ -102,11 +102,6 @@ public class AdminController {
         return ApiResponse.success(adminService.statusStats());
     }
 
-    @GetMapping("/statistics/repairer-workload")
-    public ApiResponse<List<Map<String, Object>>> repairerWorkloadStats() {
-        return ApiResponse.success(adminService.repairerWorkloadStats());
-    }
-
     @GetMapping("/logs")
     public ApiResponse<Map<String, Object>> logs(
             @RequestParam(required = false) Integer pageNum,

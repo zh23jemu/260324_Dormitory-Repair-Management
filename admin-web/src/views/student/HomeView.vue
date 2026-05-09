@@ -4,7 +4,7 @@
       <div class="portal-banner__copy">
         <div class="portal-banner__eyebrow">高校后勤一站式服务平台</div>
         <h1>报修服务平台</h1>
-        <p>统一浏览全部报修记录、服务统计、维修排行与公告信息。学生、宿管、维修员、管理员均从同一主页进入系统。</p>
+        <p>统一浏览全部报修记录、服务统计、楼栋工单排行与公告信息。学生、宿管、维修员、管理员均从同一主页进入系统。</p>
         <div class="portal-banner__cta">
           <el-button type="primary" size="large" @click="goProtected('/student/repair/create')">我要报修</el-button>
           <el-button size="large" @click="$router.push('/login')">角色登录</el-button>
@@ -15,7 +15,7 @@
           <div class="portal-illustration-card__title">统一门户演示入口</div>
           <div class="portal-illustration-card__list">
             <span>全部报修记录公开浏览</span>
-            <span>服务统计与维修排行</span>
+            <span>服务统计与楼栋排行</span>
             <span>公告与报修信息统一展示</span>
             <span>按角色进入不同工作台</span>
           </div>
@@ -106,15 +106,15 @@
           <div class="portal-stats-card__block">
             <div class="portal-stats-card__caption">
               <span class="portal-stats-card__caption-icon">🏆</span>
-              <span>维修单位排行榜</span>
+              <span>楼栋工单数量排行</span>
             </div>
             <div class="portal-mini-rank">
-              <div v-for="(item, index) in repairerRanking.slice(0, 5)" :key="item.id" class="portal-mini-rank__item">
+              <div v-for="(item, index) in buildingRanking.slice(0, 5)" :key="item.id" class="portal-mini-rank__item">
                 <div class="portal-mini-rank__main">
                   <em class="portal-mini-rank__badge" :class="`is-rank-${index + 1}`">TOP {{ index + 1 }}</em>
-                  <span>{{ item.realName }}</span>
+                  <span>{{ item.buildingName || '未命名楼栋' }}</span>
                 </div>
-                <strong>{{ item.completedCount || 0 }} 单</strong>
+                <strong>{{ item.orderCount || 0 }} 单</strong>
               </div>
             </div>
           </div>
@@ -129,7 +129,7 @@
             </div>
             <div class="portal-feature-list__item">
               <strong>服务透明</strong>
-              <span>展示历史报修记录、评分和维修排行</span>
+              <span>展示历史报修记录、评分和楼栋报修排行</span>
             </div>
           </div>
         </div>
@@ -193,7 +193,7 @@ const router = useRouter()
 const auth = useAuth()
 const announcements = ref([])
 const orders = ref([])
-const repairerRanking = ref([])
+const buildingRanking = ref([])
 const statistics = ref({})
 const orderDialogVisible = ref(false)
 const currentOrder = ref(null)
@@ -218,7 +218,7 @@ async function loadPortal() {
   const { data } = await api.get('/portal/home')
   announcements.value = data.data.announcements || []
   orders.value = data.data.orders || []
-  repairerRanking.value = data.data.repairerRanking || []
+  buildingRanking.value = data.data.buildingRanking || []
   statistics.value = data.data.statistics || {}
 }
 

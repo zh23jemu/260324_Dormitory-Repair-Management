@@ -167,7 +167,7 @@ public class AdminService {
 
     public List<Map<String, Object>> buildingHeatStats() {
         SecurityUtils.requireRole("admin");
-        return commonQueryService.list("select db.building_name as name, count(ro.id) as value from dorm_building db left join repair_order ro on db.id = ro.building_id group by db.id, db.building_name order by db.id asc");
+        return commonQueryService.list("select db.building_name as name, count(ro.id) as value from dorm_building db left join repair_order ro on db.id = ro.building_id group by db.id, db.building_name order by value desc, db.id asc");
     }
 
     public List<Map<String, Object>> ratingStats() {
@@ -178,13 +178,6 @@ public class AdminService {
     public List<Map<String, Object>> statusStats() {
         SecurityUtils.requireRole("admin");
         return commonQueryService.list("select status as name, count(*) as value from repair_order group by status order by count(*) desc");
-    }
-
-    public List<Map<String, Object>> repairerWorkloadStats() {
-        SecurityUtils.requireRole("admin");
-        return commonQueryService.list(
-                "select u.real_name as name, count(ro.id) as value from user u left join repair_order ro on u.id = ro.assigned_repairer_id where u.role = 'repairer' group by u.id, u.real_name order by value desc, u.id asc"
-        );
     }
 
     public Map<String, Object> logs(Integer pageNum, Integer pageSize) {

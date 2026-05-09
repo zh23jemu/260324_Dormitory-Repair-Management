@@ -27,14 +27,14 @@ public class PortalService {
 
     /**
      * 公共门户首页数据。
-     * 用于统一门户首页展示公告、全部报修记录、服务统计和维修排行，不再展示公开论坛内容。
+     * 用于统一门户首页展示公告、全部报修记录、服务统计和楼栋工单排行，不再展示公开论坛内容。
      */
     public Map<String, Object> home() {
         Map<String, Object> map = new HashMap<>();
         map.put("announcements", announcements(1, 6).get("records"));
         map.put("orders", repairOrders(1, 8).get("records"));
         map.put("statistics", statistics());
-        map.put("repairerRanking", repairerRanking());
+        map.put("buildingRanking", buildingRanking());
         return map;
     }
 
@@ -232,18 +232,15 @@ public class PortalService {
         return map;
     }
 
-    private List<Map<String, Object>> repairerRanking() {
+    private List<Map<String, Object>> buildingRanking() {
+        // 门户首页排行榜按报修工单所在楼栋聚合，而不是按维修员完成单数排行。
+        // 这样更符合“哪个楼栋报修最集中”的管理视角，例如一号楼 3 单排第一。
         return commonQueryService.list(
-                "select u.id, u.username, u.real_name as realName, u.avatar, " +
-                        "(select group_concat(d.dict_name, '、') from sys_dict d where d.dict_type = 'repair_work_type' and instr(',' || coalesce(u.work_type_code, '') || ',', ',' || d.dict_code || ',') > 0) as workTypeName, " +
-                        "count(ro.id) as totalCount, sum(case when ro.status in ('pending_rating', 'completed') then 1 else 0 end) as completedCount, " +
-                        "round(avg(rr.score), 2) as avgScore " +
-                        "from user u " +
-                        "left join repair_order ro on u.id = ro.assigned_repairer_id " +
-                        "left join repair_rating rr on ro.id = rr.repair_order_id " +
-                        "where u.role = 'repairer' " +
-                        "group by u.id, u.username, u.real_name, u.avatar, u.work_type_code " +
-                        "order by completedCount desc, totalCount desc, u.id asc limit 8"
+                "select db.id, db.building_name as buildingName, count(ro.id) as orderCount " +
+                        "from dorm_building db " +
+                        "left join repair_order ro on db.id = ro.building_id " +
+                        "group by db.id, db.building_name " +
+                        "order by orderCount desc, db.id asc limit 8"
         );
     }
 }
