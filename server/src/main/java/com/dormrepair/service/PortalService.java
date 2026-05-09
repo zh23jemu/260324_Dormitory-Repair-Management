@@ -90,6 +90,27 @@ public class PortalService {
         return detail;
     }
 
+    public Map<String, Object> schoolOptions() {
+        // 注册页使用公开选项接口，保证学生只能选择管理员维护过的学院、专业和班级。
+        Map<String, Object> result = new HashMap<>();
+        result.put("colleges", commonQueryService.list(
+                "select id, college_name as collegeName, sort_no as sortNo from school_college where status = 'enabled' order by sort_no asc, id asc"
+        ));
+        result.put("majors", commonQueryService.list(
+                "select sm.id, sm.college_id as collegeId, sm.major_name as majorName, sc.college_name as collegeName, sm.sort_no as sortNo " +
+                        "from school_major sm left join school_college sc on sm.college_id = sc.id " +
+                        "where sm.status = 'enabled' and sc.status = 'enabled' order by sc.sort_no asc, sm.sort_no asc, sm.id asc"
+        ));
+        result.put("classes", commonQueryService.list(
+                "select scl.id, scl.major_id as majorId, scl.class_name as className, sm.major_name as majorName, sc.id as collegeId, sc.college_name as collegeName, scl.sort_no as sortNo " +
+                        "from school_class scl " +
+                        "left join school_major sm on scl.major_id = sm.id " +
+                        "left join school_college sc on sm.college_id = sc.id " +
+                        "where scl.status = 'enabled' and sm.status = 'enabled' and sc.status = 'enabled' order by sc.sort_no asc, sm.sort_no asc, scl.sort_no asc, scl.id asc"
+        ));
+        return result;
+    }
+
     public Map<String, Object> forumPosts(String keyword, Integer pageNum, Integer pageSize) {
         // 论坛浏览已收紧为登录后访问，避免首页和匿名接口暴露公开社区内容。
         SecurityUtils.requireRole("student");

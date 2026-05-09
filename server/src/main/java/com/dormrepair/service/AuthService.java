@@ -57,6 +57,7 @@ public class AuthService {
 
     public void register(RegisterRequest request) {
         validateStudentPhone(request.phone());
+        validateSchoolSelection(request.college(), request.major(), request.className());
         Integer count = jdbcTemplate.queryForObject("select count(*) from user where username = ?", Integer.class, request.username());
         if (count != null && count > 0) {
             throw new BusinessException("用户名已存在");
@@ -80,6 +81,24 @@ public class AuthService {
                 userId, request.studentNo(), null, request.college(), request.major(), request.className(), now, now
         );
         logService.log(userId, "认证", "注册", request.username() + " 注册学生账号");
+    }
+
+    private void validateSchoolSelection(String college, String major, String className) {
+        // 学院、专业、班级必须来自管理员维护的启用数据，避免学生注册时提交任意文本破坏统计口径。
+        Integer count = jdbcTemplate.queryForObject(
+                "select count(*) from school_class scl " +
+                        "left join school_major sm on scl.major_id = sm.id " +
+                        "left join school_college sc on sm.college_id = sc.id " +
+                        "where sc.college_name = ? and sm.major_name = ? and scl.class_name = ? " +
+                        "and sc.status = 'enabled' and sm.status = 'enabled' and scl.status = 'enabled'",
+                Integer.class,
+                college,
+                major,
+                className
+        );
+        if (count == null || count <= 0) {
+            throw new BusinessException("请选择有效的学院、专业和班级");
+        }
     }
 
     private void validateStudentPhone(String phone) {

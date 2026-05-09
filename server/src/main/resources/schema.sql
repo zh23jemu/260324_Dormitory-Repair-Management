@@ -14,6 +14,9 @@ DROP TABLE IF EXISTS repair_order;
 DROP TABLE IF EXISTS dorm_facility;
 DROP TABLE IF EXISTS repair_type;
 DROP TABLE IF EXISTS student_profile;
+DROP TABLE IF EXISTS school_class;
+DROP TABLE IF EXISTS school_major;
+DROP TABLE IF EXISTS school_college;
 DROP TABLE IF EXISTS dorm_room;
 DROP TABLE IF EXISTS dorm_building;
 DROP TABLE IF EXISTS announcement;
@@ -91,6 +94,39 @@ CREATE TABLE student_profile (
     FOREIGN KEY (user_id) REFERENCES user(id),
     FOREIGN KEY (building_id) REFERENCES dorm_building(id),
     FOREIGN KEY (room_id) REFERENCES dorm_room(id)
+);
+
+CREATE TABLE school_college (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    college_name TEXT NOT NULL UNIQUE,
+    sort_no INTEGER DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'enabled',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+
+CREATE TABLE school_major (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    college_id INTEGER NOT NULL,
+    major_name TEXT NOT NULL,
+    sort_no INTEGER DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'enabled',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    UNIQUE (college_id, major_name),
+    FOREIGN KEY (college_id) REFERENCES school_college(id)
+);
+
+CREATE TABLE school_class (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    major_id INTEGER NOT NULL,
+    class_name TEXT NOT NULL,
+    sort_no INTEGER DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'enabled',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    UNIQUE (major_id, class_name),
+    FOREIGN KEY (major_id) REFERENCES school_major(id)
 );
 
 CREATE TABLE repair_type (

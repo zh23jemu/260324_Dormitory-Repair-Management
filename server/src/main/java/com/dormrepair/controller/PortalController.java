@@ -64,6 +64,11 @@ public class PortalController {
         return ApiResponse.success(portalService.repairOrderDetail(id));
     }
 
+    @GetMapping("/school-options")
+    public ApiResponse<Map<String, Object>> schoolOptions() {
+        return ApiResponse.success(portalService.schoolOptions());
+    }
+
     @PostMapping("/forum-posts/{postId}/comments")
     public ApiResponse<Void> createForumComment(@PathVariable Long postId, @Valid @RequestBody ForumCommentRequest request) {
         portalService.createForumComment(postId, request);

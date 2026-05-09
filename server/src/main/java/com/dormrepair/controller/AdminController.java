@@ -1,7 +1,10 @@
 package com.dormrepair.controller;
 
 import com.dormrepair.common.ApiResponse;
+import com.dormrepair.dto.admin.ClassRequest;
+import com.dormrepair.dto.admin.CollegeRequest;
 import com.dormrepair.dto.admin.DictSaveRequest;
+import com.dormrepair.dto.admin.MajorRequest;
 import com.dormrepair.dto.admin.MaterialRequest;
 import com.dormrepair.dto.admin.ResourceRequest;
 import com.dormrepair.dto.admin.RepairTypeSaveRequest;
@@ -232,6 +235,65 @@ public class AdminController {
     @DeleteMapping("/repair-types/{id}")
     public ApiResponse<Void> deleteRepairType(@PathVariable Long id) {
         adminService.deleteRepairType(id);
+        return ApiResponse.success();
+    }
+
+    @GetMapping("/school-options")
+    public ApiResponse<Map<String, Object>> schoolOptions() {
+        return ApiResponse.success(adminService.schoolOptions());
+    }
+
+    @PostMapping("/school-colleges")
+    public ApiResponse<Void> createCollege(@Valid @RequestBody CollegeRequest request) {
+        adminService.createCollege(request);
+        return ApiResponse.success();
+    }
+
+    @PutMapping("/school-colleges/{id}")
+    public ApiResponse<Void> updateCollege(@PathVariable Long id, @Valid @RequestBody CollegeRequest request) {
+        adminService.updateCollege(id, request);
+        return ApiResponse.success();
+    }
+
+    @DeleteMapping("/school-colleges/{id}")
+    public ApiResponse<Void> deleteCollege(@PathVariable Long id) {
+        adminService.deleteCollege(id);
+        return ApiResponse.success();
+    }
+
+    @PostMapping("/school-majors")
+    public ApiResponse<Void> createMajor(@Valid @RequestBody MajorRequest request) {
+        adminService.createMajor(request);
+        return ApiResponse.success();
+    }
+
+    @PutMapping("/school-majors/{id}")
+    public ApiResponse<Void> updateMajor(@PathVariable Long id, @Valid @RequestBody MajorRequest request) {
+        adminService.updateMajor(id, request);
+        return ApiResponse.success();
+    }
+
+    @DeleteMapping("/school-majors/{id}")
+    public ApiResponse<Void> deleteMajor(@PathVariable Long id) {
+        adminService.deleteMajor(id);
+        return ApiResponse.success();
+    }
+
+    @PostMapping("/school-classes")
+    public ApiResponse<Void> createClass(@Valid @RequestBody ClassRequest request) {
+        adminService.createClass(request);
+        return ApiResponse.success();
+    }
+
+    @PutMapping("/school-classes/{id}")
+    public ApiResponse<Void> updateClass(@PathVariable Long id, @Valid @RequestBody ClassRequest request) {
+        adminService.updateClass(id, request);
+        return ApiResponse.success();
+    }
+
+    @DeleteMapping("/school-classes/{id}")
+    public ApiResponse<Void> deleteClass(@PathVariable Long id) {
+        adminService.deleteClass(id);
         return ApiResponse.success();
     }
 

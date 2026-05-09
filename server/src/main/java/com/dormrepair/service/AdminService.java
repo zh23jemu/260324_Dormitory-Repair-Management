@@ -1,7 +1,10 @@
 package com.dormrepair.service;
 
 import com.dormrepair.common.BusinessException;
+import com.dormrepair.dto.admin.ClassRequest;
+import com.dormrepair.dto.admin.CollegeRequest;
 import com.dormrepair.dto.admin.DictSaveRequest;
+import com.dormrepair.dto.admin.MajorRequest;
 import com.dormrepair.dto.admin.MaterialRequest;
 import com.dormrepair.dto.admin.ResourceRequest;
 import com.dormrepair.dto.admin.RepairTypeSaveRequest;
@@ -265,6 +268,48 @@ public class AdminService {
         return result.isBlank() ? null : result;
     }
 
+    private Integer safeSortNo(Integer sortNo) {
+        return sortNo == null ? 1 : sortNo;
+    }
+
+    private String safeStatus(String status) {
+        return status == null || status.trim().isBlank() ? "enabled" : status.trim();
+    }
+
+    private void ensureCollegeNameAvailable(String collegeName, Long excludeId) {
+        Integer count = excludeId == null
+                ? jdbcTemplate.queryForObject("select count(*) from school_college where college_name = ?", Integer.class, collegeName)
+                : jdbcTemplate.queryForObject("select count(*) from school_college where college_name = ? and id <> ?", Integer.class, collegeName, excludeId);
+        if (count != null && count > 0) {
+            throw new BusinessException("学院名称已存在");
+        }
+    }
+
+    private void ensureMajorNameAvailable(Long collegeId, String majorName, Long excludeId) {
+        Integer count = excludeId == null
+                ? jdbcTemplate.queryForObject("select count(*) from school_major where college_id = ? and major_name = ?", Integer.class, collegeId, majorName)
+                : jdbcTemplate.queryForObject("select count(*) from school_major where college_id = ? and major_name = ? and id <> ?", Integer.class, collegeId, majorName, excludeId);
+        if (count != null && count > 0) {
+            throw new BusinessException("该学院下专业名称已存在");
+        }
+    }
+
+    private void ensureClassNameAvailable(Long majorId, String className, Long excludeId) {
+        Integer count = excludeId == null
+                ? jdbcTemplate.queryForObject("select count(*) from school_class where major_id = ? and class_name = ?", Integer.class, majorId, className)
+                : jdbcTemplate.queryForObject("select count(*) from school_class where major_id = ? and class_name = ? and id <> ?", Integer.class, majorId, className, excludeId);
+        if (count != null && count > 0) {
+            throw new BusinessException("该专业下班级名称已存在");
+        }
+    }
+
+    private void ensureNoChildren(String sql, Object param, String message) {
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, param);
+        if (count != null && count > 0) {
+            throw new BusinessException(message);
+        }
+    }
+
     public Map<String, Object> resources(Integer pageNum, Integer pageSize) {
         SecurityUtils.requireRole("admin");
         return commonQueryService.page("select rr.id, rr.title, rr.category, rr.summary, rr.content, rr.cover_image as coverImage, rr.sort_no as sortNo, rr.status, rr.created_at as createdAt, u.real_name as publisherName from repair_resource rr left join user u on rr.publisher_id = u.id order by rr.sort_no asc, rr.id desc", pageNum, pageSize);
@@ -432,6 +477,105 @@ public class AdminService {
         }
         jdbcTemplate.update("delete from repair_type where id = ?", id);
         logService.log(SecurityUtils.currentUser().id(), "基础配置", "删除", "删除报修类型: " + id);
+    }
+
+    public Map<String, Object> schoolOptions() {
+        SecurityUtils.requireRole("admin");
+        Map<String, Object> result = new HashMap<>();
+        result.put("colleges", commonQueryService.list("select id, college_name as collegeName, sort_no as sortNo, status, created_at as createdAt, updated_at as updatedAt from school_college order by sort_no asc, id asc"));
+        result.put("majors", commonQueryService.list(
+                "select sm.id, sm.college_id as collegeId, sc.college_name as collegeName, sm.major_name as majorName, sm.sort_no as sortNo, sm.status, sm.created_at as createdAt, sm.updated_at as updatedAt " +
+                        "from school_major sm left join school_college sc on sm.college_id = sc.id order by sc.sort_no asc, sm.sort_no asc, sm.id asc"
+        ));
+        result.put("classes", commonQueryService.list(
+                "select scl.id, scl.major_id as majorId, sm.major_name as majorName, sm.college_id as collegeId, sc.college_name as collegeName, scl.class_name as className, scl.sort_no as sortNo, scl.status, scl.created_at as createdAt, scl.updated_at as updatedAt " +
+                        "from school_class scl left join school_major sm on scl.major_id = sm.id left join school_college sc on sm.college_id = sc.id order by sc.sort_no asc, sm.sort_no asc, scl.sort_no asc, scl.id asc"
+        ));
+        return result;
+    }
+
+    public void createCollege(CollegeRequest request) {
+        SecurityUtils.requireRole("admin");
+        String name = cleanRequired(request.collegeName(), "请输入学院名称");
+        ensureCollegeNameAvailable(name, null);
+        String now = TimeUtils.now();
+        jdbcTemplate.update("insert into school_college(college_name, sort_no, status, created_at, updated_at) values (?, ?, ?, ?, ?)", name, safeSortNo(request.sortNo()), safeStatus(request.status()), now, now);
+        logService.log(SecurityUtils.currentUser().id(), "基础配置", "新增", "新增学院: " + name);
+    }
+
+    public void updateCollege(Long id, CollegeRequest request) {
+        SecurityUtils.requireRole("admin");
+        commonQueryService.one("select id from school_college where id = ?", id);
+        String name = cleanRequired(request.collegeName(), "请输入学院名称");
+        ensureCollegeNameAvailable(name, id);
+        jdbcTemplate.update("update school_college set college_name = ?, sort_no = ?, status = ?, updated_at = ? where id = ?", name, safeSortNo(request.sortNo()), safeStatus(request.status()), TimeUtils.now(), id);
+        logService.log(SecurityUtils.currentUser().id(), "基础配置", "修改", "修改学院: " + id);
+    }
+
+    public void deleteCollege(Long id) {
+        SecurityUtils.requireRole("admin");
+        Map<String, Object> college = commonQueryService.one("select college_name as collegeName from school_college where id = ?", id);
+        ensureNoChildren("select count(*) from school_major where college_id = ?", id, "该学院下还有专业，不能删除");
+        ensureNoChildren("select count(*) from student_profile where college = ?", college.get("collegeName"), "该学院已有学生使用，不能删除");
+        jdbcTemplate.update("delete from school_college where id = ?", id);
+        logService.log(SecurityUtils.currentUser().id(), "基础配置", "删除", "删除学院: " + id);
+    }
+
+    public void createMajor(MajorRequest request) {
+        SecurityUtils.requireRole("admin");
+        commonQueryService.one("select id from school_college where id = ?", request.collegeId());
+        String name = cleanRequired(request.majorName(), "请输入专业名称");
+        ensureMajorNameAvailable(request.collegeId(), name, null);
+        String now = TimeUtils.now();
+        jdbcTemplate.update("insert into school_major(college_id, major_name, sort_no, status, created_at, updated_at) values (?, ?, ?, ?, ?, ?)", request.collegeId(), name, safeSortNo(request.sortNo()), safeStatus(request.status()), now, now);
+        logService.log(SecurityUtils.currentUser().id(), "基础配置", "新增", "新增专业: " + name);
+    }
+
+    public void updateMajor(Long id, MajorRequest request) {
+        SecurityUtils.requireRole("admin");
+        commonQueryService.one("select id from school_major where id = ?", id);
+        commonQueryService.one("select id from school_college where id = ?", request.collegeId());
+        String name = cleanRequired(request.majorName(), "请输入专业名称");
+        ensureMajorNameAvailable(request.collegeId(), name, id);
+        jdbcTemplate.update("update school_major set college_id = ?, major_name = ?, sort_no = ?, status = ?, updated_at = ? where id = ?", request.collegeId(), name, safeSortNo(request.sortNo()), safeStatus(request.status()), TimeUtils.now(), id);
+        logService.log(SecurityUtils.currentUser().id(), "基础配置", "修改", "修改专业: " + id);
+    }
+
+    public void deleteMajor(Long id) {
+        SecurityUtils.requireRole("admin");
+        Map<String, Object> major = commonQueryService.one("select major_name as majorName from school_major where id = ?", id);
+        ensureNoChildren("select count(*) from school_class where major_id = ?", id, "该专业下还有班级，不能删除");
+        ensureNoChildren("select count(*) from student_profile where major = ?", major.get("majorName"), "该专业已有学生使用，不能删除");
+        jdbcTemplate.update("delete from school_major where id = ?", id);
+        logService.log(SecurityUtils.currentUser().id(), "基础配置", "删除", "删除专业: " + id);
+    }
+
+    public void createClass(ClassRequest request) {
+        SecurityUtils.requireRole("admin");
+        commonQueryService.one("select id from school_major where id = ?", request.majorId());
+        String name = cleanRequired(request.className(), "请输入班级名称");
+        ensureClassNameAvailable(request.majorId(), name, null);
+        String now = TimeUtils.now();
+        jdbcTemplate.update("insert into school_class(major_id, class_name, sort_no, status, created_at, updated_at) values (?, ?, ?, ?, ?, ?)", request.majorId(), name, safeSortNo(request.sortNo()), safeStatus(request.status()), now, now);
+        logService.log(SecurityUtils.currentUser().id(), "基础配置", "新增", "新增班级: " + name);
+    }
+
+    public void updateClass(Long id, ClassRequest request) {
+        SecurityUtils.requireRole("admin");
+        commonQueryService.one("select id from school_class where id = ?", id);
+        commonQueryService.one("select id from school_major where id = ?", request.majorId());
+        String name = cleanRequired(request.className(), "请输入班级名称");
+        ensureClassNameAvailable(request.majorId(), name, id);
+        jdbcTemplate.update("update school_class set major_id = ?, class_name = ?, sort_no = ?, status = ?, updated_at = ? where id = ?", request.majorId(), name, safeSortNo(request.sortNo()), safeStatus(request.status()), TimeUtils.now(), id);
+        logService.log(SecurityUtils.currentUser().id(), "基础配置", "修改", "修改班级: " + id);
+    }
+
+    public void deleteClass(Long id) {
+        SecurityUtils.requireRole("admin");
+        Map<String, Object> clazz = commonQueryService.one("select class_name as className from school_class where id = ?", id);
+        ensureNoChildren("select count(*) from student_profile where class_name = ?", clazz.get("className"), "该班级已有学生使用，不能删除");
+        jdbcTemplate.update("delete from school_class where id = ?", id);
+        logService.log(SecurityUtils.currentUser().id(), "基础配置", "删除", "删除班级: " + id);
     }
 
     public Map<String, Object> materials(Integer pageNum, Integer pageSize) {
