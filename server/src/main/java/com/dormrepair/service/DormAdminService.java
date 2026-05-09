@@ -5,6 +5,7 @@ import com.dormrepair.dto.admin.AnnouncementRequest;
 import com.dormrepair.dto.admin.BuildingRequest;
 import com.dormrepair.dto.admin.FacilityRequest;
 import com.dormrepair.dto.admin.RoomRequest;
+import com.dormrepair.dto.admin.StudentClassRequest;
 import com.dormrepair.dto.admin.StudentRoomRequest;
 import com.dormrepair.dto.repair.RepairOrderQueryRequest;
 import com.dormrepair.dto.repair.RepairAssignRequest;
@@ -289,6 +290,45 @@ public class DormAdminService {
     public void updateStudentRoom(Long id, StudentRoomRequest request) {
         SecurityUtils.requireRole("dorm_admin", "admin");
         jdbcTemplate.update("update student_profile set building_id = ?, room_id = ?, bed_no = ?, updated_at = ? where id = ?", request.buildingId(), request.roomId(), request.bedNo(), TimeUtils.now(), id);
+    }
+
+    public Map<String, Object> schoolOptions() {
+        SecurityUtils.requireRole("dorm_admin", "admin");
+        Map<String, Object> result = new java.util.HashMap<>();
+        result.put("colleges", commonQueryService.list("select id, college_name as collegeName, sort_no as sortNo from school_college where status = 'enabled' order by sort_no asc, id asc"));
+        result.put("majors", commonQueryService.list(
+                "select sm.id, sm.college_id as collegeId, sm.major_name as majorName, sc.college_name as collegeName, sm.sort_no as sortNo " +
+                        "from school_major sm left join school_college sc on sm.college_id = sc.id " +
+                        "where sm.status = 'enabled' and sc.status = 'enabled' order by sc.sort_no asc, sm.sort_no asc, sm.id asc"
+        ));
+        result.put("classes", commonQueryService.list(
+                "select scl.id, scl.major_id as majorId, scl.class_name as className, sm.major_name as majorName, sc.id as collegeId, sc.college_name as collegeName, scl.sort_no as sortNo " +
+                        "from school_class scl " +
+                        "left join school_major sm on scl.major_id = sm.id " +
+                        "left join school_college sc on sm.college_id = sc.id " +
+                        "where scl.status = 'enabled' and sm.status = 'enabled' and sc.status = 'enabled' order by sc.sort_no asc, sm.sort_no asc, scl.sort_no asc, scl.id asc"
+        ));
+        return result;
+    }
+
+    public void updateStudentClass(Long id, StudentClassRequest request) {
+        SecurityUtils.requireRole("dorm_admin", "admin");
+        Integer count = jdbcTemplate.queryForObject(
+                "select count(*) from school_class scl " +
+                        "left join school_major sm on scl.major_id = sm.id " +
+                        "left join school_college sc on sm.college_id = sc.id " +
+                        "where sc.college_name = ? and sm.major_name = ? and scl.class_name = ? " +
+                        "and sc.status = 'enabled' and sm.status = 'enabled' and scl.status = 'enabled'",
+                Integer.class,
+                request.college(),
+                request.major(),
+                request.className()
+        );
+        if (count == null || count <= 0) {
+            throw new BusinessException("请选择有效的学院、专业和班级");
+        }
+        jdbcTemplate.update("update student_profile set college = ?, major = ?, class_name = ?, updated_at = ? where id = ?", request.college(), request.major(), request.className(), TimeUtils.now(), id);
+        logService.log(SecurityUtils.currentUser().id(), "学生班级", "修改", "调整学生班级: " + id);
     }
 
     public Map<String, Object> announcements(Integer pageNum, Integer pageSize) {

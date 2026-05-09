@@ -59,6 +59,7 @@ const allMenus = [
   { path: '/admin/dorm-rooms', label: '楼栋宿舍', desc: '楼栋房间管理', roles: ['admin', 'dorm_admin'] },
   { path: '/admin/facilities', label: '设施台账', desc: '宿舍资产管理', roles: ['admin', 'dorm_admin'] },
   { path: '/admin/students', label: '学生住宿', desc: '入住信息维护', roles: ['admin', 'dorm_admin'] },
+  { path: '/admin/student-classes', label: '学生班级', desc: '学院专业班级', roles: ['admin', 'dorm_admin'] },
   { path: '/admin/announcements', label: '公告管理', desc: '发布系统公告', roles: ['admin', 'dorm_admin'] },
   { path: '/admin/users', label: '用户管理', desc: '账号与角色', roles: ['admin'] },
   { path: '/admin/resources', label: '报修知识', desc: '知识库维护', roles: ['admin'] },

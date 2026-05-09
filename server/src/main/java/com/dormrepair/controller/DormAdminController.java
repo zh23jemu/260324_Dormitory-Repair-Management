@@ -5,6 +5,7 @@ import com.dormrepair.dto.admin.AnnouncementRequest;
 import com.dormrepair.dto.admin.BuildingRequest;
 import com.dormrepair.dto.admin.FacilityRequest;
 import com.dormrepair.dto.admin.RoomRequest;
+import com.dormrepair.dto.admin.StudentClassRequest;
 import com.dormrepair.dto.admin.StudentRoomRequest;
 import com.dormrepair.dto.repair.RepairOrderQueryRequest;
 import com.dormrepair.dto.repair.RepairAssignRequest;
@@ -173,6 +174,17 @@ public class DormAdminController {
     @PutMapping("/students/{id}/room")
     public ApiResponse<Void> updateStudentRoom(@PathVariable Long id, @RequestBody StudentRoomRequest request) {
         dormAdminService.updateStudentRoom(id, request);
+        return ApiResponse.success();
+    }
+
+    @GetMapping("/school-options")
+    public ApiResponse<Map<String, Object>> schoolOptions() {
+        return ApiResponse.success(dormAdminService.schoolOptions());
+    }
+
+    @PutMapping("/students/{id}/class")
+    public ApiResponse<Void> updateStudentClass(@PathVariable Long id, @Valid @RequestBody StudentClassRequest request) {
+        dormAdminService.updateStudentClass(id, request);
         return ApiResponse.success();
     }
 
