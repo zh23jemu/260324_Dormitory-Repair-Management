@@ -108,11 +108,6 @@ INSERT INTO repair_material (id, material_name, material_type, unit, stock_qty, 
 INSERT INTO repair_rating (id, repair_order_id, student_id, score, content, created_at) VALUES
 (1, 6, 6, 5, '处理速度很快，维修后使用正常。', '2026-03-25 10:40:00');
 
-INSERT INTO repair_resource (id, title, category, summary, content, cover_image, sort_no, status, publisher_id, created_at, updated_at) VALUES
-(1, '宿舍水龙头漏水自助排查', '常见故障', '提供简单的水龙头漏水自查步骤与报修建议。', '1. 检查是否为阀芯松动；2. 关闭总阀避免继续漏水；3. 如持续漏水请拍照并提交报修。', NULL, 1, 'published', 1, '2026-03-25 09:20:00', '2026-03-25 09:20:00'),
-(2, '热水器报修须知', '报修须知', '说明热水器报修前需要确认的内容。', '请先确认宿舍供电正常，再检查热水器开关状态；报修时建议填写故障出现时间、现象和宿舍号。', NULL, 2, 'published', 1, '2026-03-25 09:30:00', '2026-03-25 09:30:00'),
-(3, '宿舍门锁使用与维护', '设施说明', '介绍门锁卡顿时的临时处理方式。', '可先检查门框是否有异物阻挡，避免强力扭转钥匙；若锁芯卡死，请立即申请报修。', NULL, 3, 'published', 2, '2026-03-25 10:10:00', '2026-03-25 10:10:00');
-
 INSERT INTO service_message (id, student_id, title, content, image_path, status, reply_content, replied_by, replied_at, created_at, updated_at) VALUES
 (1, 4, '建议增加维修进度提醒', '希望系统在维修员接单和维修完成时推送更明显的提示。', NULL, 'replied', '已记录，后续版本会继续优化消息提醒体验。', 1, '2026-03-25 12:30:00', '2026-03-25 12:00:00', '2026-03-25 12:30:00'),
 (2, 6, '报修图片上传建议', '上传图片时希望支持更多张数和更清晰的预览。', NULL, 'pending', NULL, NULL, NULL, '2026-03-25 12:40:00', '2026-03-25 12:40:00');

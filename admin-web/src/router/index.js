@@ -50,7 +50,6 @@ const routes = [
       { path: 'student-classes', name: 'student-classes', component: () => import('../views/dorm/StudentClassManageView.vue'), meta: { roles: ['admin', 'dorm_admin'], layout: 'admin' } },
       { path: 'announcements', name: 'admin-announcements', component: () => import('../views/dorm/AnnouncementManageView.vue'), meta: { roles: ['admin', 'dorm_admin'], layout: 'admin' } },
       { path: 'users', name: 'users', component: () => import('../views/admin/UserManageView.vue'), meta: { roles: ['admin'], layout: 'admin' } },
-      { path: 'resources', name: 'resources', component: () => import('../views/admin/ResourceManageView.vue'), meta: { roles: ['admin'], layout: 'admin' } },
       { path: 'forum-posts', name: 'forum-posts', component: () => import('../views/admin/ForumManageView.vue'), meta: { roles: ['admin', 'dorm_admin'], layout: 'admin' } },
       { path: 'service-messages', name: 'service-messages', component: () => import('../views/admin/ServiceMessageManageView.vue'), meta: { roles: ['admin', 'dorm_admin'], layout: 'admin' } },
       { path: 'ratings', name: 'ratings', component: () => import('../views/admin/RatingManageView.vue'), meta: { roles: ['admin', 'dorm_admin'], layout: 'admin' } },

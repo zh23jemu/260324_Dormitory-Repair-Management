@@ -3,7 +3,6 @@ PRAGMA foreign_keys = OFF;
 DROP TABLE IF EXISTS service_message;
 DROP TABLE IF EXISTS forum_comment;
 DROP TABLE IF EXISTS forum_post;
-DROP TABLE IF EXISTS repair_resource;
 DROP TABLE IF EXISTS repair_rating;
 DROP TABLE IF EXISTS repair_feedback;
 DROP TABLE IF EXISTS material_usage;
@@ -265,21 +264,6 @@ CREATE TABLE forum_comment (
     FOREIGN KEY (user_id) REFERENCES user(id)
 );
 
-CREATE TABLE repair_resource (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL,
-    category TEXT NOT NULL,
-    summary TEXT,
-    content TEXT NOT NULL,
-    cover_image TEXT,
-    sort_no INTEGER NOT NULL DEFAULT 1,
-    status TEXT NOT NULL DEFAULT 'published',
-    publisher_id INTEGER NOT NULL,
-    created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL,
-    FOREIGN KEY (publisher_id) REFERENCES user(id)
-);
-
 CREATE TABLE service_message (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     student_id INTEGER NOT NULL,
@@ -324,7 +308,6 @@ CREATE INDEX idx_repair_order_facility_id ON repair_order(facility_id);
 CREATE INDEX idx_repair_flow_order_id ON repair_flow(repair_order_id);
 CREATE INDEX idx_material_usage_order_id ON material_usage(repair_order_id);
 CREATE INDEX idx_dorm_facility_room_id ON dorm_facility(room_id);
-CREATE INDEX idx_resource_status ON repair_resource(status);
 CREATE INDEX idx_service_message_student_id ON service_message(student_id);
 CREATE INDEX idx_forum_post_status ON forum_post(status);
 CREATE INDEX idx_forum_comment_post_id ON forum_comment(forum_post_id);

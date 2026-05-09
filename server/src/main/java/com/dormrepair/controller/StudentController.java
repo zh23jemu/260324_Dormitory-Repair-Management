@@ -70,19 +70,6 @@ public class StudentController {
         return ApiResponse.success(studentService.facilities(roomId));
     }
 
-    @GetMapping("/resources")
-    public ApiResponse<Map<String, Object>> resources(
-            @RequestParam(required = false) Integer pageNum,
-            @RequestParam(required = false) Integer pageSize
-    ) {
-        return ApiResponse.success(studentService.repairResources(pageNum, pageSize));
-    }
-
-    @GetMapping("/resources/{id}")
-    public ApiResponse<Map<String, Object>> resourceDetail(@PathVariable Long id) {
-        return ApiResponse.success(studentService.repairResourceDetail(id));
-    }
-
     @GetMapping("/repairers")
     public ApiResponse<Map<String, Object>> repairers(
             @RequestParam(required = false) Integer pageNum,

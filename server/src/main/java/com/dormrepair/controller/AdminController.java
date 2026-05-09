@@ -6,7 +6,6 @@ import com.dormrepair.dto.admin.CollegeRequest;
 import com.dormrepair.dto.admin.DictSaveRequest;
 import com.dormrepair.dto.admin.MajorRequest;
 import com.dormrepair.dto.admin.MaterialRequest;
-import com.dormrepair.dto.admin.ResourceRequest;
 import com.dormrepair.dto.admin.RepairTypeSaveRequest;
 import com.dormrepair.dto.admin.ServiceMessageReplyRequest;
 import com.dormrepair.dto.admin.StatusUpdateRequest;
@@ -136,32 +135,6 @@ public class AdminController {
     @DeleteMapping("/dicts/{id}")
     public ApiResponse<Void> deleteDict(@PathVariable Long id) {
         adminService.deleteDict(id);
-        return ApiResponse.success();
-    }
-
-    @GetMapping("/resources")
-    public ApiResponse<Map<String, Object>> resources(
-            @RequestParam(required = false) Integer pageNum,
-            @RequestParam(required = false) Integer pageSize
-    ) {
-        return ApiResponse.success(adminService.resources(pageNum, pageSize));
-    }
-
-    @PostMapping("/resources")
-    public ApiResponse<Void> createResource(@Valid @RequestBody ResourceRequest request) {
-        adminService.createResource(request);
-        return ApiResponse.success();
-    }
-
-    @PutMapping("/resources/{id}")
-    public ApiResponse<Void> updateResource(@PathVariable Long id, @Valid @RequestBody ResourceRequest request) {
-        adminService.updateResource(id, request);
-        return ApiResponse.success();
-    }
-
-    @DeleteMapping("/resources/{id}")
-    public ApiResponse<Void> deleteResource(@PathVariable Long id) {
-        adminService.deleteResource(id);
         return ApiResponse.success();
     }
 

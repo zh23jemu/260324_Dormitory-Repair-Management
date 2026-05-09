@@ -124,14 +124,6 @@ public class StudentService {
         );
     }
 
-    public Map<String, Object> repairResources(Integer pageNum, Integer pageSize) {
-        return commonQueryService.page("select rr.id, rr.title, rr.category, rr.summary, rr.content, rr.cover_image as coverImage, rr.sort_no as sortNo, rr.status, rr.created_at as createdAt from repair_resource rr where rr.status = 'published' order by rr.sort_no asc, rr.id desc", pageNum, pageSize);
-    }
-
-    public Map<String, Object> repairResourceDetail(Long id) {
-        return commonQueryService.one("select rr.id, rr.title, rr.category, rr.summary, rr.content, rr.cover_image as coverImage, rr.sort_no as sortNo, rr.status, rr.created_at as createdAt, u.real_name as publisherName from repair_resource rr left join user u on rr.publisher_id = u.id where rr.id = ? and rr.status = 'published'", id);
-    }
-
     public Map<String, Object> repairers(Integer pageNum, Integer pageSize) {
         return commonQueryService.page(
                 "select u.id, u.real_name as realName, u.phone, u.avatar, u.work_type_code as workTypeCode, (select group_concat(d.dict_name, '、') from sys_dict d where d.dict_type = 'repair_work_type' and instr(',' || coalesce(u.work_type_code, '') || ',', ',' || d.dict_code || ',') > 0) as workTypeName, " +

@@ -6,7 +6,6 @@ import com.dormrepair.dto.admin.CollegeRequest;
 import com.dormrepair.dto.admin.DictSaveRequest;
 import com.dormrepair.dto.admin.MajorRequest;
 import com.dormrepair.dto.admin.MaterialRequest;
-import com.dormrepair.dto.admin.ResourceRequest;
 import com.dormrepair.dto.admin.RepairTypeSaveRequest;
 import com.dormrepair.dto.admin.ServiceMessageReplyRequest;
 import com.dormrepair.dto.admin.StatusUpdateRequest;
@@ -97,9 +96,6 @@ public class AdminService {
         }
         if (countByUser("select count(*) from announcement where publisher_id = ?", id) > 0) {
             throw new BusinessException("该用户已发布公告，不能删除");
-        }
-        if (countByUser("select count(*) from repair_resource where publisher_id = ?", id) > 0) {
-            throw new BusinessException("该用户已发布知识内容，不能删除");
         }
         if (countByUser("select count(*) from forum_post where student_id = ?", id) > 0) {
             throw new BusinessException("该用户已发布论坛帖子，不能删除");
@@ -308,38 +304,6 @@ public class AdminService {
         if (count != null && count > 0) {
             throw new BusinessException(message);
         }
-    }
-
-    public Map<String, Object> resources(Integer pageNum, Integer pageSize) {
-        SecurityUtils.requireRole("admin");
-        return commonQueryService.page("select rr.id, rr.title, rr.category, rr.summary, rr.content, rr.cover_image as coverImage, rr.sort_no as sortNo, rr.status, rr.created_at as createdAt, u.real_name as publisherName from repair_resource rr left join user u on rr.publisher_id = u.id order by rr.sort_no asc, rr.id desc", pageNum, pageSize);
-    }
-
-    public void createResource(ResourceRequest request) {
-        SecurityUtils.requireRole("admin");
-        String now = TimeUtils.now();
-        jdbcTemplate.update(
-                "insert into repair_resource(title, category, summary, content, cover_image, sort_no, status, publisher_id, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                request.title(), request.category(), request.summary(), request.content(), request.coverImage(), request.sortNo(),
-                request.status() == null ? "published" : request.status(), SecurityUtils.currentUser().id(), now, now
-        );
-        logService.log(SecurityUtils.currentUser().id(), "报修知识", "新增", "新增知识库内容: " + request.title());
-    }
-
-    public void updateResource(Long id, ResourceRequest request) {
-        SecurityUtils.requireRole("admin");
-        jdbcTemplate.update(
-                "update repair_resource set title = ?, category = ?, summary = ?, content = ?, cover_image = ?, sort_no = ?, status = ?, updated_at = ? where id = ?",
-                request.title(), request.category(), request.summary(), request.content(), request.coverImage(), request.sortNo(),
-                request.status() == null ? "published" : request.status(), TimeUtils.now(), id
-        );
-        logService.log(SecurityUtils.currentUser().id(), "报修知识", "修改", "修改知识库内容: " + id);
-    }
-
-    public void deleteResource(Long id) {
-        SecurityUtils.requireRole("admin");
-        jdbcTemplate.update("delete from repair_resource where id = ?", id);
-        logService.log(SecurityUtils.currentUser().id(), "报修知识", "删除", "删除知识库内容: " + id);
     }
 
     public Map<String, Object> serviceMessages(Integer pageNum, Integer pageSize) {

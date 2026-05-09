@@ -62,7 +62,6 @@ const allMenus = [
   { path: '/admin/student-classes', label: '学生班级', desc: '学院专业班级', roles: ['admin', 'dorm_admin'] },
   { path: '/admin/announcements', label: '公告管理', desc: '发布系统公告', roles: ['admin', 'dorm_admin'] },
   { path: '/admin/users', label: '用户管理', desc: '账号与角色', roles: ['admin'] },
-  { path: '/admin/resources', label: '报修知识', desc: '知识库维护', roles: ['admin'] },
   { path: '/admin/forum-posts', label: '论坛管理', desc: '公开内容审核', roles: ['admin', 'dorm_admin'] },
   { path: '/admin/service-messages', label: '服务留言', desc: '用户反馈处理', roles: ['admin', 'dorm_admin'] },
   { path: '/admin/ratings', label: '评价管理', desc: '服务质量评价', roles: ['admin', 'dorm_admin'] },
