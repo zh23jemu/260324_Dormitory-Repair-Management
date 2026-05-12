@@ -1,0 +1,181 @@
+<mxfile host="Electron" agent="Codex">
+  <diagram id="student-submit-audit-sequence" name="学生提交报修与审核分配时序图">
+    <mxGraphModel dx="1414" dy="961" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1060" pageHeight="830" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#FFFFFF;strokeColor=#000000;fontSize=12;fontColor=#000000;" value="" vertex="1">
+          <mxGeometry height="66" width="36" x="52" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="3" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=12;fontColor=#000000;strokeColor=none;fillColor=none;" value="学生用户" vertex="1">
+          <mxGeometry height="24" width="76" x="32" y="96" as="geometry" />
+        </mxCell>
+        <mxCell id="4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontSize=13;fontColor=#000000;align=center;verticalAlign=middle;" value="统一门户与学生页面" vertex="1">
+          <mxGeometry height="45" width="144" x="158" y="42" as="geometry" />
+        </mxCell>
+        <mxCell id="5" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontSize=13;fontColor=#000000;align=center;verticalAlign=middle;" value="报修业务服务" vertex="1">
+          <mxGeometry height="45" width="120" x="350" y="42" as="geometry" />
+        </mxCell>
+        <mxCell id="6" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontSize=13;fontColor=#000000;align=center;verticalAlign=middle;" value="宿管审核端" vertex="1">
+          <mxGeometry height="45" width="120" x="550" y="42" as="geometry" />
+        </mxCell>
+        <mxCell id="7" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontSize=13;fontColor=#000000;align=center;verticalAlign=middle;" value="维修员端" vertex="1">
+          <mxGeometry height="45" width="110" x="735" y="42" as="geometry" />
+        </mxCell>
+        <mxCell id="8" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontSize=13;fontColor=#000000;align=center;verticalAlign=middle;" value="数据存储与流转记录" vertex="1">
+          <mxGeometry height="45" width="156" x="892" y="42" as="geometry" />
+        </mxCell>
+        <mxCell id="9" edge="1" parent="1" style="endArrow=none;html=1;rounded=0;strokeColor=#000000;strokeWidth=1;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="70" y="92" as="sourcePoint" />
+            <mxPoint x="70" y="790" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="10" edge="1" parent="1" style="endArrow=none;html=1;rounded=0;strokeColor=#000000;strokeWidth=1;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="230" y="92" as="sourcePoint" />
+            <mxPoint x="230" y="790" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="11" edge="1" parent="1" style="endArrow=none;html=1;rounded=0;strokeColor=#000000;strokeWidth=1;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="410" y="92" as="sourcePoint" />
+            <mxPoint x="410" y="790" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="12" edge="1" parent="1" style="endArrow=none;html=1;rounded=0;strokeColor=#000000;strokeWidth=1;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="610" y="92" as="sourcePoint" />
+            <mxPoint x="610" y="790" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="13" edge="1" parent="1" style="endArrow=none;html=1;rounded=0;strokeColor=#000000;strokeWidth=1;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="790" y="92" as="sourcePoint" />
+            <mxPoint x="790" y="790" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="14" edge="1" parent="1" style="endArrow=none;html=1;rounded=0;strokeColor=#000000;strokeWidth=1;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="970" y="92" as="sourcePoint" />
+            <mxPoint x="970" y="790" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="15" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;" value="" vertex="1">
+          <mxGeometry height="590" width="10" x="65" y="145" as="geometry" />
+        </mxCell>
+        <mxCell id="16" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;" value="" vertex="1">
+          <mxGeometry height="520" width="10" x="225" y="165" as="geometry" />
+        </mxCell>
+        <mxCell id="17" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;" value="" vertex="1">
+          <mxGeometry height="405" width="10" x="405" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="18" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;" value="" vertex="1">
+          <mxGeometry height="250" width="10" x="605" y="455" as="geometry" />
+        </mxCell>
+        <mxCell id="19" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;" value="" vertex="1">
+          <mxGeometry height="130" width="10" x="785" y="610" as="geometry" />
+        </mxCell>
+        <mxCell id="20" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;" value="" vertex="1">
+          <mxGeometry height="160" width="10" x="965" y="315" as="geometry" />
+        </mxCell>
+        <mxCell id="21" edge="1" parent="1" style="endArrow=block;html=1;rounded=0;strokeColor=#000000;strokeWidth=1;fontSize=12;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=middle;" value="1、进入统一门户，选择学生角色登录">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="70" y="145" as="sourcePoint" />
+            <mxPoint x="230" y="145" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="22" edge="1" parent="1" style="endArrow=block;html=1;rounded=0;strokeColor=#000000;strokeWidth=1;fontSize=12;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=middle;" value="2、加载报修页面，查询楼栋、宿舍、设施和报修类型">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="230" y="200" as="sourcePoint" />
+            <mxPoint x="410" y="200" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="23" edge="1" parent="1" style="endArrow=block;html=1;rounded=0;strokeColor=#000000;strokeWidth=1;fontSize=12;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=middle;dashed=1;dashPattern=8 6;" value="3、返回可选报修地点与类型列表">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="410" y="235" as="sourcePoint" />
+            <mxPoint x="230" y="235" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="24" edge="1" parent="1" style="endArrow=block;html=1;rounded=0;strokeColor=#000000;strokeWidth=1;fontSize=12;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=middle;" value="4、填写故障描述、期望维修时间并上传图片">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="70" y="275" as="sourcePoint" />
+            <mxPoint x="230" y="275" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="25" edge="1" parent="1" style="endArrow=block;html=1;rounded=0;strokeColor=#000000;strokeWidth=1;fontSize=12;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=middle;" value="5、提交报修申请">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="230" y="315" as="sourcePoint" />
+            <mxPoint x="410" y="315" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="26" edge="1" parent="1" style="endArrow=block;html=1;rounded=0;strokeColor=#000000;strokeWidth=1;fontSize=12;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=middle;" value="6、校验必填信息、手机号、地点和图片数据">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="410" y="355" as="sourcePoint" />
+            <mxPoint x="970" y="355" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="27" edge="1" parent="1" style="endArrow=block;html=1;rounded=0;strokeColor=#000000;strokeWidth=1;fontSize=12;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=middle;" value="7、保存工单、图片和初始流转记录">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="410" y="395" as="sourcePoint" />
+            <mxPoint x="970" y="395" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="28" edge="1" parent="1" style="endArrow=block;html=1;rounded=0;strokeColor=#000000;strokeWidth=1;fontSize=12;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=middle;" value="8、通知宿管待审核">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="410" y="435" as="sourcePoint" />
+            <mxPoint x="610" y="435" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="29" edge="1" parent="1" style="endArrow=block;html=1;rounded=0;strokeColor=#000000;strokeWidth=1;fontSize=12;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=middle;dashed=1;dashPattern=8 6;" value="9、返回提交成功和工单编号">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="410" y="475" as="sourcePoint" />
+            <mxPoint x="230" y="475" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="30" edge="1" parent="1" style="endArrow=block;html=1;rounded=0;strokeColor=#000000;strokeWidth=1;fontSize=12;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=middle;dashed=1;dashPattern=8 6;" value="10、展示提交成功，进入我的工单">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="230" y="515" as="sourcePoint" />
+            <mxPoint x="70" y="515" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="31" edge="1" parent="1" style="endArrow=block;html=1;rounded=0;strokeColor=#000000;strokeWidth=1;fontSize=12;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=middle;" value="11、宿管查看工单详情和报修图片">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="610" y="560" as="sourcePoint" />
+            <mxPoint x="410" y="560" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="32" edge="1" parent="1" style="endArrow=block;html=1;rounded=0;strokeColor=#000000;strokeWidth=1;fontSize=12;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=middle;dashed=1;dashPattern=8 6;" value="12、业务服务返回工单、地点和学生信息">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="410" y="600" as="sourcePoint" />
+            <mxPoint x="610" y="600" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="33" edge="1" parent="1" style="endArrow=block;html=1;rounded=0;strokeColor=#000000;strokeWidth=1;fontSize=12;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=middle;" value="13、审核通过，选择合适维修员">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="610" y="640" as="sourcePoint" />
+            <mxPoint x="410" y="640" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="34" edge="1" parent="1" style="endArrow=block;html=1;rounded=0;strokeColor=#000000;strokeWidth=1;fontSize=12;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=middle;" value="14、更新工单状态为已分配并写入流转记录">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="410" y="680" as="sourcePoint" />
+            <mxPoint x="970" y="680" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="35" edge="1" parent="1" style="endArrow=block;html=1;rounded=0;strokeColor=#000000;strokeWidth=1;fontSize=12;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=middle;" value="15、推送维修任务">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="410" y="720" as="sourcePoint" />
+            <mxPoint x="790" y="720" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="36" edge="1" parent="1" style="endArrow=block;html=1;rounded=0;strokeColor=#000000;strokeWidth=1;fontSize=12;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=middle;" value="16、维修员查看分配工单">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="790" y="760" as="sourcePoint" />
+            <mxPoint x="410" y="760" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
